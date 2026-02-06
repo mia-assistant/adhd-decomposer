@@ -149,7 +149,7 @@ class CalendarService {
       final stepsDescription = task.steps.asMap().entries.map((entry) {
         final index = entry.key + 1;
         final step = entry.value;
-        return '${index}. ${step.action} (~${step.estimatedMinutes} min)';
+        return '$index. ${step.action} (~${step.estimatedMinutes} min)';
       }).join('\n');
 
       final description =
@@ -275,8 +275,6 @@ class CalendarService {
 
       // Check if there's a gap before this event
       if (eventStart.isAfter(searchStart)) {
-        final gapDuration = eventStart.difference(searchStart);
-
         // Check each potential slot in the gap
         var slotStart = searchStart;
         while (slotStart.add(duration).isBefore(eventStart) ||

@@ -9,12 +9,15 @@ import 'data/services/achievements_service.dart';
 import 'data/services/widget_service.dart';
 import 'data/services/notification_service.dart';
 import 'data/services/analytics_service.dart';
+import 'data/services/calendar_service.dart';
+import 'data/services/routine_service.dart';
 import 'presentation/providers/task_provider.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/onboarding/onboarding_screen.dart';
 import 'presentation/screens/decompose_screen.dart';
 import 'presentation/screens/execute_screen.dart';
 import 'presentation/screens/stats_screen.dart';
+import 'presentation/screens/routines_screen.dart';
 
 // Global navigator key for deep linking
 final GlobalKey<NavigatorState> globalNavigatorKey = GlobalKey<NavigatorState>();
@@ -48,6 +51,14 @@ void main() async {
   final analytics = AnalyticsService();
   await analytics.initialize();
   
+  // Initialize calendar service
+  final calendar = CalendarService();
+  await calendar.initialize();
+  
+  // Initialize routines service
+  final routines = RoutineService();
+  await routines.initialize();
+  
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -59,6 +70,8 @@ void main() async {
     stats: stats,
     achievements: achievements,
     notifications: notifications,
+    calendar: calendar,
+    routines: routines,
   ));
 }
 
@@ -67,6 +80,8 @@ class ADHDDecomposerApp extends StatefulWidget {
   final StatsService stats;
   final AchievementsService achievements;
   final NotificationService notifications;
+  final CalendarService calendar;
+  final RoutineService routines;
   
   const ADHDDecomposerApp({
     super.key,
@@ -74,6 +89,8 @@ class ADHDDecomposerApp extends StatefulWidget {
     required this.stats,
     required this.achievements,
     required this.notifications,
+    required this.calendar,
+    required this.routines,
   });
 
   @override
@@ -177,6 +194,11 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
           MaterialPageRoute(builder: (_) => const StatsScreen()),
         );
         break;
+      case 'routines':
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const RoutinesScreen()),
+        );
+        break;
     }
   }
   
@@ -202,6 +224,8 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
         Provider.value(value: widget.stats),
         ChangeNotifierProvider.value(value: widget.achievements),
         Provider.value(value: widget.notifications),
+        Provider.value(value: widget.calendar),
+        ChangeNotifierProvider.value(value: widget.routines),
       ],
       child: MaterialApp(
         title: 'Tiny Steps',
