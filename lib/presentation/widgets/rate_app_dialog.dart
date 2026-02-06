@@ -54,7 +54,7 @@ class RateAppDialog extends StatelessWidget {
         // Ask me later
         TextButton(
           onPressed: () {
-            analytics.trackRateAppResponse('ask_later');
+            AnalyticsService.trackRateAppResponse('ask_later');
             settings.recordRatePromptShown();
             Navigator.of(context).pop();
             onDismiss?.call();
@@ -64,7 +64,7 @@ class RateAppDialog extends StatelessWidget {
         // Not really - go to feedback
         TextButton(
           onPressed: () {
-            analytics.trackRateAppResponse('not_really');
+            AnalyticsService.trackRateAppResponse('not_really');
             settings.recordRatePromptShown();
             Navigator.of(context).pop();
             // Navigate to feedback form
@@ -77,7 +77,7 @@ class RateAppDialog extends StatelessWidget {
         // Love it! - open app store
         FilledButton.icon(
           onPressed: () async {
-            analytics.trackRateAppResponse('love_it');
+            AnalyticsService.trackRateAppResponse('love_it');
             settings.recordUserRated();
             Navigator.of(context).pop();
             

@@ -9,6 +9,9 @@ import 'settings_screen.dart';
 import 'stats_screen.dart';
 import 'templates_screen.dart';
 
+/// Minimum touch target size for accessibility (48x48dp per WCAG guidelines)
+const double kMinTouchTarget = 48.0;
+
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -16,24 +19,36 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(AppStrings.appName),
+        title: Semantics(
+          header: true,
+          child: const Text(AppStrings.appName),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.bar_chart_rounded),
-            tooltip: 'Stats',
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const StatsScreen()),
-              );
-            },
+          Semantics(
+            label: 'View statistics',
+            button: true,
+            child: IconButton(
+              icon: const Icon(Icons.bar_chart_rounded),
+              tooltip: 'Stats',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const StatsScreen()),
+                );
+              },
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
-              );
-            },
+          Semantics(
+            label: 'Open settings',
+            button: true,
+            child: IconButton(
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: 'Settings',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                );
+              },
+            ),
           ),
         ],
       ),
@@ -48,19 +63,33 @@ class HomeScreen extends StatelessWidget {
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          FloatingActionButton.extended(
-            heroTag: 'templates',
-            onPressed: () => _navigateToTemplates(context),
-            icon: const Icon(Icons.library_books_outlined),
-            label: const Text('Templates'),
-            backgroundColor: Theme.of(context).colorScheme.secondary,
+          Semantics(
+            label: 'Browse task templates',
+            button: true,
+            child: SizedBox(
+              height: kMinTouchTarget,
+              child: FloatingActionButton.extended(
+                heroTag: 'templates',
+                onPressed: () => _navigateToTemplates(context),
+                icon: const Icon(Icons.library_books_outlined),
+                label: const Text('Templates'),
+                backgroundColor: Theme.of(context).colorScheme.secondary,
+              ),
+            ),
           ),
           const SizedBox(width: 12),
-          FloatingActionButton.extended(
-            heroTag: 'new_task',
-            onPressed: () => _navigateToDecompose(context),
-            icon: const Icon(Icons.add),
-            label: const Text(AppStrings.newTask),
+          Semantics(
+            label: 'Create a new task',
+            button: true,
+            child: SizedBox(
+              height: kMinTouchTarget,
+              child: FloatingActionButton.extended(
+                heroTag: 'new_task',
+                onPressed: () => _navigateToDecompose(context),
+                icon: const Icon(Icons.add),
+                label: const Text(AppStrings.newTask),
+              ),
+            ),
           ),
         ],
       ),
@@ -72,27 +101,33 @@ class HomeScreen extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.checklist_outlined,
-              size: 80,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              AppStrings.noTasksYet,
-              style: Theme.of(context).textTheme.headlineMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              AppStrings.startByAdding,
-              style: Theme.of(context).textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: Semantics(
+          label: 'No tasks yet. Use the buttons below to create a new task or browse templates.',
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.checklist_outlined,
+                size: 80,
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+                semanticLabel: 'Empty checklist',
+              ),
+              const SizedBox(height: 24),
+              Text(
+                AppStrings.noTasksYet,
+                style: Theme.of(context).textTheme.headlineMedium,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                AppStrings.startByAdding,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  height: 1.5, // Improved line spacing for readability
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -106,11 +141,14 @@ class HomeScreen extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       children: [
         if (activeTasks.isNotEmpty) ...[
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              'In Progress',
-              style: Theme.of(context).textTheme.titleLarge,
+          Semantics(
+            header: true,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                'In Progress',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
             ),
           ),
           ...activeTasks.map((task) => _TaskCard(
@@ -121,12 +159,15 @@ class HomeScreen extends StatelessWidget {
         ],
         if (completedTasks.isNotEmpty) ...[
           const SizedBox(height: 24),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Text(
-              'Completed',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Theme.of(context).colorScheme.primary,
+          Semantics(
+            header: true,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                'Completed',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                ),
               ),
             ),
           ),
@@ -174,77 +215,106 @@ class _TaskCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isCompleted = task.isCompleted;
+    final progressPercent = (task.progress * 100).round();
     
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      task.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        decoration: isCompleted ? TextDecoration.lineThrough : null,
-                        color: isCompleted 
-                          ? Theme.of(context).textTheme.bodyMedium?.color 
-                          : null,
+    // Build semantic label for screen readers
+    final semanticLabel = isCompleted
+        ? 'Completed task: ${task.title}. ${task.completedStepsCount} steps done.'
+        : 'Task: ${task.title}. ${task.completedStepsCount} of ${task.steps.length} steps completed. Estimated ${task.totalEstimatedMinutes} minutes. ${progressPercent > 0 ? '$progressPercent percent complete.' : ''} Double tap to continue.';
+    
+    return Semantics(
+      label: semanticLabel,
+      button: onTap != null,
+      child: Card(
+        margin: const EdgeInsets.only(bottom: 12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: ExcludeSemantics(
+                        child: Text(
+                          task.title,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            decoration: isCompleted ? TextDecoration.lineThrough : null,
+                            color: isCompleted 
+                              ? Theme.of(context).textTheme.bodyMedium?.color 
+                              : null,
+                            height: 1.3, // Better line spacing
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                  if (isCompleted)
-                    Icon(
-                      Icons.check_circle,
-                      color: Theme.of(context).colorScheme.primary,
-                    )
-                  else
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline),
-                      onPressed: onDelete,
-                      iconSize: 20,
-                    ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  Icon(
-                    Icons.timer_outlined,
-                    size: 16,
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${task.totalEstimatedMinutes} min',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(width: 16),
-                  Icon(
-                    Icons.checklist,
-                    size: 16,
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${task.completedStepsCount}/${task.steps.length} steps',
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                ],
-              ),
-              if (!isCompleted && task.progress > 0) ...[
-                const SizedBox(height: 12),
-                LinearProgressIndicator(
-                  value: task.progress,
-                  backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    if (isCompleted)
+                      ExcludeSemantics(
+                        child: Icon(
+                          Icons.check_circle,
+                          color: Theme.of(context).colorScheme.primary,
+                          semanticLabel: 'Completed',
+                        ),
+                      )
+                    else
+                      Semantics(
+                        label: 'Delete task ${task.title}',
+                        button: true,
+                        child: SizedBox(
+                          width: kMinTouchTarget,
+                          height: kMinTouchTarget,
+                          child: IconButton(
+                            icon: const Icon(Icons.delete_outline),
+                            onPressed: onDelete,
+                            iconSize: 20,
+                            tooltip: 'Delete task',
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
+                const SizedBox(height: 8),
+                ExcludeSemantics(
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.timer_outlined,
+                        size: 16,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${task.totalEstimatedMinutes} min',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(width: 16),
+                      Icon(
+                        Icons.checklist,
+                        size: 16,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${task.completedStepsCount}/${task.steps.length} steps',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+                if (!isCompleted && task.progress > 0) ...[
+                  const SizedBox(height: 12),
+                  ExcludeSemantics(
+                    child: LinearProgressIndicator(
+                      value: task.progress,
+                      backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                    ),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

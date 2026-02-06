@@ -36,7 +36,7 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     
     // Track the event
     final analytics = AnalyticsService();
-    analytics.trackFeedbackSubmitted(
+    AnalyticsService.trackFeedbackSubmitted(
       hasEmail: _emailController.text.trim().isNotEmpty,
     );
     

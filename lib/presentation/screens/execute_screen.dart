@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
@@ -702,7 +703,7 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
           showDialog(
             context: context,
             barrierDismissible: false,
-            builder: (ctx) => const RateAppDialog(),
+            builder: (ctx) => RateAppDialog(settings: settings),
           );
         }
       });
