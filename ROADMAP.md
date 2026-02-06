@@ -1,54 +1,81 @@
 # ADHD Task Decomposer - Roadmap
 
-## v1.0 MVP (In Progress)
+*Last updated: Feb 6, 2026 - 10:15 PM*
+
+## v1.0 MVP ✅ COMPLETE
 - [x] Core task decomposition with AI
 - [x] Execute mode (one step at a time)
 - [x] Confetti/celebration system
 - [x] Timer functionality
 - [x] Home screen with task list
-- [x] Settings screen (basic)
+- [x] Settings screen
 - [x] GitHub repo setup
-- [ ] Onboarding flow
-- [ ] Settings persistence
-- [ ] Paywall UI
-- [ ] Usage tracking (3 free decompositions)
+- [x] Onboarding flow (4 screens)
+- [x] Settings persistence (Hive)
+- [x] Paywall UI ($4.99/mo, $29.99/yr)
+- [x] Usage tracking (3 free decompositions)
+- [x] API key input for power users
+- [x] Sound effects (step/task complete, timer)
 
-## v1.1 Polish
-- [ ] Sound effects (completion ding, timer end)
-- [ ] Haptic feedback patterns
-- [ ] "I'm stuck" AI integration (real API call for sub-steps)
-- [ ] App icon & splash screen design
+## v1.1 Polish (In Progress)
+- [x] Task templates library (20+ pre-made decompositions)
+- [x] Templates screen with categories
+- [x] Stats tracking service
+- [x] Achievements system
+- [x] Stats screen
+- [ ] Notifications (gentle reminders) - subagent working
+- [ ] Share completion cards - subagent working
+- [ ] Android home screen widgets - subagent working
+- [ ] Branding assets/ASO - subagent working
+- [ ] App icon design
 - [ ] Dark mode polish
-- [ ] Widget for home screen (current task)
 
 ## v1.2 Engagement
-- [ ] Daily streak tracking
-- [ ] Statistics screen (tasks completed, time saved, streaks)
-- [ ] Achievement badges (first task, 7-day streak, 100 steps)
-- [ ] "Favorite" templates (save common task decompositions)
-- [ ] Share progress to social media
+- [ ] Achievement unlock celebrations
+- [ ] "Favorite" templates (save custom decompositions)
+- [ ] Rate app prompt (after 5 completed tasks)
+- [ ] In-app feedback form
 
 ## v1.3 Smart Features
-- [ ] Task templates library (pre-made decompositions)
 - [ ] Learn from user edits (improve AI prompts)
-- [ ] Smart time estimation (adjust based on actual completion times)
-- [ ] Calendar integration (block time for tasks)
-- [ ] Routine builder (morning routine, evening routine)
+- [ ] Smart time estimation (adjust based on actual completion)
+- [ ] Recurring tasks/routines
+- [ ] Calendar integration (block time)
 
-## v1.4 Monetization & Growth
+## v1.4 Monetization & Launch
 - [ ] RevenueCat integration (real IAP)
-- [ ] Referral program (free week for invites)
 - [ ] A/B test paywall variants
-- [ ] Rate app prompt (after 5 completed tasks)
-- [ ] App Store optimization (screenshots, preview video)
+- [ ] App Store screenshots
+- [ ] Preview video
+- [ ] Privacy policy
+- [ ] Terms of service
 
 ## v2.0 Future Ideas
-- [ ] Apple Watch companion (see current step on wrist)
-- [ ] Siri shortcuts ("Hey Siri, break down my task")
-- [ ] Body doubling mode (lofi music + virtual coworking timer)
-- [ ] AI coach personality (choose your assistant vibe)
-- [ ] Sync across devices (optional account)
-- [ ] Team/family sharing
+- [ ] Apple Watch companion
+- [ ] Siri shortcuts
+- [ ] Body doubling mode (lofi + timer)
+- [ ] AI coach personalities
+- [ ] Cloud sync (optional account)
+- [ ] iPad layout
+
+---
+
+## Current Status
+
+**Code Stats:**
+- 21 Dart files
+- ~5,600 lines of code
+- 11 commits
+
+**GitHub:** https://github.com/mia-assistant/adhd-decomposer
+
+**Active Subagents:**
+- notifications
+- sharing
+- widgets
+- branding
+- templates
+- stats
 
 ---
 
@@ -58,14 +85,3 @@
 3. **No guilt** - Skip button always available
 4. **Calm UI** - Soft colors, rounded corners, breathing room
 5. **Fast to value** - Task → steps in <3 seconds
-
-## Technical Debt to Address
-- [ ] Proper error handling throughout
-- [ ] Offline mode (cache AI responses)
-- [ ] Unit tests for providers
-- [ ] Integration tests for key flows
-- [ ] Analytics (Mixpanel/Amplitude)
-- [ ] Crash reporting (Sentry/Crashlytics)
-
----
-*Last updated: Feb 6, 2026*
