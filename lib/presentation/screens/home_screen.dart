@@ -6,6 +6,7 @@ import '../../data/models/task.dart';
 import 'decompose_screen.dart';
 import 'execute_screen.dart';
 import 'settings_screen.dart';
+import 'stats_screen.dart';
 import 'templates_screen.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -17,6 +18,15 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text(AppStrings.appName),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.bar_chart_rounded),
+            tooltip: 'Stats',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const StatsScreen()),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {

@@ -21,6 +21,22 @@ class SettingsScreen extends StatelessWidget {
               if (!provider.isPremium)
                 _buildUpgradeBanner(context, provider),
                 
+              _buildSectionHeader(context, 'Notifications'),
+              _buildNotificationToggle(context, provider),
+              if (provider.notificationsEnabled) ...[
+                _buildReminderTimeTile(context, provider),
+                _buildSwitchTile(
+                  context,
+                  icon: Icons.notifications_active_outlined,
+                  title: 'Gentle Nudge',
+                  subtitle: 'Remind me 2 hours after I leave a task unfinished',
+                  value: provider.gentleNudgeEnabled,
+                  onChanged: (value) => provider.setGentleNudgeEnabled(value),
+                ),
+                _buildTestNotificationTile(context, provider),
+              ],
+                
+              const Divider(height: 32),
               _buildSectionHeader(context, 'Feedback'),
               _buildSwitchTile(
                 context,
@@ -164,6 +180,94 @@ class SettingsScreen extends StatelessWidget {
       subtitle: Text(subtitle),
       value: value,
       onChanged: onChanged,
+    );
+  }
+  
+  Widget _buildNotificationToggle(BuildContext context, TaskProvider provider) {
+    return SwitchListTile(
+      secondary: const Icon(Icons.notifications_outlined),
+      title: const Text('Notifications'),
+      subtitle: Text(
+        provider.notificationsEnabled
+            ? 'Receive gentle reminders'
+            : 'Enable to get helpful reminders',
+      ),
+      value: provider.notificationsEnabled,
+      onChanged: (value) async {
+        if (value) {
+          final enabled = await provider.enableNotifications();
+          if (!enabled) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please enable notifications in system settings'),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+          }
+        } else {
+          await provider.disableNotifications();
+        }
+      },
+    );
+  }
+  
+  Widget _buildReminderTimeTile(BuildContext context, TaskProvider provider) {
+    final hour = provider.reminderHour;
+    final minute = provider.reminderMinute;
+    final timeStr = TimeOfDay(hour: hour, minute: minute).format(context);
+    
+    return ListTile(
+      leading: const Icon(Icons.access_time),
+      title: const Text('Daily Reminder Time'),
+      subtitle: Text('Remind me at $timeStr'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showTimePicker(context, provider),
+    );
+  }
+  
+  void _showTimePicker(BuildContext context, TaskProvider provider) async {
+    final currentTime = TimeOfDay(
+      hour: provider.reminderHour,
+      minute: provider.reminderMinute,
+    );
+    
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: currentTime,
+      helpText: 'When should I remind you?',
+    );
+    
+    if (picked != null) {
+      await provider.setReminderTime(picked.hour, picked.minute);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Reminder set for ${picked.format(context)}'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+  
+  Widget _buildTestNotificationTile(BuildContext context, TaskProvider provider) {
+    return ListTile(
+      leading: const Icon(Icons.send_outlined),
+      title: const Text('Test Notification'),
+      subtitle: const Text('Send a test notification now'),
+      onTap: () async {
+        await provider.showTestNotification();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Test notification sent!'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      },
     );
   }
   

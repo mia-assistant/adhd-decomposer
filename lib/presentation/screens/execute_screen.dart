@@ -6,9 +6,12 @@ import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/task_provider.dart';
+import '../widgets/share_card.dart';
 import '../../core/constants/strings.dart';
 import '../../data/models/task.dart';
 import '../../data/services/sound_service.dart';
+import '../../data/services/share_service.dart';
+import '../../data/services/stats_service.dart';
 
 class ExecuteScreen extends StatefulWidget {
   const ExecuteScreen({super.key});
@@ -20,6 +23,7 @@ class ExecuteScreen extends StatefulWidget {
 class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProviderStateMixin {
   late ConfettiController _confettiController;
   final SoundService _soundService = SoundService();
+  final GlobalKey _shareCardKey = GlobalKey();
   Timer? _timer;
   int _secondsRemaining = 0;
   bool _timerRunning = false;
@@ -316,6 +320,14 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
     _confettiController.play();
     _soundService.playStepComplete();
     
+    // Record timer usage if a timer was active
+    if (_selectedMinutes != null) {
+      final minutesUsed = _selectedMinutes! - (_secondsRemaining ~/ 60);
+      if (minutesUsed > 0) {
+        provider.recordTimerUsage(minutesUsed);
+      }
+    }
+    
     final message = Encouragements.stepComplete[
       _random.nextInt(Encouragements.stepComplete.length)
     ];
@@ -443,13 +455,81 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
                 ],
               ),
             ),
-            const SizedBox(height: 48),
+            const SizedBox(height: 32),
+            // Share button
+            OutlinedButton.icon(
+              onPressed: () => _showShareCard(context, task),
+              icon: const Icon(Icons.share),
+              label: const Text('Share Achievement'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              ),
+            ),
+            const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).popUntil((route) => route.isFirst);
               },
               child: const Text(AppStrings.backToTasks),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  void _showShareCard(BuildContext context, Task task) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Share Your Achievement',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Show the world what you accomplished!',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 24),
+            // Share card preview
+            RepaintBoundary(
+              key: _shareCardKey,
+              child: CompletionShareCard(
+                taskName: task.title,
+                stepsCompleted: task.completedStepsCount,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () async {
+                final statsService = context.read<StatsService>();
+                Navigator.pop(ctx);
+                await ShareService.captureAndShare(
+                  key: _shareCardKey,
+                  shareText: 'I just completed "${task.title}" using Tiny Steps! 🎉 #TinySteps #ProductivityWin',
+                  subject: 'My Tiny Steps Achievement',
+                );
+                // Track the share
+                statsService.recordShare();
+              },
+              icon: const Icon(Icons.share),
+              label: const Text('Share'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              ),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),

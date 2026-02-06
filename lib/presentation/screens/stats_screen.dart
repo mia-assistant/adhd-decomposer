@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
 import '../../data/services/stats_service.dart';
 import '../../data/services/achievements_service.dart';
+import '../../data/services/share_service.dart';
+import '../widgets/share_card.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -15,6 +17,7 @@ class StatsScreen extends StatefulWidget {
 
 class _StatsScreenState extends State<StatsScreen> {
   late ConfettiController _confettiController;
+  final GlobalKey _shareCardKey = GlobalKey();
 
   @override
   void initState() {
@@ -60,6 +63,66 @@ class _StatsScreenState extends State<StatsScreen> {
     );
   }
 
+  void _showShareStatsCard(BuildContext context, StatsService stats) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Share Your Progress',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Show off your Tiny Steps journey!',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 24),
+            // Share card preview
+            RepaintBoundary(
+              key: _shareCardKey,
+              child: StatsShareCard(
+                tasksCompleted: stats.totalTasksCompleted,
+                currentStreak: stats.currentStreak,
+                totalSteps: stats.totalStepsCompleted,
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton.icon(
+              onPressed: () async {
+                Navigator.pop(ctx);
+                await ShareService.captureAndShare(
+                  key: _shareCardKey,
+                  shareText: 'My Tiny Steps Progress: ${stats.currentStreak} day streak 🔥, ${stats.totalTasksCompleted} tasks completed! #TinySteps #ProductivityWin',
+                  subject: 'My Tiny Steps Progress',
+                );
+                // Track the share
+                if (mounted) {
+                  stats.recordShare();
+                }
+              },
+              icon: const Icon(Icons.share),
+              label: const Text('Share'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final stats = context.watch<StatsService>();
@@ -68,6 +131,13 @@ class _StatsScreenState extends State<StatsScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Stats'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Share Stats',
+            onPressed: () => _showShareStatsCard(context, stats),
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -478,9 +548,9 @@ class _AchievementUnlockedDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
+            const Text(
               '🎉',
-              style: const TextStyle(fontSize: 48),
+              style: TextStyle(fontSize: 48),
             )
                 .animate(onPlay: (c) => c.repeat())
                 .shake(hz: 2, duration: const Duration(milliseconds: 500))

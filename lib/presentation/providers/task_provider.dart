@@ -7,12 +7,14 @@ import '../../data/services/settings_service.dart';
 import '../../data/services/stats_service.dart';
 import '../../data/services/achievements_service.dart';
 import '../../data/services/widget_service.dart';
+import '../../data/services/notification_service.dart';
 
 class TaskProvider extends ChangeNotifier {
   final AIService _aiService;
   final SettingsService? _settings;
   final StatsService? _stats;
   final AchievementsService? _achievements;
+  final NotificationService? _notifications;
   List<Task> _tasks = [];
   Task? _activeTask;
   bool _isLoading = false;
@@ -23,10 +25,12 @@ class TaskProvider extends ChangeNotifier {
     SettingsService? settings,
     StatsService? stats,
     AchievementsService? achievements,
+    NotificationService? notifications,
   }) : _aiService = aiService ?? AIService(),
        _settings = settings,
        _stats = stats,
-       _achievements = achievements;
+       _achievements = achievements,
+       _notifications = notifications;
   
   List<Task> get tasks => _tasks;
   List<Task> get activeTasks => _tasks.where((t) => !t.isCompleted).toList();
@@ -43,6 +47,12 @@ class TaskProvider extends ChangeNotifier {
   int get remainingFreeDecompositions => _settings?.remainingFreeDecompositions ?? -1;
   bool get isPremium => _settings?.isPremium ?? false;
   bool get hasCustomApiKey => _settings?.hasCustomApiKey ?? false;
+  
+  // Notification settings getters for UI
+  bool get notificationsEnabled => _notifications?.notificationsEnabled ?? false;
+  int get reminderHour => _notifications?.reminderHour ?? 9;
+  int get reminderMinute => _notifications?.reminderMinute ?? 0;
+  bool get gentleNudgeEnabled => _notifications?.gentleNudgeEnabled ?? true;
   
   // Settings setters
   void setSoundEnabled(bool value) {
@@ -66,6 +76,35 @@ class TaskProvider extends ChangeNotifier {
   }
   
   String? get openAIApiKey => _settings?.openAIApiKey;
+  
+  // Notification settings setters
+  Future<bool> enableNotifications() async {
+    final enabled = await _notifications?.enableNotifications() ?? false;
+    notifyListeners();
+    return enabled;
+  }
+  
+  Future<void> disableNotifications() async {
+    await _notifications?.disableNotifications();
+    notifyListeners();
+  }
+  
+  Future<void> setReminderTime(int hour, int minute) async {
+    await _notifications?.setReminderTime(hour, minute);
+    notifyListeners();
+  }
+  
+  Future<void> setGentleNudgeEnabled(bool value) async {
+    _notifications?.gentleNudgeEnabled = value;
+    if (!value) {
+      await _notifications?.clearUnfinishedTaskReminder();
+    }
+    notifyListeners();
+  }
+  
+  Future<void> showTestNotification() async {
+    await _notifications?.showTestNotification();
+  }
   
   Future<void> initialize() async {
     try {
@@ -130,6 +169,14 @@ class TaskProvider extends ChangeNotifier {
   void setActiveTask(Task? task) {
     _activeTask = task;
     _updateWidget();
+    
+    // Schedule unfinished task reminder if task is set
+    if (task != null && !task.isCompleted) {
+      _notifications?.scheduleUnfinishedTaskReminder(task.id);
+    } else {
+      _notifications?.clearUnfinishedTaskReminder();
+    }
+    
     notifyListeners();
   }
   
@@ -141,6 +188,9 @@ class TaskProvider extends ChangeNotifier {
       // Record step completion
       _stats?.recordStepCompletion();
       
+      // Update notification activity (resets 2-hour timer)
+      _notifications?.updateTaskActivity();
+      
       // If task is now completed, record task completion
       if (!wasCompleted && _activeTask!.isCompleted) {
         _stats?.recordTaskCompletion(
@@ -148,6 +198,13 @@ class TaskProvider extends ChangeNotifier {
         );
         // Check for new achievements
         _achievements?.checkAndUnlockAchievements();
+        
+        // Clear unfinished task reminder and schedule streak reminder
+        _notifications?.clearUnfinishedTaskReminder();
+        final currentStreak = _stats?.currentStreak ?? 0;
+        if (currentStreak >= 2) {
+          _notifications?.scheduleStreakReminder(currentStreak);
+        }
       }
       
       _saveTasks();
@@ -159,6 +216,10 @@ class TaskProvider extends ChangeNotifier {
   void skipCurrentStep() {
     if (_activeTask != null) {
       _activeTask!.skipCurrentStep();
+      
+      // Update notification activity (resets 2-hour timer)
+      _notifications?.updateTaskActivity();
+      
       _saveTasks();
       _updateWidget();
       notifyListeners();
@@ -179,6 +240,7 @@ class TaskProvider extends ChangeNotifier {
     _tasks.removeWhere((t) => t.id == taskId);
     if (_activeTask?.id == taskId) {
       _activeTask = null;
+      _notifications?.clearUnfinishedTaskReminder();
     }
     _saveTasks();
     notifyListeners();
@@ -194,6 +256,7 @@ class TaskProvider extends ChangeNotifier {
   void clearAllTasks() {
     _tasks.clear();
     _activeTask = null;
+    _notifications?.clearUnfinishedTaskReminder();
     _saveTasks();
     notifyListeners();
   }

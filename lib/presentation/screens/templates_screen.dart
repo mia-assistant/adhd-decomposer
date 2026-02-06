@@ -171,6 +171,9 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     final provider = context.read<TaskProvider>();
     provider.addTask(task);
     provider.setActiveTask(task);
+    
+    // Record template usage for stats/achievements
+    provider.recordTemplateUsed(template.id);
 
     // Navigate to execute screen
     Navigator.of(context).pushReplacement(

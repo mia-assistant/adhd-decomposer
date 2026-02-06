@@ -7,11 +7,16 @@ import 'data/services/settings_service.dart';
 import 'data/services/stats_service.dart';
 import 'data/services/achievements_service.dart';
 import 'data/services/widget_service.dart';
+import 'data/services/notification_service.dart';
 import 'presentation/providers/task_provider.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/onboarding/onboarding_screen.dart';
 import 'presentation/screens/decompose_screen.dart';
 import 'presentation/screens/execute_screen.dart';
+import 'presentation/screens/stats_screen.dart';
+
+// Global navigator key for deep linking
+final GlobalKey<NavigatorState> globalNavigatorKey = GlobalKey<NavigatorState>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,6 +39,10 @@ void main() async {
   // Initialize widget service
   await WidgetService.initialize();
   
+  // Initialize notifications
+  final notifications = NotificationService();
+  await notifications.initialize();
+  
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -44,6 +53,7 @@ void main() async {
     settings: settings,
     stats: stats,
     achievements: achievements,
+    notifications: notifications,
   ));
 }
 
@@ -51,12 +61,14 @@ class ADHDDecomposerApp extends StatefulWidget {
   final SettingsService settings;
   final StatsService stats;
   final AchievementsService achievements;
+  final NotificationService notifications;
   
   const ADHDDecomposerApp({
     super.key,
     required this.settings,
     required this.stats,
     required this.achievements,
+    required this.notifications,
   });
 
   @override
@@ -65,7 +77,6 @@ class ADHDDecomposerApp extends StatefulWidget {
 
 class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
   late bool _showOnboarding;
-  String? _initialRoute;
   
   @override
   void initState() {
@@ -73,13 +84,15 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
     _showOnboarding = !widget.settings.onboardingComplete;
     _handleWidgetLaunch();
     _listenToWidgetClicks();
+    _setupNotificationHandling();
   }
   
   Future<void> _handleWidgetLaunch() async {
     final uri = await WidgetService.getInitialUri();
     if (uri != null) {
-      setState(() {
-        _initialRoute = uri.host;
+      // Navigate after first frame when context is ready
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navigateToRoute(uri.host);
       });
     }
   }
@@ -92,8 +105,44 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
     });
   }
   
+  void _setupNotificationHandling() {
+    // Set up notification tap callback
+    NotificationService.onNotificationTap = (payload) {
+      if (payload != null && mounted) {
+        // Small delay to ensure navigation context is ready
+        Future.delayed(const Duration(milliseconds: 100), () {
+          _handleNotificationNavigation(payload);
+        });
+      }
+    };
+  }
+  
+  void _handleNotificationNavigation(String payload) {
+    final context = globalNavigatorKey.currentContext;
+    if (context == null) return;
+    
+    switch (payload) {
+      case NotificationService.payloadHome:
+        // Navigate to home (pop all routes)
+        Navigator.of(context).popUntil((route) => route.isFirst);
+        break;
+        
+      case NotificationService.payloadExecute:
+        // Navigate to execute screen
+        _navigateToRoute('execute');
+        break;
+        
+      case NotificationService.payloadStats:
+        // Navigate to stats screen
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const StatsScreen()),
+        );
+        break;
+    }
+  }
+  
   void _navigateToRoute(String route) {
-    final context = navigatorKey.currentContext;
+    final context = globalNavigatorKey.currentContext;
     if (context == null) return;
     
     switch (route) {
@@ -107,18 +156,21 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
         final taskProvider = Provider.of<TaskProvider>(context, listen: false);
         if (taskProvider.activeTask != null) {
           Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (_) => ExecuteScreen(task: taskProvider.activeTask!),
-            ),
+            MaterialPageRoute(builder: (_) => const ExecuteScreen()),
           );
         } else if (taskProvider.activeTasks.isNotEmpty) {
           // Set the first active task as active and navigate
           final task = taskProvider.activeTasks.first;
           taskProvider.setActiveTask(task);
           Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => ExecuteScreen(task: task)),
+            MaterialPageRoute(builder: (_) => const ExecuteScreen()),
           );
         }
+        break;
+      case 'stats':
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const StatsScreen()),
+        );
         break;
     }
   }
@@ -128,8 +180,6 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
       _showOnboarding = false;
     });
   }
-  
-  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   Widget build(BuildContext context) {
@@ -140,15 +190,17 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
             settings: widget.settings,
             stats: widget.stats,
             achievements: widget.achievements,
+            notifications: widget.notifications,
           )..initialize(),
         ),
         Provider.value(value: widget.settings),
         Provider.value(value: widget.stats),
         ChangeNotifierProvider.value(value: widget.achievements),
+        Provider.value(value: widget.notifications),
       ],
       child: MaterialApp(
         title: 'Tiny Steps',
-        navigatorKey: navigatorKey,
+        navigatorKey: globalNavigatorKey,
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,

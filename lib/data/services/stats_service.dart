@@ -15,6 +15,7 @@ class StatsService {
   static const String keyDailyCompletions = 'dailyCompletions';
   static const String keyTimerUsageCount = 'timerUsageCount';
   static const String keyTemplatesUsed = 'templatesUsed';
+  static const String keyTotalShares = 'totalShares';
   
   Box<dynamic>? _box;
   
@@ -56,6 +57,10 @@ class StatsService {
   // Timer usage count
   int get timerUsageCount => _safeBox.get(keyTimerUsageCount, defaultValue: 0);
   set timerUsageCount(int value) => _safeBox.put(keyTimerUsageCount, value);
+  
+  // Total shares
+  int get totalShares => _safeBox.get(keyTotalShares, defaultValue: 0);
+  set totalShares(int value) => _safeBox.put(keyTotalShares, value);
   
   // Templates used (stored as JSON list)
   Set<String> get templatesUsed {
@@ -143,6 +148,11 @@ class StatsService {
     final templates = templatesUsed;
     templates.add(templateId);
     templatesUsed = templates;
+  }
+  
+  /// Record a share action
+  void recordShare() {
+    totalShares = totalShares + 1;
   }
   
   void _updateStreak(DateTime now) {

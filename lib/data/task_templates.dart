@@ -2,6 +2,7 @@
 // Users can pick from these instead of using AI decomposition.
 
 class TaskTemplate {
+  final String id;
   final String title;
   final String category;
   final List<TaskTemplateStep> steps;
@@ -10,6 +11,7 @@ class TaskTemplate {
   final String? description;
 
   const TaskTemplate({
+    required this.id,
     required this.title,
     required this.category,
     required this.steps,
@@ -58,6 +60,7 @@ class TaskTemplates {
   // ============================================
 
   static const cleanKitchen = TaskTemplate(
+    id: 'clean_kitchen',
     title: 'Clean the Kitchen',
     category: TaskCategories.home,
     icon: '🍳',
@@ -76,6 +79,7 @@ class TaskTemplates {
   );
 
   static const doLaundry = TaskTemplate(
+    id: 'do_laundry',
     title: 'Do Laundry (Full Cycle)',
     category: TaskCategories.home,
     icon: '👕',
@@ -95,6 +99,7 @@ class TaskTemplates {
   );
 
   static const cleanBathroom = TaskTemplate(
+    id: 'clean_bathroom',
     title: 'Clean the Bathroom',
     category: TaskCategories.home,
     icon: '🚿',
@@ -115,6 +120,7 @@ class TaskTemplates {
   );
 
   static const declutterDesk = TaskTemplate(
+    id: 'declutter_desk',
     title: 'Declutter Desk/Workspace',
     category: TaskCategories.home,
     icon: '🖥️',
@@ -133,6 +139,7 @@ class TaskTemplates {
   );
 
   static const takeOutTrash = TaskTemplate(
+    id: 'take_out_trash',
     title: 'Take Out Trash & Recycling',
     category: TaskCategories.home,
     icon: '🗑️',
@@ -153,6 +160,7 @@ class TaskTemplates {
   // ============================================
 
   static const processInbox = TaskTemplate(
+    id: 'process_inbox',
     title: 'Process Email Inbox',
     category: TaskCategories.work,
     icon: '📧',
@@ -170,6 +178,7 @@ class TaskTemplates {
   );
 
   static const startDifficultTask = TaskTemplate(
+    id: 'start_difficult_task',
     title: 'Start a Difficult Work Task',
     category: TaskCategories.work,
     icon: '🎯',
@@ -187,6 +196,7 @@ class TaskTemplates {
   );
 
   static const writeReport = TaskTemplate(
+    id: 'write_report',
     title: 'Write a Report/Document',
     category: TaskCategories.work,
     icon: '📝',
@@ -204,6 +214,7 @@ class TaskTemplates {
   );
 
   static const prepareForMeeting = TaskTemplate(
+    id: 'prepare_for_meeting',
     title: 'Prepare for a Meeting',
     category: TaskCategories.work,
     icon: '📅',
@@ -220,6 +231,7 @@ class TaskTemplates {
   );
 
   static const makePhoneCall = TaskTemplate(
+    id: 'make_phone_call',
     title: 'Make a Phone Call You\'ve Been Avoiding',
     category: TaskCategories.work,
     icon: '📞',
@@ -242,6 +254,7 @@ class TaskTemplates {
   // ============================================
 
   static const morningRoutine = TaskTemplate(
+    id: 'morning_routine',
     title: 'Morning Routine',
     category: TaskCategories.selfcare,
     icon: '🌅',
@@ -262,6 +275,7 @@ class TaskTemplates {
   );
 
   static const eveningRoutine = TaskTemplate(
+    id: 'evening_routine',
     title: 'Evening Routine (Wind Down)',
     category: TaskCategories.selfcare,
     icon: '🌙',
@@ -281,6 +295,7 @@ class TaskTemplates {
   );
 
   static const showerAndGetReady = TaskTemplate(
+    id: 'shower_and_get_ready',
     title: 'Shower and Get Ready',
     category: TaskCategories.selfcare,
     icon: '🚿',
@@ -302,6 +317,7 @@ class TaskTemplates {
   );
 
   static const exerciseWorkout = TaskTemplate(
+    id: 'exercise_workout',
     title: 'Exercise Workout',
     category: TaskCategories.selfcare,
     icon: '💪',
@@ -318,6 +334,7 @@ class TaskTemplates {
   );
 
   static const mealPrep = TaskTemplate(
+    id: 'meal_prep',
     title: 'Meal Prep',
     category: TaskCategories.selfcare,
     icon: '🥗',
@@ -341,6 +358,7 @@ class TaskTemplates {
   // ============================================
 
   static const groceryShopping = TaskTemplate(
+    id: 'grocery_shopping',
     title: 'Go Grocery Shopping',
     category: TaskCategories.errands,
     icon: '🛒',
@@ -358,6 +376,7 @@ class TaskTemplates {
   );
 
   static const returnItem = TaskTemplate(
+    id: 'return_item',
     title: 'Return an Item to Store',
     category: TaskCategories.errands,
     icon: '📦',
@@ -375,6 +394,7 @@ class TaskTemplates {
   );
 
   static const scheduleDoctorAppointment = TaskTemplate(
+    id: 'schedule_doctor_appointment',
     title: 'Schedule a Doctor Appointment',
     category: TaskCategories.errands,
     icon: '🏥',
@@ -392,6 +412,7 @@ class TaskTemplates {
   );
 
   static const payBills = TaskTemplate(
+    id: 'pay_bills',
     title: 'Pay Bills',
     category: TaskCategories.errands,
     icon: '💰',
