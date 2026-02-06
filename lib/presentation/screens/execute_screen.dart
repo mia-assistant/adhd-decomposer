@@ -17,7 +17,6 @@ import '../../data/services/stats_service.dart';
 import '../../data/services/settings_service.dart';
 import '../../data/services/analytics_service.dart';
 import '../../data/services/calendar_service.dart';
-import '../../data/services/routine_service.dart';
 import '../widgets/time_slot_picker.dart';
 import 'body_double_screen.dart';
 import 'routines_screen.dart';
@@ -719,23 +718,23 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
               ],
             ),
             const SizedBox(height: 12),
-            // TODO: Save as routine (coming soon)
-            // Semantics(
-            //   label: 'Save this task as a recurring routine',
-            //   button: true,
-            //   child: SizedBox(
-            //     width: double.infinity,
-            //     height: kMinTouchTarget,
-            //     child: OutlinedButton.icon(
-            //       onPressed: () => _saveAsRoutine(context, task),
-            //       icon: const Icon(Icons.repeat),
-            //       label: const Text('Save as Routine'),
-            //       style: OutlinedButton.styleFrom(
-            //         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            //       ),
-            //     ),
-            //   ),
-            // ),
+            // Save as routine button
+            Semantics(
+              label: 'Save this task as a recurring routine',
+              button: true,
+              child: SizedBox(
+                width: double.infinity,
+                height: kMinTouchTarget,
+                child: OutlinedButton.icon(
+                  onPressed: () => _saveAsRoutine(context, task),
+                  icon: const Icon(Icons.repeat),
+                  label: const Text('Save as Routine'),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
             Semantics(
               label: 'Return to task list',

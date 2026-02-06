@@ -154,7 +154,7 @@ class Routine {
       case RecurrenceType.monthly:
         if (dayOfMonth == null) return 'Monthly';
         final suffix = _getOrdinalSuffix(dayOfMonth!);
-        return '${dayOfMonth}$suffix of month';
+        return '$dayOfMonth$suffix of month';
     }
   }
 

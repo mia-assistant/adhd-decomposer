@@ -324,7 +324,7 @@ class _RoutinesDueTodaySection extends StatelessWidget {
               header: true,
               child: Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.today,
                     size: 20,
                     color: Colors.orange,
