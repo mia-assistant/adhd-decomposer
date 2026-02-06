@@ -4,6 +4,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/task_provider.dart';
 import '../../core/constants/strings.dart';
 import 'execute_screen.dart';
+import 'paywall_screen.dart';
 
 class DecomposeScreen extends StatefulWidget {
   const DecomposeScreen({super.key});
@@ -20,8 +21,26 @@ class _DecomposeScreenState extends State<DecomposeScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkUsageLimit();
       _focusNode.requestFocus();
     });
+  }
+  
+  void _checkUsageLimit() {
+    final provider = context.read<TaskProvider>();
+    if (!provider.canDecompose) {
+      // Show paywall immediately if limit reached
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => PaywallScreen(
+            showSkip: false,
+            onPurchaseComplete: () {
+              Navigator.of(context).pop();
+            },
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -79,11 +98,21 @@ class _DecomposeScreenState extends State<DecomposeScreen> {
   }
 
   Widget _buildInputState(BuildContext context, TaskProvider provider) {
+    final remaining = provider.remainingFreeDecompositions;
+    final showRemainingBanner = !provider.isPremium && 
+                                 !provider.hasCustomApiKey && 
+                                 remaining > 0 && 
+                                 remaining <= 3;
+    
     return Padding(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (showRemainingBanner) ...[
+            _buildRemainingBanner(context, remaining),
+            const SizedBox(height: 16),
+          ],
           Text(
             AppStrings.whatNeedsToBeDone,
             style: Theme.of(context).textTheme.displaySmall,
@@ -120,6 +149,46 @@ class _DecomposeScreenState extends State<DecomposeScreen> {
       ),
     );
   }
+  
+  Widget _buildRemainingBanner(BuildContext context, int remaining) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: remaining == 1 
+            ? Theme.of(context).colorScheme.errorContainer
+            : Theme.of(context).colorScheme.primaryContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            remaining == 1 ? Icons.warning_amber_rounded : Icons.info_outline,
+            color: remaining == 1 
+                ? Theme.of(context).colorScheme.error
+                : Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              remaining == 1
+                  ? 'Last free breakdown! Upgrade for unlimited.'
+                  : '$remaining free breakdowns left',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => _showPaywall(context),
+            style: TextButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+            ),
+            child: const Text('Upgrade'),
+          ),
+        ],
+      ),
+    ).animate().fadeIn().slideY(begin: -0.3, end: 0);
+  }
 
   Widget _buildSuggestions(BuildContext context) {
     final suggestions = [
@@ -141,9 +210,26 @@ class _DecomposeScreenState extends State<DecomposeScreen> {
       )).toList(),
     );
   }
+  
+  void _showPaywall(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => PaywallScreen(
+          onSkip: () => Navigator.of(context).pop(),
+          onPurchaseComplete: () => Navigator.of(context).pop(),
+        ),
+      ),
+    );
+  }
 
   Future<void> _decompose(TaskProvider provider) async {
     if (_controller.text.trim().isEmpty) return;
+    
+    // Check if can decompose before attempting
+    if (!provider.canDecompose) {
+      _showPaywall(context);
+      return;
+    }
 
     final task = await provider.decomposeTask(_controller.text.trim());
     
