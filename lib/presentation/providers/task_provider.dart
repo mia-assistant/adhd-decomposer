@@ -4,18 +4,29 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/models/task.dart';
 import '../../data/services/ai_service.dart';
 import '../../data/services/settings_service.dart';
+import '../../data/services/stats_service.dart';
+import '../../data/services/achievements_service.dart';
+import '../../data/services/widget_service.dart';
 
 class TaskProvider extends ChangeNotifier {
   final AIService _aiService;
   final SettingsService? _settings;
+  final StatsService? _stats;
+  final AchievementsService? _achievements;
   List<Task> _tasks = [];
   Task? _activeTask;
   bool _isLoading = false;
   String? _error;
   
-  TaskProvider({AIService? aiService, SettingsService? settings}) 
-    : _aiService = aiService ?? AIService(),
-      _settings = settings;
+  TaskProvider({
+    AIService? aiService,
+    SettingsService? settings,
+    StatsService? stats,
+    AchievementsService? achievements,
+  }) : _aiService = aiService ?? AIService(),
+       _settings = settings,
+       _stats = stats,
+       _achievements = achievements;
   
   List<Task> get tasks => _tasks;
   List<Task> get activeTasks => _tasks.where((t) => !t.isCompleted).toList();
@@ -118,13 +129,29 @@ class TaskProvider extends ChangeNotifier {
   
   void setActiveTask(Task? task) {
     _activeTask = task;
+    _updateWidget();
     notifyListeners();
   }
   
   void completeCurrentStep() {
     if (_activeTask != null) {
+      final wasCompleted = _activeTask!.isCompleted;
       _activeTask!.completeCurrentStep();
+      
+      // Record step completion
+      _stats?.recordStepCompletion();
+      
+      // If task is now completed, record task completion
+      if (!wasCompleted && _activeTask!.isCompleted) {
+        _stats?.recordTaskCompletion(
+          stepsCompleted: _activeTask!.completedStepsCount,
+        );
+        // Check for new achievements
+        _achievements?.checkAndUnlockAchievements();
+      }
+      
       _saveTasks();
+      _updateWidget();
       notifyListeners();
     }
   }
@@ -133,8 +160,14 @@ class TaskProvider extends ChangeNotifier {
     if (_activeTask != null) {
       _activeTask!.skipCurrentStep();
       _saveTasks();
+      _updateWidget();
       notifyListeners();
     }
+  }
+  
+  /// Update home screen widget with current task data
+  Future<void> _updateWidget() async {
+    await WidgetService.updateCurrentTask(_activeTask);
   }
   
   Future<List<TaskStep>> getSubSteps(String stepAction) async {
@@ -151,6 +184,13 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
   
+  /// Add a task from a template (no AI decomposition needed)
+  void addTask(Task task) {
+    _tasks.insert(0, task);
+    _saveTasks();
+    notifyListeners();
+  }
+  
   void clearAllTasks() {
     _tasks.clear();
     _activeTask = null;
@@ -161,5 +201,17 @@ class TaskProvider extends ChangeNotifier {
   void clearError() {
     _error = null;
     notifyListeners();
+  }
+  
+  /// Record timer usage for stats tracking
+  void recordTimerUsage(int minutes) {
+    _stats?.recordTimerUsage(minutes);
+    _achievements?.checkAndUnlockAchievements();
+  }
+  
+  /// Record template usage for stats tracking
+  void recordTemplateUsed(String templateId) {
+    _stats?.recordTemplateUsed(templateId);
+    _achievements?.checkAndUnlockAchievements();
   }
 }

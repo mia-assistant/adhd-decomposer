@@ -1,5 +1,5 @@
-/// Pre-made task decompositions for common ADHD struggle tasks.
-/// Users can pick from these instead of using AI decomposition.
+// Pre-made task decompositions for common ADHD struggle tasks.
+// Users can pick from these instead of using AI decomposition.
 
 class TaskTemplate {
   final String title;

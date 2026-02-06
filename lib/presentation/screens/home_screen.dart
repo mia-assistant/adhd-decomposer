@@ -6,6 +6,7 @@ import '../../data/models/task.dart';
 import 'decompose_screen.dart';
 import 'execute_screen.dart';
 import 'settings_screen.dart';
+import 'templates_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -34,10 +35,24 @@ class HomeScreen extends StatelessWidget {
           return _buildTaskList(context, provider);
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _navigateToDecompose(context),
-        icon: const Icon(Icons.add),
-        label: const Text(AppStrings.newTask),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'templates',
+            onPressed: () => _navigateToTemplates(context),
+            icon: const Icon(Icons.library_books_outlined),
+            label: const Text('Templates'),
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+          ),
+          const SizedBox(width: 12),
+          FloatingActionButton.extended(
+            heroTag: 'new_task',
+            onPressed: () => _navigateToDecompose(context),
+            icon: const Icon(Icons.add),
+            label: const Text(AppStrings.newTask),
+          ),
+        ],
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
@@ -118,6 +133,12 @@ class HomeScreen extends StatelessWidget {
   void _navigateToDecompose(BuildContext context) {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const DecomposeScreen()),
+    );
+  }
+
+  void _navigateToTemplates(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const TemplatesScreen()),
     );
   }
 
