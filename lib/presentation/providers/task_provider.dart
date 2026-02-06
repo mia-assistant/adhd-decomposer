@@ -109,6 +109,13 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
   
+  void clearAllTasks() {
+    _tasks.clear();
+    _activeTask = null;
+    _saveTasks();
+    notifyListeners();
+  }
+  
   void clearError() {
     _error = null;
     notifyListeners();
