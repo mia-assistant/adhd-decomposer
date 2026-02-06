@@ -15,7 +15,15 @@ class SettingsService {
   static const String keyIsPremium = 'isPremium';
   static const String keyOpenAIApiKey = 'openAIApiKey';
   
+  // Rate app settings
+  static const String keyHasRated = 'hasRated';
+  static const String keyRateAskedCount = 'rateAskedCount';
+  static const String keyTasksSinceLastAsk = 'tasksSinceLastAsk';
+  
   static const int freeDecompositionLimit = 3;
+  static const int tasksBeforeFirstAsk = 5;
+  static const int tasksBetweenAsks = 5;
+  static const int maxAskCount = 3;
   
   Box<dynamic>? _box;
   
@@ -77,5 +85,46 @@ class SettingsService {
   int get remainingFreeDecompositions {
     if (isPremium || hasCustomApiKey) return -1; // Unlimited
     return (freeDecompositionLimit - decompositionCount).clamp(0, freeDecompositionLimit);
+  }
+  
+  // Rate app tracking
+  bool get hasRated => _safeBox.get(keyHasRated, defaultValue: false);
+  set hasRated(bool value) => _safeBox.put(keyHasRated, value);
+  
+  int get rateAskedCount => _safeBox.get(keyRateAskedCount, defaultValue: 0);
+  set rateAskedCount(int value) => _safeBox.put(keyRateAskedCount, value);
+  
+  int get tasksSinceLastAsk => _safeBox.get(keyTasksSinceLastAsk, defaultValue: 0);
+  set tasksSinceLastAsk(int value) => _safeBox.put(keyTasksSinceLastAsk, value);
+  
+  /// Check if we should show the rate app prompt
+  bool get shouldShowRatePrompt {
+    if (hasRated) return false;
+    if (rateAskedCount >= maxAskCount) return false;
+    
+    final totalTasks = tasksSinceLastAsk;
+    if (rateAskedCount == 0) {
+      // First time: ask after X tasks
+      return totalTasks >= tasksBeforeFirstAsk;
+    } else {
+      // Subsequent times: ask after Y more tasks
+      return totalTasks >= tasksBetweenAsks;
+    }
+  }
+  
+  /// Record that we asked for a rating
+  void recordRatePromptShown() {
+    rateAskedCount = rateAskedCount + 1;
+    tasksSinceLastAsk = 0;
+  }
+  
+  /// Record that user rated the app
+  void recordUserRated() {
+    hasRated = true;
+  }
+  
+  /// Increment task count (called after task completion)
+  void incrementTasksSinceLastAsk() {
+    tasksSinceLastAsk = tasksSinceLastAsk + 1;
   }
 }

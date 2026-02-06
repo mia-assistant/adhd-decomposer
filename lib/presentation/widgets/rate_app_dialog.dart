@@ -1,0 +1,105 @@
+import 'package:flutter/material.dart';
+import 'package:in_app_review/in_app_review.dart';
+import '../../data/services/settings_service.dart';
+import '../../data/services/analytics_service.dart';
+import '../screens/feedback_screen.dart';
+
+/// A non-intrusive dialog asking users to rate the app
+/// Shows only after significant usage and respects user's choice
+class RateAppDialog extends StatelessWidget {
+  final SettingsService settings;
+  final VoidCallback? onDismiss;
+  
+  const RateAppDialog({
+    super.key,
+    required this.settings,
+    this.onDismiss,
+  });
+  
+  static Future<void> showIfNeeded(BuildContext context, SettingsService settings) async {
+    if (!settings.shouldShowRatePrompt) return;
+    
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => RateAppDialog(settings: settings),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final analytics = AnalyticsService();
+    
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      title: Row(
+        children: [
+          Icon(
+            Icons.favorite,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text('Enjoying Tiny Steps?'),
+          ),
+        ],
+      ),
+      content: const Text(
+        'Your feedback helps us make the app better for everyone with ADHD.',
+        style: TextStyle(fontSize: 15),
+      ),
+      actions: [
+        // Ask me later
+        TextButton(
+          onPressed: () {
+            analytics.trackRateAppResponse('ask_later');
+            settings.recordRatePromptShown();
+            Navigator.of(context).pop();
+            onDismiss?.call();
+          },
+          child: const Text('Ask me later'),
+        ),
+        // Not really - go to feedback
+        TextButton(
+          onPressed: () {
+            analytics.trackRateAppResponse('not_really');
+            settings.recordRatePromptShown();
+            Navigator.of(context).pop();
+            // Navigate to feedback form
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const FeedbackScreen()),
+            );
+          },
+          child: const Text('Not really'),
+        ),
+        // Love it! - open app store
+        FilledButton.icon(
+          onPressed: () async {
+            analytics.trackRateAppResponse('love_it');
+            settings.recordUserRated();
+            Navigator.of(context).pop();
+            
+            // Try native in-app review, fall back to store listing
+            final InAppReview inAppReview = InAppReview.instance;
+            
+            if (await inAppReview.isAvailable()) {
+              await inAppReview.requestReview();
+            } else {
+              // Open store listing directly
+              await inAppReview.openStoreListing(
+                appStoreId: '6479684930', // Replace with your App Store ID
+              );
+            }
+            
+            onDismiss?.call();
+          },
+          icon: const Icon(Icons.star, size: 18),
+          label: const Text('Love it!'),
+        ),
+      ],
+      actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+    );
+  }
+}
