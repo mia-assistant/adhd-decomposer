@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/task_provider.dart';
 import '../../core/constants/strings.dart';
 import 'execute_screen.dart';
@@ -64,7 +65,9 @@ class _DecomposeScreenState extends State<DecomposeScreen> {
           Text(
             AppStrings.decomposing,
             style: Theme.of(context).textTheme.headlineMedium,
-          ),
+          )
+            .animate(onPlay: (c) => c.repeat())
+            .shimmer(duration: const Duration(seconds: 2)),
           const SizedBox(height: 8),
           Text(
             'Breaking your task into tiny steps...',
@@ -72,7 +75,7 @@ class _DecomposeScreenState extends State<DecomposeScreen> {
           ),
         ],
       ),
-    );
+    ).animate().fadeIn();
   }
 
   Widget _buildInputState(BuildContext context, TaskProvider provider) {

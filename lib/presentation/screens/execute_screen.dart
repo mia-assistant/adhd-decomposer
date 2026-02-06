@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/task_provider.dart';
 import '../../core/constants/strings.dart';
 import '../../data/models/task.dart';
@@ -171,7 +172,10 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
                   ),
                 ],
               ),
-            ),
+            )
+              .animate()
+              .fadeIn(duration: const Duration(milliseconds: 300))
+              .slideY(begin: 0.1, end: 0, duration: const Duration(milliseconds: 300)),
             
             const SizedBox(height: 24),
             
@@ -359,7 +363,11 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
               color: Theme.of(context).colorScheme.primary,
             ),
           ),
-        ),
+        )
+          .animate()
+          .scale(begin: const Offset(0.8, 0.8), end: const Offset(1.0, 1.0), duration: const Duration(milliseconds: 200))
+          .then()
+          .shake(hz: 3, duration: const Duration(milliseconds: 300)),
       ),
     );
   }
