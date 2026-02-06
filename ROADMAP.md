@@ -1,6 +1,6 @@
 # ADHD Task Decomposer - Roadmap
 
-*Last updated: Feb 6, 2026 - 10:15 PM*
+*Last updated: Feb 6, 2026 - 10:25 PM*
 
 ## v1.0 MVP ✅ COMPLETE
 - [x] Core task decomposition with AI
@@ -17,38 +17,43 @@
 - [x] API key input for power users
 - [x] Sound effects (step/task complete, timer)
 
-## v1.1 Polish (In Progress)
-- [x] Task templates library (20+ pre-made decompositions)
+## v1.1 Polish ✅ COMPLETE
+- [x] Task templates library (19 pre-made decompositions)
 - [x] Templates screen with categories
 - [x] Stats tracking service
-- [x] Achievements system
-- [x] Stats screen
-- [ ] Notifications (gentle reminders) - subagent working
-- [ ] Share completion cards - subagent working
-- [ ] Android home screen widgets - subagent working
-- [ ] Branding assets/ASO - subagent working
-- [ ] App icon design
-- [ ] Dark mode polish
+- [x] Stats screen with activity chart
+- [x] Achievements system (7 achievements)
+- [x] Share completion cards (Instagram-friendly 1080x1080)
+- [x] Share stats cards
+- [x] Android home screen widgets (Current Task, Quick Add)
+- [x] Branding assets (icon spec, colors, ASO, landing copy)
 
-## v1.2 Engagement
+## v1.2 Notifications (In Progress)
+- [ ] Local notifications setup
+- [ ] Gentle reminders for unfinished tasks
+- [ ] Daily reminder at preferred time
+- [ ] Streak notifications
+- [ ] Deep linking from notifications
+
+## v1.3 Engagement
 - [ ] Achievement unlock celebrations
 - [ ] "Favorite" templates (save custom decompositions)
 - [ ] Rate app prompt (after 5 completed tasks)
 - [ ] In-app feedback form
 
-## v1.3 Smart Features
+## v1.4 Smart Features
 - [ ] Learn from user edits (improve AI prompts)
 - [ ] Smart time estimation (adjust based on actual completion)
 - [ ] Recurring tasks/routines
 - [ ] Calendar integration (block time)
 
-## v1.4 Monetization & Launch
+## v1.5 Launch Prep
 - [ ] RevenueCat integration (real IAP)
-- [ ] A/B test paywall variants
-- [ ] App Store screenshots
-- [ ] Preview video
-- [ ] Privacy policy
+- [ ] App Store screenshots (from ASO spec)
+- [ ] Preview video (from ASO spec)
+- [ ] Privacy policy page
 - [ ] Terms of service
+- [ ] App icon (from icon spec)
 
 ## v2.0 Future Ideas
 - [ ] Apple Watch companion
@@ -63,19 +68,13 @@
 ## Current Status
 
 **Code Stats:**
-- 21 Dart files
-- ~5,600 lines of code
-- 11 commits
+- 26+ Dart files
+- ~7,000 lines of code
+- 16 commits
 
 **GitHub:** https://github.com/mia-assistant/adhd-decomposer
 
-**Active Subagents:**
-- notifications
-- sharing
-- widgets
-- branding
-- templates
-- stats
+**Build:** Debug APK ready at `build/app/outputs/flutter-apk/app-debug.apk` (107MB)
 
 ---
 
