@@ -8,6 +8,7 @@ import 'data/services/stats_service.dart';
 import 'data/services/achievements_service.dart';
 import 'data/services/widget_service.dart';
 import 'data/services/notification_service.dart';
+import 'data/services/analytics_service.dart';
 import 'presentation/providers/task_provider.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/onboarding/onboarding_screen.dart';
@@ -42,6 +43,10 @@ void main() async {
   // Initialize notifications
   final notifications = NotificationService();
   await notifications.initialize();
+  
+  // Initialize analytics (stub for now)
+  final analytics = AnalyticsService();
+  await analytics.initialize();
   
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([

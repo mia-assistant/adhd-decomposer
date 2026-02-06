@@ -1,4 +1,5 @@
 import 'package:hive_flutter/hive_flutter.dart';
+import 'ai_service.dart';
 
 /// Service for managing app settings persistence
 class SettingsService {
@@ -14,11 +15,16 @@ class SettingsService {
   static const String keyDecompositionCount = 'decompositionCount';
   static const String keyIsPremium = 'isPremium';
   static const String keyOpenAIApiKey = 'openAIApiKey';
+  static const String keyDecompositionStyle = 'decompositionStyle';
   
   // Rate app settings
   static const String keyHasRated = 'hasRated';
   static const String keyRateAskedCount = 'rateAskedCount';
   static const String keyTasksSinceLastAsk = 'tasksSinceLastAsk';
+  
+  // Accessibility settings
+  static const String keyReduceAnimations = 'reduceAnimations';
+  static const String keyAutoAdvanceEnabled = 'autoAdvanceEnabled';
   
   static const int freeDecompositionLimit = 3;
   static const int tasksBeforeFirstAsk = 5;
@@ -79,6 +85,35 @@ class SettingsService {
   
   bool get hasCustomApiKey => openAIApiKey != null && openAIApiKey!.isNotEmpty;
   
+  // Decomposition style
+  DecompositionStyle get decompositionStyle {
+    final stored = _safeBox.get(keyDecompositionStyle, defaultValue: 'standard');
+    switch (stored) {
+      case 'quick':
+        return DecompositionStyle.quick;
+      case 'gentle':
+        return DecompositionStyle.gentle;
+      default:
+        return DecompositionStyle.standard;
+    }
+  }
+  
+  set decompositionStyle(DecompositionStyle value) {
+    String stringValue;
+    switch (value) {
+      case DecompositionStyle.quick:
+        stringValue = 'quick';
+        break;
+      case DecompositionStyle.gentle:
+        stringValue = 'gentle';
+        break;
+      case DecompositionStyle.standard:
+        stringValue = 'standard';
+        break;
+    }
+    _safeBox.put(keyDecompositionStyle, stringValue);
+  }
+  
   // Can decompose (premium, has custom API key, or hasn't hit limit)
   bool get canDecompose => isPremium || hasCustomApiKey || !hasReachedFreeLimit;
   
@@ -127,4 +162,13 @@ class SettingsService {
   void incrementTasksSinceLastAsk() {
     tasksSinceLastAsk = tasksSinceLastAsk + 1;
   }
+  
+  // Accessibility settings
+  /// Reduce animations for users sensitive to motion
+  bool get reduceAnimations => _safeBox.get(keyReduceAnimations, defaultValue: false);
+  set reduceAnimations(bool value) => _safeBox.put(keyReduceAnimations, value);
+  
+  /// Auto-advance to next step after completion (can be disabled for accessibility)
+  bool get autoAdvanceEnabled => _safeBox.get(keyAutoAdvanceEnabled, defaultValue: true);
+  set autoAdvanceEnabled(bool value) => _safeBox.put(keyAutoAdvanceEnabled, value);
 }

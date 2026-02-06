@@ -9,6 +9,9 @@ import '../../data/services/achievements_service.dart';
 import '../../data/services/widget_service.dart';
 import '../../data/services/notification_service.dart';
 
+// Re-export DecompositionStyle for UI access
+export '../../data/services/ai_service.dart' show DecompositionStyle;
+
 class TaskProvider extends ChangeNotifier {
   final AIService _aiService;
   final SettingsService? _settings;
@@ -47,6 +50,10 @@ class TaskProvider extends ChangeNotifier {
   int get remainingFreeDecompositions => _settings?.remainingFreeDecompositions ?? -1;
   bool get isPremium => _settings?.isPremium ?? false;
   bool get hasCustomApiKey => _settings?.hasCustomApiKey ?? false;
+  DecompositionStyle get decompositionStyle => _settings?.decompositionStyle ?? DecompositionStyle.standard;
+  // Accessibility settings getters
+  bool get reduceAnimations => _settings?.reduceAnimations ?? false;
+  bool get autoAdvanceEnabled => _settings?.autoAdvanceEnabled ?? true;
   
   // Notification settings getters for UI
   bool get notificationsEnabled => _notifications?.notificationsEnabled ?? false;
@@ -67,6 +74,21 @@ class TaskProvider extends ChangeNotifier {
   
   void setConfettiEnabled(bool value) {
     _settings?.confettiEnabled = value;
+    notifyListeners();
+  }
+  
+  void setReduceAnimations(bool value) {
+    _settings?.reduceAnimations = value;
+    notifyListeners();
+  }
+  
+  void setAutoAdvanceEnabled(bool value) {
+    _settings?.autoAdvanceEnabled = value;
+    notifyListeners();
+  }
+  
+  void setDecompositionStyle(DecompositionStyle style) {
+    _settings?.decompositionStyle = style;
     notifyListeners();
   }
   
@@ -148,7 +170,12 @@ class TaskProvider extends ChangeNotifier {
     try {
       // Use custom API key if available
       final apiKey = _settings?.openAIApiKey;
-      final task = await _aiService.decomposeTask(description, apiKey: apiKey);
+      final style = _settings?.decompositionStyle ?? DecompositionStyle.standard;
+      final task = await _aiService.decomposeTask(
+        description,
+        apiKey: apiKey,
+        style: style,
+      );
       _tasks.insert(0, task);
       await _saveTasks();
       

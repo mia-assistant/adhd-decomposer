@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import 'paywall_screen.dart';
+import 'feedback_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -64,8 +65,24 @@ class SettingsScreen extends StatelessWidget {
               ),
               
               const Divider(height: 32),
+              _buildSectionHeader(context, 'AI Decomposition'),
+              _buildDecompositionStyleTile(context, provider),
+              
+              const Divider(height: 32),
               _buildSectionHeader(context, 'Power User'),
               _buildApiKeyTile(context, provider),
+              
+              const Divider(height: 32),
+              _buildSectionHeader(context, 'Support'),
+              ListTile(
+                leading: const Icon(Icons.feedback_outlined),
+                title: const Text('Send Feedback'),
+                subtitle: const Text('Help us improve Tiny Steps'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const FeedbackScreen()),
+                ),
+              ),
               
               const Divider(height: 32),
               _buildSectionHeader(context, 'Data'),
@@ -268,6 +285,138 @@ class SettingsScreen extends StatelessWidget {
           );
         }
       },
+    );
+  }
+  
+  Widget _buildDecompositionStyleTile(BuildContext context, TaskProvider provider) {
+    final style = provider.decompositionStyle;
+    
+    String styleName;
+    String styleDesc;
+    IconData styleIcon;
+    
+    switch (style) {
+      case DecompositionStyle.quick:
+        styleName = 'Quick';
+        styleDesc = 'Fewer steps, faster completion';
+        styleIcon = Icons.bolt;
+        break;
+      case DecompositionStyle.gentle:
+        styleName = 'Gentle';
+        styleDesc = 'Extra supportive for tough days';
+        styleIcon = Icons.favorite_outline;
+        break;
+      case DecompositionStyle.standard:
+        styleName = 'Standard';
+        styleDesc = 'Balanced detail and support';
+        styleIcon = Icons.auto_awesome_outlined;
+        break;
+    }
+    
+    return ListTile(
+      leading: Icon(styleIcon),
+      title: const Text('Decomposition Style'),
+      subtitle: Text('$styleName - $styleDesc'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showDecompositionStyleDialog(context, provider),
+    );
+  }
+  
+  void _showDecompositionStyleDialog(BuildContext context, TaskProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Decomposition Style'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Choose how tasks are broken down:',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            _buildStyleOption(
+              context,
+              provider,
+              DecompositionStyle.standard,
+              'Standard',
+              'Balanced detail and encouragement',
+              Icons.auto_awesome_outlined,
+            ),
+            _buildStyleOption(
+              context,
+              provider,
+              DecompositionStyle.quick,
+              'Quick',
+              'Minimal steps for time pressure',
+              Icons.bolt,
+            ),
+            _buildStyleOption(
+              context,
+              provider,
+              DecompositionStyle.gentle,
+              'Gentle',
+              'Extra support for bad brain days',
+              Icons.favorite_outline,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildStyleOption(
+    BuildContext context,
+    TaskProvider provider,
+    DecompositionStyle style,
+    String title,
+    String description,
+    IconData icon,
+  ) {
+    final isSelected = provider.decompositionStyle == style;
+    
+    return Card(
+      color: isSelected 
+          ? Theme.of(context).colorScheme.primaryContainer 
+          : null,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: isSelected 
+              ? Theme.of(context).colorScheme.primary 
+              : null,
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        subtitle: Text(description),
+        trailing: isSelected 
+            ? Icon(
+                Icons.check_circle,
+                color: Theme.of(context).colorScheme.primary,
+              )
+            : null,
+        onTap: () {
+          provider.setDecompositionStyle(style);
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Style changed to $title'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      ),
     );
   }
   

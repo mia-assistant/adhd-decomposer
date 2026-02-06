@@ -3,6 +3,16 @@ import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import '../models/task.dart';
 
+/// Decomposition style modes for different user needs
+enum DecompositionStyle {
+  /// Standard mode - balanced detail and encouragement
+  standard,
+  /// Quick mode - fewer steps, faster completion for time pressure
+  quick,
+  /// Gentle mode - extra supportive language for bad brain days
+  gentle,
+}
+
 class AIService {
   static const String _baseUrl = 'https://api.openai.com/v1/chat/completions';
   
@@ -11,15 +21,30 @@ class AIService {
   
   AIService({this.defaultApiKey});
   
-  Future<Task> decomposeTask(String taskDescription, {String? apiKey}) async {
+  /// Decompose a task into manageable steps
+  /// 
+  /// [taskDescription] - The task to break down
+  /// [apiKey] - Optional API key override
+  /// [style] - Decomposition style (standard, quick, gentle)
+  /// [currentHour] - Current hour (0-23) for time-aware prompting
+  Future<Task> decomposeTask(
+    String taskDescription, {
+    String? apiKey,
+    DecompositionStyle style = DecompositionStyle.standard,
+    int? currentHour,
+  }) async {
     final effectiveKey = apiKey ?? defaultApiKey;
+    final hour = currentHour ?? DateTime.now().hour;
     
     if (effectiveKey == null || effectiveKey.isEmpty) {
       // Return mock data for testing without API key
-      return _getMockDecomposition(taskDescription);
+      return _getMockDecomposition(taskDescription, style: style);
     }
     
     try {
+      final systemPrompt = _buildSystemPrompt(taskDescription, style, hour);
+      final userPrompt = _buildUserPrompt(taskDescription, style);
+      
       final response = await http.post(
         Uri.parse(_baseUrl),
         headers: {
@@ -31,15 +56,15 @@ class AIService {
           'messages': [
             {
               'role': 'system',
-              'content': _systemPrompt,
+              'content': systemPrompt,
             },
             {
               'role': 'user',
-              'content': 'Break down this task: "$taskDescription"',
+              'content': userPrompt,
             },
           ],
-          'temperature': 0.7,
-          'max_tokens': 1000,
+          'temperature': style == DecompositionStyle.quick ? 0.5 : 0.7,
+          'max_tokens': style == DecompositionStyle.quick ? 600 : 1200,
         }),
       );
       
@@ -52,11 +77,20 @@ class AIService {
       }
     } catch (e) {
       // Fallback to mock on error
-      return _getMockDecomposition(taskDescription);
+      return _getMockDecomposition(taskDescription, style: style);
     }
   }
   
-  Future<List<TaskStep>> getSubSteps(String stepAction, String? apiKey) async {
+  /// Get smaller sub-steps when user is stuck
+  /// 
+  /// [stepAction] - The step they're stuck on
+  /// [apiKey] - Optional API key
+  /// [stuckReason] - Optional reason why they're stuck
+  Future<List<TaskStep>> getSubSteps(
+    String stepAction,
+    String? apiKey, {
+    String? stuckReason,
+  }) async {
     final effectiveKey = apiKey ?? defaultApiKey;
     
     if (effectiveKey == null || effectiveKey.isEmpty) {
@@ -79,11 +113,11 @@ class AIService {
             },
             {
               'role': 'user',
-              'content': 'The user is stuck on: "$stepAction"',
+              'content': _buildStuckUserPrompt(stepAction, stuckReason),
             },
           ],
           'temperature': 0.7,
-          'max_tokens': 500,
+          'max_tokens': 700,
         }),
       );
       
@@ -96,6 +130,121 @@ class AIService {
       }
     } catch (e) {
       return _getMockSubSteps(stepAction);
+    }
+  }
+  
+  /// Build the system prompt based on context
+  String _buildSystemPrompt(String task, DecompositionStyle style, int hour) {
+    final taskType = _detectTaskType(task);
+    final timeContext = _getTimeContext(hour);
+    final mentionsADHD = task.toLowerCase().contains('adhd');
+    
+    final basePrompt = StringBuffer();
+    
+    // Style-specific opening
+    switch (style) {
+      case DecompositionStyle.quick:
+        basePrompt.writeln(_quickModePrompt);
+        break;
+      case DecompositionStyle.gentle:
+        basePrompt.writeln(_gentleModePrompt);
+        break;
+      case DecompositionStyle.standard:
+        basePrompt.writeln(_standardModePrompt);
+        break;
+    }
+    
+    // Add context-aware elements
+    if (taskType != null) {
+      basePrompt.writeln('\n$taskType');
+    }
+    
+    if (timeContext != null) {
+      basePrompt.writeln('\n$timeContext');
+    }
+    
+    if (mentionsADHD) {
+      basePrompt.writeln('\n$_adhdAcknowledgment');
+    }
+    
+    // Add step quality guidelines
+    if (style != DecompositionStyle.quick) {
+      basePrompt.writeln('\n$_stepQualityGuidelines');
+    }
+    
+    basePrompt.writeln('\n$_outputFormat');
+    
+    return basePrompt.toString();
+  }
+  
+  /// Build the user prompt
+  String _buildUserPrompt(String task, DecompositionStyle style) {
+    switch (style) {
+      case DecompositionStyle.quick:
+        return 'Quick breakdown needed: "$task"';
+      case DecompositionStyle.gentle:
+        return 'Please help me break down this task gently: "$task"';
+      case DecompositionStyle.standard:
+        return 'Break down this task: "$task"';
+    }
+  }
+  
+  /// Build the user prompt for stuck state
+  String _buildStuckUserPrompt(String stepAction, String? stuckReason) {
+    if (stuckReason != null && stuckReason.isNotEmpty) {
+      return 'The user is stuck on: "$stepAction"\nThey said: "$stuckReason"';
+    }
+    return 'The user is stuck on: "$stepAction"';
+  }
+  
+  /// Detect the type of task for context-aware prompting
+  String? _detectTaskType(String task) {
+    final lower = task.toLowerCase();
+    
+    // Cleaning tasks
+    if (_matchesAny(lower, ['clean', 'tidy', 'organize', 'declutter', 'wash', 'vacuum', 'mop', 'dust'])) {
+      return _cleaningContext;
+    }
+    
+    // Work/productivity tasks
+    if (_matchesAny(lower, ['email', 'report', 'meeting', 'presentation', 'deadline', 'project', 'work', 'write', 'document'])) {
+      return _workContext;
+    }
+    
+    // Errands
+    if (_matchesAny(lower, ['grocery', 'shopping', 'store', 'errand', 'pick up', 'drop off', 'appointment', 'pharmacy', 'bank'])) {
+      return _errandsContext;
+    }
+    
+    // Self-care
+    if (_matchesAny(lower, ['shower', 'brush', 'exercise', 'workout', 'eat', 'meal', 'sleep', 'bed', 'routine', 'hygiene'])) {
+      return _selfCareContext;
+    }
+    
+    // Administrative/paperwork
+    if (_matchesAny(lower, ['tax', 'bill', 'form', 'paperwork', 'application', 'insurance', 'budget', 'finance'])) {
+      return _adminContext;
+    }
+    
+    return null;
+  }
+  
+  bool _matchesAny(String text, List<String> keywords) {
+    return keywords.any((k) => text.contains(k));
+  }
+  
+  /// Get time-of-day context for the prompt
+  String? _getTimeContext(int hour) {
+    if (hour >= 5 && hour < 10) {
+      return _morningContext;
+    } else if (hour >= 10 && hour < 14) {
+      return _middayContext;
+    } else if (hour >= 14 && hour < 18) {
+      return _afternoonContext;
+    } else if (hour >= 18 && hour < 22) {
+      return _eveningContext;
+    } else {
+      return _lateNightContext;
     }
   }
   
@@ -149,54 +298,130 @@ class AIService {
     return [];
   }
   
-  Task _getMockDecomposition(String taskDescription) {
+  Task _getMockDecomposition(String taskDescription, {DecompositionStyle style = DecompositionStyle.standard}) {
     // Intelligent mock based on common tasks
     final lowerTask = taskDescription.toLowerCase();
     
     List<Map<String, dynamic>> mockSteps;
     
     if (lowerTask.contains('clean') && lowerTask.contains('kitchen')) {
-      mockSteps = [
-        {'action': 'Clear countertops into sink or trash', 'minutes': 3},
-        {'action': 'Put away any items that belong elsewhere', 'minutes': 2},
-        {'action': 'Load dirty dishes into dishwasher', 'minutes': 5},
-        {'action': 'Hand wash any remaining dishes', 'minutes': 5},
-        {'action': 'Wipe down countertops', 'minutes': 3},
-        {'action': 'Wipe stovetop and appliances', 'minutes': 3},
-        {'action': 'Take out trash if needed', 'minutes': 2},
-        {'action': 'Sweep or wipe floor', 'minutes': 5},
-      ];
+      mockSteps = style == DecompositionStyle.quick
+          ? [
+              {'action': 'Clear countertops into sink', 'minutes': 3},
+              {'action': 'Load dishwasher and start it', 'minutes': 5},
+              {'action': 'Wipe counters and stovetop', 'minutes': 5},
+              {'action': 'Quick floor sweep', 'minutes': 3},
+            ]
+          : style == DecompositionStyle.gentle
+          ? [
+              {'action': '💭 Take a breath. Walk to the kitchen doorway and just look around', 'minutes': 1},
+              {'action': '🫧 Clear the countertop closest to you - just that one spot first', 'minutes': 3},
+              {'action': '🌟 Nice! Now put away anything that doesn\'t belong in the kitchen', 'minutes': 3},
+              {'action': '🍽️ Load dishes into dishwasher. You can do this while sitting if needed!', 'minutes': 5},
+              {'action': '✨ Reward moment: Get yourself a drink or snack', 'minutes': 2},
+              {'action': '🧽 Wipe down the counters - feel how smooth they become', 'minutes': 4},
+              {'action': '🔥 Clean the stovetop - watch it transform', 'minutes': 3},
+              {'action': '🧹 Quick sweep or spot-clean the floor', 'minutes': 4},
+              {'action': '🎉 Done! Look at what you accomplished!', 'minutes': 1},
+            ]
+          : [
+              {'action': 'Walk to the kitchen and take a quick look around', 'minutes': 1},
+              {'action': 'Clear countertops - put items in sink or trash', 'minutes': 3},
+              {'action': 'Put away any items that belong elsewhere', 'minutes': 2},
+              {'action': 'Load dirty dishes into dishwasher', 'minutes': 5},
+              {'action': 'Hand wash any remaining dishes', 'minutes': 5},
+              {'action': 'Wipe down countertops with cloth', 'minutes': 3},
+              {'action': 'Wipe stovetop and appliance fronts', 'minutes': 3},
+              {'action': 'Take out trash if it\'s getting full', 'minutes': 2},
+              {'action': 'Sweep or wipe down the floor', 'minutes': 5},
+            ];
     } else if (lowerTask.contains('laundry')) {
-      mockSteps = [
-        {'action': 'Gather all dirty clothes into basket', 'minutes': 5},
-        {'action': 'Sort clothes by color/type', 'minutes': 3},
-        {'action': 'Load first batch into washer', 'minutes': 2},
-        {'action': 'Add detergent and start cycle', 'minutes': 1},
-        {'action': 'Set timer for when cycle ends', 'minutes': 1},
-        {'action': 'Transfer to dryer when done', 'minutes': 2},
-        {'action': 'Fold clothes when dry', 'minutes': 10},
-        {'action': 'Put folded clothes away', 'minutes': 5},
-      ];
+      mockSteps = style == DecompositionStyle.quick
+          ? [
+              {'action': 'Gather dirty clothes into basket', 'minutes': 3},
+              {'action': 'Load washer and start cycle', 'minutes': 3},
+              {'action': 'Set phone timer for cycle end', 'minutes': 1},
+              {'action': 'Transfer to dryer when timer rings', 'minutes': 2},
+            ]
+          : style == DecompositionStyle.gentle
+          ? [
+              {'action': '🧺 Grab the laundry basket. Just holding it is progress!', 'minutes': 1},
+              {'action': '👕 Walk around and toss clothes in. No folding, just gathering', 'minutes': 4},
+              {'action': '🚶 Carry basket to the washing machine - feel the weight decrease', 'minutes': 2},
+              {'action': '🌀 Load clothes in gently. Add detergent. Press start', 'minutes': 3},
+              {'action': '📱 Set a timer and give yourself permission to relax until it goes off', 'minutes': 1},
+              {'action': '✨ When done: Transfer to dryer. The warm clothes feel nice!', 'minutes': 3},
+              {'action': '👚 Fold while watching something comforting. No rush', 'minutes': 15},
+              {'action': '🏠 Put away one category at a time. Celebrate each drawer!', 'minutes': 5},
+            ]
+          : [
+              {'action': 'Grab laundry basket from your room', 'minutes': 1},
+              {'action': 'Gather all dirty clothes into basket', 'minutes': 5},
+              {'action': 'Sort clothes by color/type if needed', 'minutes': 3},
+              {'action': 'Load first batch into washer', 'minutes': 2},
+              {'action': 'Add detergent and start cycle', 'minutes': 1},
+              {'action': 'Set timer for when cycle ends', 'minutes': 1},
+              {'action': 'Transfer to dryer when done', 'minutes': 2},
+              {'action': 'Fold clothes when dry', 'minutes': 10},
+              {'action': 'Put folded clothes away', 'minutes': 5},
+            ];
     } else if (lowerTask.contains('email') || lowerTask.contains('inbox')) {
-      mockSteps = [
-        {'action': 'Open email app/website', 'minutes': 1},
-        {'action': 'Delete obvious spam and junk', 'minutes': 2},
-        {'action': 'Flag emails that need action later', 'minutes': 3},
-        {'action': 'Reply to quick emails (under 2 min each)', 'minutes': 5},
-        {'action': 'Archive handled emails', 'minutes': 2},
-        {'action': 'Tackle one flagged email', 'minutes': 5},
-      ];
+      mockSteps = style == DecompositionStyle.quick
+          ? [
+              {'action': 'Open inbox and delete spam', 'minutes': 2},
+              {'action': 'Reply to urgent emails only', 'minutes': 5},
+              {'action': 'Archive everything else for later', 'minutes': 2},
+            ]
+          : style == DecompositionStyle.gentle
+          ? [
+              {'action': '💻 Open your email. Just opening it is the hard part', 'minutes': 1},
+              {'action': '🗑️ Delete obvious spam first - easy wins', 'minutes': 2},
+              {'action': '⭐ Star the emails that feel scary - we\'ll handle them', 'minutes': 2},
+              {'action': '💬 Reply to ONE easy email. Just one!', 'minutes': 3},
+              {'action': '☕ Take a sip of water or tea. You\'re doing great', 'minutes': 1},
+              {'action': '📧 Reply to one more email - still an easy one', 'minutes': 3},
+              {'action': '📦 Archive everything you\'ve handled', 'minutes': 2},
+              {'action': '⭐ Look at those starred emails. Pick the least scary one', 'minutes': 5},
+              {'action': '🎉 Close inbox and celebrate! More tomorrow is okay', 'minutes': 1},
+            ]
+          : [
+              {'action': 'Open email app/website', 'minutes': 1},
+              {'action': 'Delete obvious spam and junk', 'minutes': 2},
+              {'action': 'Flag emails that need action later', 'minutes': 3},
+              {'action': 'Reply to quick emails (under 2 min each)', 'minutes': 5},
+              {'action': 'Archive handled emails', 'minutes': 2},
+              {'action': 'Tackle one flagged email', 'minutes': 5},
+            ];
     } else {
       // Generic decomposition
-      mockSteps = [
-        {'action': 'Get materials/tools needed for task', 'minutes': 3},
-        {'action': 'Set up your workspace', 'minutes': 2},
-        {'action': 'Start with the easiest part first', 'minutes': 5},
-        {'action': 'Continue to the next section', 'minutes': 5},
-        {'action': 'Take a quick stretch break', 'minutes': 1},
-        {'action': 'Complete the remaining work', 'minutes': 5},
-        {'action': 'Clean up and put things away', 'minutes': 3},
-      ];
+      mockSteps = style == DecompositionStyle.quick
+          ? [
+              {'action': 'Gather what you need', 'minutes': 2},
+              {'action': 'Do the main task', 'minutes': 10},
+              {'action': 'Clean up and done', 'minutes': 3},
+            ]
+          : style == DecompositionStyle.gentle
+          ? [
+              {'action': '🌟 First, just stand up or sit up straight. You\'re starting!', 'minutes': 1},
+              {'action': '🔍 Look at what you need for this task. Just look, no action yet', 'minutes': 1},
+              {'action': '🎯 Gather one item you\'ll need', 'minutes': 2},
+              {'action': '✨ Good! Get the rest of your materials', 'minutes': 2},
+              {'action': '🌱 Start with the easiest, smallest part', 'minutes': 5},
+              {'action': '☕ Mini break - stretch or take a sip of water', 'minutes': 1},
+              {'action': '💪 Continue with the next small piece', 'minutes': 5},
+              {'action': '🎨 Keep going - you\'re in the flow now', 'minutes': 5},
+              {'action': '🧹 Start putting things away as you finish', 'minutes': 3},
+              {'action': '🎉 Done! Take a moment to appreciate what you did', 'minutes': 1},
+            ]
+          : [
+              {'action': 'Get materials/tools needed for task', 'minutes': 3},
+              {'action': 'Set up your workspace', 'minutes': 2},
+              {'action': 'Start with the easiest part first', 'minutes': 5},
+              {'action': 'Continue to the next section', 'minutes': 5},
+              {'action': 'Take a quick stretch break', 'minutes': 1},
+              {'action': 'Complete the remaining work', 'minutes': 5},
+              {'action': 'Clean up and put things away', 'minutes': 3},
+            ];
     }
     
     final steps = mockSteps.map((s) => TaskStep(
@@ -218,60 +443,181 @@ class AIService {
     return [
       TaskStep(
         id: _uuid.v4(),
-        action: 'Take a deep breath and stand up',
+        action: '🌬️ Take a deep breath - in for 4, hold for 4, out for 4',
         estimatedMinutes: 1,
       ),
       TaskStep(
         id: _uuid.v4(),
-        action: 'Walk to where you need to be for this step',
+        action: '👀 Look around: Name 3 things you can see right now',
         estimatedMinutes: 1,
       ),
       TaskStep(
         id: _uuid.v4(),
-        action: 'Do just the first tiny part of: $stepAction',
+        action: '🦶 Stand up and take 3 steps toward where you need to be',
+        estimatedMinutes: 1,
+      ),
+      TaskStep(
+        id: _uuid.v4(),
+        action: '🎯 Do just the first 10 seconds of: $stepAction',
         estimatedMinutes: 2,
       ),
     ];
   }
+
+  // ============================================
+  // PROMPT TEMPLATES
+  // ============================================
   
-  static const String _systemPrompt = '''
-You are an ADHD-friendly task assistant. Break down the following task into small, actionable steps that take 2-10 minutes each.
+  static const String _standardModePrompt = '''
+You are a supportive ADHD-friendly task assistant. Break down tasks into small, actionable steps that each take 2-10 minutes.
+
+Core principles:
+- Each step should be ONE clear physical action
+- Use simple, direct language starting with action verbs (Put, Open, Grab, Walk, Type)
+- NO "think about" or "consider" steps - only concrete actions
+- Include realistic time estimates
+- Be encouraging but authentic - no toxic positivity
+- Maximum 10 steps, minimum 3 steps''';
+
+  static const String _quickModePrompt = '''
+You are a fast-paced task assistant. The user is pressed for time. Give them the MINIMUM viable steps to complete this task.
 
 Rules:
-- Each step should be ONE physical action
-- Use simple, direct language
-- Start each step with a verb (Put, Open, Grab, Walk, Type, etc.)
-- Include time estimates in minutes
-- Don't include "think about" or "consider" steps - only actions
-- If a step is still complex, break it down further
-- Maximum 12 steps, minimum 3
-- Be encouraging but not cheesy
+- Maximum 5 steps
+- Only essential actions - skip setup/cleanup unless critical
+- Brief, action-focused language
+- No fluff, no encouragement text
+- Focus on: What's the fastest path to "done"?''';
 
-Output format (JSON only, no explanation):
+  static const String _gentleModePrompt = '''
+You are a warm, understanding task assistant for someone having a tough brain day. Your tone is like a supportive friend who gets it.
+
+Core principles:
+- Start with the smallest possible action (even just standing up)
+- Use emojis sparingly but warmly (1-2 per step max)
+- Include sensory details to help with body doubling ("feel the warm water", "hear the click")
+- Add brief "reward yourself" micro-moments every 3-4 steps
+- Acknowledge that starting is the hardest part
+- Use phrases like "just this one thing" and "you can stop after this if you need to"
+- Include grounding moments (noticing breath, feeling feet on floor)
+- Maximum 12 steps to avoid overwhelm''';
+
+  // Context-specific guidance
+  static const String _cleaningContext = '''
+Task type detected: CLEANING
+- Include transition cues ("Now that you're at the sink...")
+- Reference sensory satisfaction (shiny surfaces, clear counters)
+- Suggest background audio/podcast for body doubling
+- Break into zones/areas for spatial clarity''';
+
+  static const String _workContext = '''
+Task type detected: WORK/PRODUCTIVITY
+- Minimize decision points - be specific
+- Include "close other tabs/apps" as a step if relevant
+- Suggest time-boxing ("spend just 5 minutes on...")
+- Include one "just start typing anything" step for writing tasks''';
+
+  static const String _errandsContext = '''
+Task type detected: ERRANDS
+- List exactly what to bring (keys, wallet, list)
+- Include "check if you have X" steps
+- Group by location to minimize trips
+- Include realistic travel/parking time''';
+
+  static const String _selfCareContext = '''
+Task type detected: SELF-CARE
+- Extra gentle, no judgment
+- Include sensory comfort details
+- Acknowledge that basic tasks can be hard
+- Suggest pairing with something enjoyable (music, podcast)''';
+
+  static const String _adminContext = '''
+Task type detected: ADMINISTRATIVE/PAPERWORK
+- Break down into "gather documents" first
+- Include specific what-to-look-for details
+- Suggest a reward after completion
+- Acknowledge that paperwork is tedious for most people''';
+
+  // Time-of-day contexts
+  static const String _morningContext = '''
+Time context: MORNING
+- Account for possible grogginess
+- Include hydration/caffeine step if appropriate
+- Gentler pacing for first tasks
+- "Morning momentum" - start with one easy win''';
+
+  static const String _middayContext = '''
+Time context: MIDDAY
+- Energy may be at peak - can suggest slightly more complex sequences
+- Include lunch/snack break reminder if task is long
+- Good time for focused work tasks''';
+
+  static const String _afternoonContext = '''
+Time context: AFTERNOON
+- Energy may be dipping
+- Include stretch/movement breaks
+- Shorter task segments
+- Consider post-lunch slump''';
+
+  static const String _eveningContext = '''
+Time context: EVENING
+- Wind-down energy
+- Shorter, lighter steps
+- Include relaxation angle where possible
+- Acknowledge end-of-day tiredness''';
+
+  static const String _lateNightContext = '''
+Time context: LATE NIGHT
+- Very gentle approach
+- Question if task can wait until tomorrow
+- If urgent, minimal essential steps only
+- Include "get ready for sleep soon" awareness''';
+
+  static const String _adhdAcknowledgment = '''
+The user mentioned ADHD in their task. Acknowledge their experience:
+- You understand that starting is often the hardest part
+- Executive dysfunction is real and valid
+- Small steps are not "cheating" - they're smart strategy
+- Include one "just do 10 seconds" option for the hardest step''';
+
+  static const String _stepQualityGuidelines = '''
+Step quality guidelines:
+- Add transition cues between steps when changing location or tool ("Now that you're at the desk...")
+- Include sensory details for body doubling ("Feel the keyboard under your fingers")
+- Every 4-5 steps, include a mini-reward or grounding moment ("Take a breath and notice how far you've come")
+- Make the first step almost impossibly easy - this breaks initiation paralysis''';
+
+  static const String _outputFormat = '''
+Output format (JSON only, no explanation before or after):
 {
   "task_name": "Clean the kitchen",
   "total_estimated_minutes": 28,
   "steps": [
-    {"action": "Put all dishes in sink", "minutes": 2},
-    {"action": "Fill sink with soapy water", "minutes": 1}
+    {"action": "Walk to the kitchen doorway and take a look around", "minutes": 1},
+    {"action": "Put all dishes in sink", "minutes": 3}
   ]
-}
-''';
+}''';
 
   static const String _stuckPrompt = '''
-The user is stuck on a task step and needs it broken down even smaller.
+The user is stuck on a step and needs help. This is normal and valid - ADHD brains can get stuck even on "simple" things.
 
-Rules:
-- Provide 2-3 even tinier steps
-- Each should take 1-3 minutes max
-- Be warm and encouraging
-- Start with something easy (like standing up or walking over)
-- Don't make them feel bad for being stuck
+Your job:
+1. Break the step into even smaller micro-actions (2-4 steps, 1-3 minutes each)
+2. Start with a grounding/physical action (breathe, stand up, move 3 steps)
+3. Include sensory grounding if appropriate (5-4-3-2-1: things you see/hear/feel)
+4. Make the first action almost laughably small ("just touch the thing")
+5. Be warm and non-judgmental
 
-Output format (JSON array only):
+Strategies to offer through your steps:
+- "Just 10 seconds" approach
+- Body doubling suggestion (turn on a video, call a friend)
+- Environment shift (change rooms, change position)
+- Grounding first (breath work, name 3 things you see)
+
+Output format (JSON array only, no extra text):
 [
-  {"action": "Stand up from your chair", "minutes": 1},
-  {"action": "Walk to the kitchen", "minutes": 1}
-]
-''';
+  {"action": "🌬️ Pause. Take one slow breath in... and out", "minutes": 1},
+  {"action": "👀 Ground yourself: Name 3 things you can see right now", "minutes": 1},
+  {"action": "🦶 Stand up and take 3 steps toward where you need to be", "minutes": 1}
+]''';
 }
