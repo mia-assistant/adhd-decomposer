@@ -1,6 +1,6 @@
 # ADHD Task Decomposer - Roadmap
 
-*Last updated: Feb 6, 2026 - 10:25 PM*
+*Last updated: Feb 6, 2026 - 10:35 PM*
 
 ## v1.0 MVP ✅ COMPLETE
 - [x] Core task decomposition with AI
@@ -22,59 +22,66 @@
 - [x] Templates screen with categories
 - [x] Stats tracking service
 - [x] Stats screen with activity chart
-- [x] Achievements system (7 achievements)
+- [x] Achievements system (8 achievements)
 - [x] Share completion cards (Instagram-friendly 1080x1080)
 - [x] Share stats cards
 - [x] Android home screen widgets (Current Task, Quick Add)
 - [x] Branding assets (icon spec, colors, ASO, landing copy)
+- [x] Privacy policy and terms of service
 
-## v1.2 Notifications (In Progress)
-- [ ] Local notifications setup
-- [ ] Gentle reminders for unfinished tasks
-- [ ] Daily reminder at preferred time
-- [ ] Streak notifications
-- [ ] Deep linking from notifications
+## v1.2 Engagement ✅ COMPLETE
+- [x] Local notifications with deep linking
+- [x] Gentle reminders for unfinished tasks
+- [x] Daily reminder at preferred time
+- [x] Streak notifications
+- [x] Rate app prompt (after 5 completed tasks)
+- [x] Feedback form
+- [x] Analytics service (stub ready for Firebase)
+- [x] Comprehensive accessibility (WCAG 2.1 AA)
 
-## v1.3 Engagement
-- [ ] Achievement unlock celebrations
-- [ ] "Favorite" templates (save custom decompositions)
-- [ ] Rate app prompt (after 5 completed tasks)
-- [ ] In-app feedback form
+## v1.3 Smart AI ✅ COMPLETE
+- [x] Context-aware AI prompts (task type detection)
+- [x] Time-of-day awareness in prompts
+- [x] 3 decomposition styles (Standard, Quick, Gentle)
+- [x] Improved "I'm stuck" with grounding techniques
+- [x] Transition cues between steps
+- [x] Sensory details for body doubling effect
 
-## v1.4 Smart Features
-- [ ] Learn from user edits (improve AI prompts)
-- [ ] Smart time estimation (adjust based on actual completion)
+## v1.4 Advanced Features (In Progress)
+- [ ] Body doubling mode with ambient sounds
+- [ ] Calendar integration (time blocking)
 - [ ] Recurring tasks/routines
-- [ ] Calendar integration (block time)
+- [ ] Pomodoro-style deep focus timer
+- [ ] Custom routine creation
 
 ## v1.5 Launch Prep
 - [ ] RevenueCat integration (real IAP)
 - [ ] App Store screenshots (from ASO spec)
 - [ ] Preview video (from ASO spec)
-- [ ] Privacy policy page
-- [ ] Terms of service
-- [ ] App icon (from icon spec)
+- [ ] App icon design (from icon spec)
+- [ ] iOS build and test
 
 ## v2.0 Future Ideas
 - [ ] Apple Watch companion
 - [ ] Siri shortcuts
-- [ ] Body doubling mode (lofi + timer)
 - [ ] AI coach personalities
 - [ ] Cloud sync (optional account)
-- [ ] iPad layout
+- [ ] iPad optimized layout
+- [ ] Widget for iOS
+- [ ] Haptic patterns for different events
 
 ---
 
 ## Current Status
 
 **Code Stats:**
-- 26+ Dart files
-- ~7,000 lines of code
-- 16 commits
+- 8,600+ lines of Dart code
+- 25+ commits
+- 30+ files
 
 **GitHub:** https://github.com/mia-assistant/adhd-decomposer
 
-**Build:** Debug APK ready at `build/app/outputs/flutter-apk/app-debug.apk` (107MB)
+**Build:** Debug APK ready at `build/app/outputs/flutter-apk/app-debug.apk`
 
 ---
 
