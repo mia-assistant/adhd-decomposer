@@ -8,6 +8,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/task_provider.dart';
 import '../../core/constants/strings.dart';
 import '../../data/models/task.dart';
+import '../../data/services/sound_service.dart';
 
 class ExecuteScreen extends StatefulWidget {
   const ExecuteScreen({super.key});
@@ -18,6 +19,7 @@ class ExecuteScreen extends StatefulWidget {
 
 class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProviderStateMixin {
   late ConfettiController _confettiController;
+  final SoundService _soundService = SoundService();
   Timer? _timer;
   int _secondsRemaining = 0;
   bool _timerRunning = false;
@@ -298,7 +300,7 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
         timer.cancel();
         _timerRunning = false;
         HapticFeedback.heavyImpact();
-        // TODO: Play completion sound
+        _soundService.playTimerEnd();
       }
     });
   }
@@ -312,6 +314,7 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
   void _completeStep(TaskProvider provider) {
     HapticFeedback.mediumImpact();
     _confettiController.play();
+    _soundService.playStepComplete();
     
     final message = Encouragements.stepComplete[
       _random.nextInt(Encouragements.stepComplete.length)
@@ -378,6 +381,7 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
       if (!_showCelebration) {
         _confettiController.play();
         HapticFeedback.heavyImpact();
+        _soundService.playTaskComplete();
       }
     });
 
