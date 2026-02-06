@@ -65,6 +65,25 @@ class SettingsScreen extends StatelessWidget {
               ),
               
               const Divider(height: 32),
+              _buildSectionHeader(context, 'Accessibility'),
+              _buildSwitchTile(
+                context,
+                icon: Icons.animation_outlined,
+                title: 'Reduce Animations',
+                subtitle: 'Minimize motion for sensitive users',
+                value: provider.reduceAnimations,
+                onChanged: (value) => provider.setReduceAnimations(value),
+              ),
+              _buildSwitchTile(
+                context,
+                icon: Icons.skip_next_outlined,
+                title: 'Auto-Advance Steps',
+                subtitle: 'Automatically move to next step after completion',
+                value: provider.autoAdvanceEnabled,
+                onChanged: (value) => provider.setAutoAdvanceEnabled(value),
+              ),
+              
+              const Divider(height: 32),
               _buildSectionHeader(context, 'AI Decomposition'),
               _buildDecompositionStyleTile(context, provider),
               
