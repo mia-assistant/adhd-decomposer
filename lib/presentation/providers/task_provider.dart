@@ -11,6 +11,8 @@ import '../../data/services/notification_service.dart';
 
 // Re-export DecompositionStyle for UI access
 export '../../data/services/ai_service.dart' show DecompositionStyle;
+// Re-export DefaultAmbientSound for UI access
+export '../../data/services/settings_service.dart' show DefaultAmbientSound;
 
 class TaskProvider extends ChangeNotifier {
   final AIService _aiService;
@@ -54,6 +56,8 @@ class TaskProvider extends ChangeNotifier {
   // Accessibility settings getters
   bool get reduceAnimations => _settings?.reduceAnimations ?? false;
   bool get autoAdvanceEnabled => _settings?.autoAdvanceEnabled ?? true;
+  // Body Double settings getters
+  DefaultAmbientSound get defaultAmbientSound => _settings?.defaultAmbientSound ?? DefaultAmbientSound.none;
   
   // Notification settings getters for UI
   bool get notificationsEnabled => _notifications?.notificationsEnabled ?? false;
@@ -89,6 +93,11 @@ class TaskProvider extends ChangeNotifier {
   
   void setDecompositionStyle(DecompositionStyle style) {
     _settings?.decompositionStyle = style;
+    notifyListeners();
+  }
+  
+  void setDefaultAmbientSound(DefaultAmbientSound sound) {
+    _settings?.defaultAmbientSound = sound;
     notifyListeners();
   }
   

@@ -46,6 +46,9 @@ dependencies:
   
   # In-app review
   in_app_review: ^2.0.9
+  
+  # Calendar integration
+  device_calendar: ^4.3.2
 
 dev_dependencies:
   flutter_test:
@@ -60,3 +63,4 @@ flutter:
   assets:
     - assets/sounds/
     - assets/images/
+    - assets/audio/ambient/

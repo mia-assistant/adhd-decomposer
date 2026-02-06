@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:device_calendar/device_calendar.dart';
 import '../providers/task_provider.dart';
+import '../../data/services/calendar_service.dart';
 import 'paywall_screen.dart';
 import 'feedback_screen.dart';
 
@@ -84,8 +86,16 @@ class SettingsScreen extends StatelessWidget {
               ),
               
               const Divider(height: 32),
+              _buildSectionHeader(context, 'Calendar'),
+              _buildCalendarSettings(context),
+              
+              const Divider(height: 32),
               _buildSectionHeader(context, 'AI Decomposition'),
               _buildDecompositionStyleTile(context, provider),
+              
+              const Divider(height: 32),
+              _buildSectionHeader(context, 'Body Double'),
+              _buildDefaultAmbientSoundTile(context, provider),
               
               const Divider(height: 32),
               _buildSectionHeader(context, 'Power User'),
@@ -216,6 +226,211 @@ class SettingsScreen extends StatelessWidget {
       subtitle: Text(subtitle),
       value: value,
       onChanged: onChanged,
+    );
+  }
+  
+  Widget _buildCalendarSettings(BuildContext context) {
+    final calendarService = context.read<CalendarService>();
+    
+    return FutureBuilder<bool>(
+      future: calendarService.hasCalendarPermission(),
+      builder: (context, snapshot) {
+        final hasPermission = snapshot.data ?? false;
+        final isEnabled = calendarService.calendarEnabled;
+        
+        return Column(
+          children: [
+            SwitchListTile(
+              secondary: Icon(
+                isEnabled && hasPermission 
+                    ? Icons.calendar_today 
+                    : Icons.calendar_today_outlined,
+                color: isEnabled && hasPermission
+                    ? Theme.of(context).colorScheme.primary
+                    : null,
+              ),
+              title: const Text('Calendar Integration'),
+              subtitle: Text(
+                isEnabled && hasPermission
+                    ? 'Block time for tasks in your calendar'
+                    : 'Enable to schedule tasks as calendar events',
+              ),
+              value: isEnabled && hasPermission,
+              onChanged: (value) async {
+                if (value) {
+                  final granted = await calendarService.enableCalendar();
+                  if (!granted && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enable calendar access in system settings'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                } else {
+                  calendarService.disableCalendar();
+                }
+                // Force rebuild
+                if (context.mounted) {
+                  (context as Element).markNeedsBuild();
+                }
+              },
+            ),
+            if (isEnabled && hasPermission) ...[
+              _buildDefaultCalendarTile(context, calendarService),
+              _buildReminderMinutesTile(context, calendarService),
+            ],
+          ],
+        );
+      },
+    );
+  }
+  
+  Widget _buildDefaultCalendarTile(BuildContext context, CalendarService calendarService) {
+    return FutureBuilder(
+      future: calendarService.getAvailableCalendars(),
+      builder: (context, snapshot) {
+        final calendars = snapshot.data ?? [];
+        final defaultId = calendarService.defaultCalendarId;
+        final defaultCalendar = calendars.isNotEmpty
+            ? calendars.firstWhere(
+                (c) => c.id == defaultId,
+                orElse: () => calendars.first,
+              )
+            : null;
+        
+        return ListTile(
+          leading: const Icon(Icons.folder_outlined),
+          title: const Text('Default Calendar'),
+          subtitle: Text(defaultCalendar?.name ?? 'Select a calendar'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () => _showCalendarPicker(context, calendarService, calendars),
+        );
+      },
+    );
+  }
+  
+  void _showCalendarPicker(BuildContext context, CalendarService calendarService, List<Calendar> calendars) {
+    if (calendars.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No writable calendars found'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Select Calendar'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: calendars.length,
+            itemBuilder: (context, index) {
+              final calendar = calendars[index];
+              final isSelected = calendar.id == calendarService.defaultCalendarId;
+              
+              return ListTile(
+                leading: Icon(
+                  isSelected ? Icons.check_circle : Icons.calendar_today_outlined,
+                  color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                ),
+                title: Text(
+                  calendar.name ?? 'Calendar',
+                  style: TextStyle(
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+                subtitle: calendar.accountName != null 
+                    ? Text(calendar.accountName!) 
+                    : null,
+                onTap: () {
+                  calendarService.defaultCalendarId = calendar.id;
+                  Navigator.pop(ctx);
+                  // Force rebuild
+                  (context as Element).markNeedsBuild();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Calendar set to ${calendar.name}'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildReminderMinutesTile(BuildContext context, CalendarService calendarService) {
+    final currentMinutes = calendarService.defaultReminderMinutes;
+    
+    return ListTile(
+      leading: const Icon(Icons.alarm_outlined),
+      title: const Text('Default Reminder'),
+      subtitle: Text('$currentMinutes minutes before'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showReminderMinutesPicker(context, calendarService),
+    );
+  }
+  
+  void _showReminderMinutesPicker(BuildContext context, CalendarService calendarService) {
+    final options = [5, 10, 15, 30];
+    final currentMinutes = calendarService.defaultReminderMinutes;
+    
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Reminder Time'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: options.map((mins) {
+            final isSelected = mins == currentMinutes;
+            return ListTile(
+              leading: Icon(
+                isSelected ? Icons.check_circle : Icons.access_time,
+                color: isSelected ? Theme.of(context).colorScheme.primary : null,
+              ),
+              title: Text(
+                '$mins minutes before',
+                style: TextStyle(
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+              onTap: () {
+                calendarService.defaultReminderMinutes = mins;
+                Navigator.pop(ctx);
+                // Force rebuild
+                (context as Element).markNeedsBuild();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Reminder set to $mins minutes before'),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            );
+          }).toList(),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
     );
   }
   
@@ -431,6 +646,146 @@ class SettingsScreen extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('Style changed to $title'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        },
+      ),
+    );
+  }
+  
+  Widget _buildDefaultAmbientSoundTile(BuildContext context, TaskProvider provider) {
+    final sound = provider.defaultAmbientSound;
+    
+    String soundName;
+    IconData soundIcon;
+    
+    switch (sound) {
+      case DefaultAmbientSound.cafe:
+        soundName = 'Café';
+        soundIcon = Icons.coffee;
+        break;
+      case DefaultAmbientSound.rain:
+        soundName = 'Rain';
+        soundIcon = Icons.water_drop;
+        break;
+      case DefaultAmbientSound.whiteNoise:
+        soundName = 'White Noise';
+        soundIcon = Icons.waves;
+        break;
+      case DefaultAmbientSound.none:
+        soundName = 'None';
+        soundIcon = Icons.volume_off;
+        break;
+    }
+    
+    return ListTile(
+      leading: Icon(soundIcon),
+      title: const Text('Default Ambient Sound'),
+      subtitle: Text('$soundName - plays when entering Body Double mode'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => _showDefaultAmbientSoundDialog(context, provider),
+    );
+  }
+  
+  void _showDefaultAmbientSoundDialog(BuildContext context, TaskProvider provider) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Default Ambient Sound'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Choose the default sound for Body Double mode:',
+              style: TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 16),
+            _buildSoundOption(
+              context,
+              provider,
+              DefaultAmbientSound.none,
+              'None',
+              'Start in silence',
+              Icons.volume_off,
+            ),
+            _buildSoundOption(
+              context,
+              provider,
+              DefaultAmbientSound.cafe,
+              'Café',
+              'Ambient coffee shop sounds',
+              Icons.coffee,
+            ),
+            _buildSoundOption(
+              context,
+              provider,
+              DefaultAmbientSound.rain,
+              'Rain',
+              'Calming rain sounds',
+              Icons.water_drop,
+            ),
+            _buildSoundOption(
+              context,
+              provider,
+              DefaultAmbientSound.whiteNoise,
+              'White Noise',
+              'Consistent background noise',
+              Icons.waves,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Done'),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildSoundOption(
+    BuildContext context,
+    TaskProvider provider,
+    DefaultAmbientSound sound,
+    String title,
+    String description,
+    IconData icon,
+  ) {
+    final isSelected = provider.defaultAmbientSound == sound;
+    
+    return Card(
+      color: isSelected 
+          ? Theme.of(context).colorScheme.primaryContainer 
+          : null,
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      child: ListTile(
+        leading: Icon(
+          icon,
+          color: isSelected 
+              ? Theme.of(context).colorScheme.primary 
+              : null,
+        ),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        subtitle: Text(description),
+        trailing: isSelected 
+            ? Icon(
+                Icons.check_circle,
+                color: Theme.of(context).colorScheme.primary,
+              )
+            : null,
+        onTap: () {
+          provider.setDefaultAmbientSound(sound);
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Default sound set to $title'),
               behavior: SnackBarBehavior.floating,
             ),
           );

@@ -1,6 +1,14 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'ai_service.dart';
 
+/// Ambient sound options for Body Double mode
+enum DefaultAmbientSound {
+  none,
+  cafe,
+  rain,
+  whiteNoise,
+}
+
 /// Service for managing app settings persistence
 class SettingsService {
   static const String _boxName = 'settings';
@@ -16,6 +24,7 @@ class SettingsService {
   static const String keyIsPremium = 'isPremium';
   static const String keyOpenAIApiKey = 'openAIApiKey';
   static const String keyDecompositionStyle = 'decompositionStyle';
+  static const String keyDefaultAmbientSound = 'defaultAmbientSound';
   
   // Rate app settings
   static const String keyHasRated = 'hasRated';
@@ -25,6 +34,11 @@ class SettingsService {
   // Accessibility settings
   static const String keyReduceAnimations = 'reduceAnimations';
   static const String keyAutoAdvanceEnabled = 'autoAdvanceEnabled';
+  
+  // Calendar settings
+  static const String keyCalendarEnabled = 'calendarEnabled';
+  static const String keyDefaultCalendarId = 'defaultCalendarId';
+  static const String keyDefaultReminderMinutes = 'defaultReminderMinutes';
   
   static const int freeDecompositionLimit = 3;
   static const int tasksBeforeFirstAsk = 5;
@@ -171,4 +185,52 @@ class SettingsService {
   /// Auto-advance to next step after completion (can be disabled for accessibility)
   bool get autoAdvanceEnabled => _safeBox.get(keyAutoAdvanceEnabled, defaultValue: true);
   set autoAdvanceEnabled(bool value) => _safeBox.put(keyAutoAdvanceEnabled, value);
+  
+  // Calendar settings
+  /// Enable/disable calendar integration
+  bool get calendarEnabled => _safeBox.get(keyCalendarEnabled, defaultValue: false);
+  set calendarEnabled(bool value) => _safeBox.put(keyCalendarEnabled, value);
+  
+  /// Default calendar ID for creating events
+  String? get defaultCalendarId => _safeBox.get(keyDefaultCalendarId);
+  set defaultCalendarId(String? value) => _safeBox.put(keyDefaultCalendarId, value);
+  
+  /// Default reminder time in minutes before event
+  int get defaultReminderMinutes => _safeBox.get(keyDefaultReminderMinutes, defaultValue: 5);
+  set defaultReminderMinutes(int value) => _safeBox.put(keyDefaultReminderMinutes, value);
+  
+  // Body Double settings
+  /// Default ambient sound for Body Double mode
+  DefaultAmbientSound get defaultAmbientSound {
+    final stored = _safeBox.get(keyDefaultAmbientSound, defaultValue: 'none');
+    switch (stored) {
+      case 'cafe':
+        return DefaultAmbientSound.cafe;
+      case 'rain':
+        return DefaultAmbientSound.rain;
+      case 'whiteNoise':
+        return DefaultAmbientSound.whiteNoise;
+      default:
+        return DefaultAmbientSound.none;
+    }
+  }
+  
+  set defaultAmbientSound(DefaultAmbientSound value) {
+    String stringValue;
+    switch (value) {
+      case DefaultAmbientSound.cafe:
+        stringValue = 'cafe';
+        break;
+      case DefaultAmbientSound.rain:
+        stringValue = 'rain';
+        break;
+      case DefaultAmbientSound.whiteNoise:
+        stringValue = 'whiteNoise';
+        break;
+      case DefaultAmbientSound.none:
+        stringValue = 'none';
+        break;
+    }
+    _safeBox.put(keyDefaultAmbientSound, stringValue);
+  }
 }
