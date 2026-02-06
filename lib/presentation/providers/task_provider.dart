@@ -3,16 +3,19 @@ import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/models/task.dart';
 import '../../data/services/ai_service.dart';
+import '../../data/services/settings_service.dart';
 
 class TaskProvider extends ChangeNotifier {
   final AIService _aiService;
+  final SettingsService? _settings;
   List<Task> _tasks = [];
   Task? _activeTask;
   bool _isLoading = false;
   String? _error;
   
-  TaskProvider({AIService? aiService}) 
-    : _aiService = aiService ?? AIService();
+  TaskProvider({AIService? aiService, SettingsService? settings}) 
+    : _aiService = aiService ?? AIService(),
+      _settings = settings;
   
   List<Task> get tasks => _tasks;
   List<Task> get activeTasks => _tasks.where((t) => !t.isCompleted).toList();
@@ -20,6 +23,38 @@ class TaskProvider extends ChangeNotifier {
   Task? get activeTask => _activeTask;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  
+  // Settings getters for UI
+  bool get soundEnabled => _settings?.soundEnabled ?? true;
+  bool get hapticEnabled => _settings?.hapticEnabled ?? true;
+  bool get confettiEnabled => _settings?.confettiEnabled ?? true;
+  bool get canDecompose => _settings?.canDecompose ?? true;
+  int get remainingFreeDecompositions => _settings?.remainingFreeDecompositions ?? -1;
+  bool get isPremium => _settings?.isPremium ?? false;
+  bool get hasCustomApiKey => _settings?.hasCustomApiKey ?? false;
+  
+  // Settings setters
+  void setSoundEnabled(bool value) {
+    _settings?.soundEnabled = value;
+    notifyListeners();
+  }
+  
+  void setHapticEnabled(bool value) {
+    _settings?.hapticEnabled = value;
+    notifyListeners();
+  }
+  
+  void setConfettiEnabled(bool value) {
+    _settings?.confettiEnabled = value;
+    notifyListeners();
+  }
+  
+  void setOpenAIApiKey(String? key) {
+    _settings?.openAIApiKey = key;
+    notifyListeners();
+  }
+  
+  String? get openAIApiKey => _settings?.openAIApiKey;
   
   Future<void> initialize() async {
     try {
@@ -61,9 +96,15 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
     
     try {
-      final task = await _aiService.decomposeTask(description);
+      // Use custom API key if available
+      final apiKey = _settings?.openAIApiKey;
+      final task = await _aiService.decomposeTask(description, apiKey: apiKey);
       _tasks.insert(0, task);
       await _saveTasks();
+      
+      // Track decomposition count
+      _settings?.incrementDecompositionCount();
+      
       _isLoading = false;
       notifyListeners();
       return task;
@@ -97,7 +138,8 @@ class TaskProvider extends ChangeNotifier {
   }
   
   Future<List<TaskStep>> getSubSteps(String stepAction) async {
-    return await _aiService.getSubSteps(stepAction, null);
+    final apiKey = _settings?.openAIApiKey;
+    return await _aiService.getSubSteps(stepAction, apiKey);
   }
   
   void deleteTask(String taskId) {

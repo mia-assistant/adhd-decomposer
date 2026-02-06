@@ -6,13 +6,15 @@ import '../models/task.dart';
 class AIService {
   static const String _baseUrl = 'https://api.openai.com/v1/chat/completions';
   
-  final String? apiKey;
+  final String? defaultApiKey;
   final Uuid _uuid = const Uuid();
   
-  AIService({this.apiKey});
+  AIService({this.defaultApiKey});
   
-  Future<Task> decomposeTask(String taskDescription) async {
-    if (apiKey == null || apiKey!.isEmpty) {
+  Future<Task> decomposeTask(String taskDescription, {String? apiKey}) async {
+    final effectiveKey = apiKey ?? defaultApiKey;
+    
+    if (effectiveKey == null || effectiveKey.isEmpty) {
       // Return mock data for testing without API key
       return _getMockDecomposition(taskDescription);
     }
@@ -22,7 +24,7 @@ class AIService {
         Uri.parse(_baseUrl),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
+          'Authorization': 'Bearer $effectiveKey',
         },
         body: jsonEncode({
           'model': 'gpt-4o-mini',
@@ -54,8 +56,10 @@ class AIService {
     }
   }
   
-  Future<List<TaskStep>> getSubSteps(String stepAction, String? userContext) async {
-    if (apiKey == null || apiKey!.isEmpty) {
+  Future<List<TaskStep>> getSubSteps(String stepAction, String? apiKey) async {
+    final effectiveKey = apiKey ?? defaultApiKey;
+    
+    if (effectiveKey == null || effectiveKey.isEmpty) {
       return _getMockSubSteps(stepAction);
     }
     
@@ -64,7 +68,7 @@ class AIService {
         Uri.parse(_baseUrl),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $apiKey',
+          'Authorization': 'Bearer $effectiveKey',
         },
         body: jsonEncode({
           'model': 'gpt-4o-mini',
@@ -75,7 +79,7 @@ class AIService {
             },
             {
               'role': 'user',
-              'content': 'The user is stuck on: "$stepAction"${userContext != null ? '\nThey said: "$userContext"' : ''}',
+              'content': 'The user is stuck on: "$stepAction"',
             },
           ],
           'temperature': 0.7,
