@@ -16,17 +16,13 @@ class WelcomePage extends StatelessWidget {
           const Spacer(),
           
           // App icon/illustration
-          Container(
-            width: 120,
-            height: 120,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              borderRadius: BorderRadius.circular(32),
-            ),
-            child: Icon(
-              Icons.auto_awesome,
-              size: 64,
-              color: Theme.of(context).colorScheme.primary,
+          ClipRRect(
+            borderRadius: BorderRadius.circular(32),
+            child: Image.asset(
+              'assets/icons/app_icon_1024.png',
+              width: 140,
+              height: 140,
+              fit: BoxFit.cover,
             ),
           )
               .animate()
