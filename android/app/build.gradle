@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.tinysteps.app"
+    namespace = "com.manuelpa.tinysteps"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.tinysteps.app"
+        applicationId = "com.manuelpa.tinysteps"
         minSdkVersion = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
