@@ -1,0 +1,322 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
+
+/// Error types for purchase operations
+enum PurchaseErrorType {
+  networkError,
+  userCancelled,
+  paymentDeclined,
+  productNotFound,
+  alreadyPurchased,
+  unknown,
+}
+
+/// Exception for purchase errors
+class PurchaseException implements Exception {
+  final PurchaseErrorType type;
+  final String message;
+  
+  PurchaseException(this.type, this.message);
+  
+  @override
+  String toString() => message;
+  
+  /// Human-readable error message for UI
+  String get userMessage {
+    switch (type) {
+      case PurchaseErrorType.networkError:
+        return 'Unable to connect. Please check your internet connection and try again.';
+      case PurchaseErrorType.userCancelled:
+        return 'Purchase cancelled.';
+      case PurchaseErrorType.paymentDeclined:
+        return 'Payment was declined. Please check your payment method and try again.';
+      case PurchaseErrorType.productNotFound:
+        return 'Product not available. Please try again later.';
+      case PurchaseErrorType.alreadyPurchased:
+        return 'You already have an active subscription!';
+      case PurchaseErrorType.unknown:
+        return 'Something went wrong. Please try again.';
+    }
+  }
+}
+
+/// Service for managing in-app purchases via RevenueCat
+class PurchaseService extends ChangeNotifier {
+  // Placeholder API keys - replace with actual keys from RevenueCat dashboard
+  static const String _androidApiKey = 'YOUR_REVENUECAT_ANDROID_API_KEY';
+  static const String _iosApiKey = 'YOUR_REVENUECAT_IOS_API_KEY';
+  
+  // Entitlement ID configured in RevenueCat
+  static const String _entitlementId = 'premium';
+  
+  // Product identifiers (must match RevenueCat/App Store/Play Store)
+  static const String productIdMonthly = 'tiny_steps_premium_monthly';
+  static const String productIdYearly = 'tiny_steps_premium_yearly';
+  
+  bool _isInitialized = false;
+  bool _isPremium = false;
+  CustomerInfo? _customerInfo;
+  List<Package> _availablePackages = [];
+  
+  bool get isInitialized => _isInitialized;
+  bool get isPremium => _isPremium;
+  CustomerInfo? get customerInfo => _customerInfo;
+  List<Package> get availablePackages => _availablePackages;
+  
+  /// Initialize RevenueCat SDK
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+    
+    try {
+      // Determine platform and use appropriate API key
+      final String apiKey;
+      if (defaultTargetPlatform == TargetPlatform.iOS || 
+          defaultTargetPlatform == TargetPlatform.macOS) {
+        apiKey = _iosApiKey;
+      } else {
+        apiKey = _androidApiKey;
+      }
+      
+      // Skip initialization if using placeholder key (for development)
+      if (apiKey.startsWith('YOUR_')) {
+        debugPrint('PurchaseService: Using placeholder API key, skipping initialization');
+        _isInitialized = true;
+        return;
+      }
+      
+      // Configure RevenueCat
+      await Purchases.configure(PurchasesConfiguration(apiKey));
+      
+      // Enable debug logs in debug mode
+      if (kDebugMode) {
+        await Purchases.setLogLevel(LogLevel.debug);
+      }
+      
+      // Listen for customer info updates
+      Purchases.addCustomerInfoUpdateListener(_onCustomerInfoUpdated);
+      
+      // Get initial customer info
+      await checkPremiumStatus();
+      
+      _isInitialized = true;
+      debugPrint('PurchaseService: Initialized successfully');
+    } catch (e) {
+      debugPrint('PurchaseService: Failed to initialize: $e');
+      // Don't throw - allow app to function without purchases
+      _isInitialized = true;
+    }
+  }
+  
+  /// Callback for customer info updates
+  void _onCustomerInfoUpdated(CustomerInfo info) {
+    _customerInfo = info;
+    _updatePremiumStatus(info);
+  }
+  
+  /// Update premium status based on customer info
+  void _updatePremiumStatus(CustomerInfo info) {
+    final entitlement = info.entitlements.active[_entitlementId];
+    final wasPremium = _isPremium;
+    _isPremium = entitlement != null;
+    
+    if (wasPremium != _isPremium) {
+      debugPrint('PurchaseService: Premium status changed to $_isPremium');
+      notifyListeners();
+    }
+  }
+  
+  /// Check current premium status from RevenueCat
+  Future<void> checkPremiumStatus() async {
+    try {
+      _customerInfo = await Purchases.getCustomerInfo();
+      _updatePremiumStatus(_customerInfo!);
+    } catch (e) {
+      debugPrint('PurchaseService: Error checking premium status: $e');
+    }
+  }
+  
+  /// Get available subscription packages from RevenueCat
+  Future<List<Package>> getOfferings() async {
+    try {
+      final offerings = await Purchases.getOfferings();
+      
+      if (offerings.current == null) {
+        debugPrint('PurchaseService: No current offering available');
+        return [];
+      }
+      
+      _availablePackages = offerings.current!.availablePackages;
+      notifyListeners();
+      
+      return _availablePackages;
+    } on PlatformException catch (e) {
+      throw _handlePlatformException(e);
+    } catch (e) {
+      debugPrint('PurchaseService: Error getting offerings: $e');
+      throw PurchaseException(
+        PurchaseErrorType.unknown,
+        'Failed to load subscription options',
+      );
+    }
+  }
+  
+  /// Purchase a subscription package
+  Future<bool> purchasePackage(Package package) async {
+    try {
+      final result = await Purchases.purchasePackage(package);
+      _customerInfo = result;
+      _updatePremiumStatus(result);
+      
+      return _isPremium;
+    } on PlatformException catch (e) {
+      throw _handlePlatformException(e);
+    } catch (e) {
+      debugPrint('PurchaseService: Error purchasing package: $e');
+      throw PurchaseException(
+        PurchaseErrorType.unknown,
+        'Purchase failed: ${e.toString()}',
+      );
+    }
+  }
+  
+  /// Restore previous purchases
+  Future<bool> restorePurchases() async {
+    try {
+      final result = await Purchases.restorePurchases();
+      _customerInfo = result;
+      _updatePremiumStatus(result);
+      
+      return _isPremium;
+    } on PlatformException catch (e) {
+      throw _handlePlatformException(e);
+    } catch (e) {
+      debugPrint('PurchaseService: Error restoring purchases: $e');
+      throw PurchaseException(
+        PurchaseErrorType.unknown,
+        'Restore failed: ${e.toString()}',
+      );
+    }
+  }
+  
+  /// Handle RevenueCat platform exceptions
+  PurchaseException _handlePlatformException(PlatformException e) {
+    final errorCode = PurchasesErrorHelper.getErrorCode(e);
+    
+    switch (errorCode) {
+      case PurchasesErrorCode.purchaseCancelledError:
+        return PurchaseException(
+          PurchaseErrorType.userCancelled,
+          'Purchase was cancelled',
+        );
+        
+      case PurchasesErrorCode.networkError:
+        return PurchaseException(
+          PurchaseErrorType.networkError,
+          'Network error occurred',
+        );
+        
+      case PurchasesErrorCode.productAlreadyPurchasedError:
+        // Not actually an error - user already has premium
+        _isPremium = true;
+        notifyListeners();
+        return PurchaseException(
+          PurchaseErrorType.alreadyPurchased,
+          'You already have an active subscription',
+        );
+        
+      case PurchasesErrorCode.paymentPendingError:
+        return PurchaseException(
+          PurchaseErrorType.paymentDeclined,
+          'Payment is pending approval',
+        );
+        
+      case PurchasesErrorCode.productNotAvailableForPurchaseError:
+        return PurchaseException(
+          PurchaseErrorType.productNotFound,
+          'Product not available',
+        );
+        
+      case PurchasesErrorCode.purchaseNotAllowedError:
+        return PurchaseException(
+          PurchaseErrorType.paymentDeclined,
+          'Purchases not allowed on this device',
+        );
+        
+      default:
+        debugPrint('PurchaseService: Unhandled error code: $errorCode');
+        return PurchaseException(
+          PurchaseErrorType.unknown,
+          e.message ?? 'An error occurred',
+        );
+    }
+  }
+  
+  /// Get the monthly package from available offerings
+  Package? get monthlyPackage {
+    try {
+      return _availablePackages.firstWhere(
+        (p) => p.packageType == PackageType.monthly,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+  
+  /// Get the yearly package from available offerings
+  Package? get yearlyPackage {
+    try {
+      return _availablePackages.firstWhere(
+        (p) => p.packageType == PackageType.annual,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+  
+  /// Get formatted price string for a package
+  String getFormattedPrice(Package package) {
+    return package.storeProduct.priceString;
+  }
+  
+  /// Get price value for a package
+  double getPrice(Package package) {
+    return package.storeProduct.price;
+  }
+  
+  /// Calculate yearly savings compared to monthly
+  double? getYearlySavings() {
+    final monthly = monthlyPackage;
+    final yearly = yearlyPackage;
+    
+    if (monthly == null || yearly == null) return null;
+    
+    final yearlyMonthlyPrice = getPrice(monthly) * 12;
+    final yearlyPrice = getPrice(yearly);
+    
+    return yearlyMonthlyPrice - yearlyPrice;
+  }
+  
+  /// Get monthly equivalent price for yearly subscription
+  double? getYearlyMonthlyEquivalent() {
+    final yearly = yearlyPackage;
+    if (yearly == null) return null;
+    
+    return getPrice(yearly) / 12;
+  }
+  
+  /// Set user ID for attribution (optional)
+  Future<void> setUserId(String userId) async {
+    try {
+      await Purchases.logIn(userId);
+    } catch (e) {
+      debugPrint('PurchaseService: Error setting user ID: $e');
+    }
+  }
+  
+  @override
+  void dispose() {
+    Purchases.removeCustomerInfoUpdateListener(_onCustomerInfoUpdated);
+    super.dispose();
+  }
+}

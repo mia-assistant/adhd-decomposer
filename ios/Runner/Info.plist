@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Adhd Decomposer</string>
+	<string>Tiny Steps</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>adhd_decomposer</string>
+	<string>Tiny Steps</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -45,5 +45,50 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<!-- Privacy Permission Descriptions -->
+	<key>NSCalendarsUsageDescription</key>
+	<string>Tiny Steps needs calendar access to add your task deadlines and reminders to your calendar, helping you stay organized.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Tiny Steps needs full calendar access to add your task deadlines and reminders to your calendar, helping you stay organized.</string>
+	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+	<string>Tiny Steps needs calendar write access to add your task deadlines to your calendar.</string>
+	
+	<!-- Background Modes for notifications -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+	
+	<!-- Deep Linking Configuration -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.tinysteps.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>tinysteps</string>
+			</array>
+		</dict>
+	</array>
+	
+	<!-- Universal Links -->
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:tinysteps.app</string>
+	</array>
+	
+	<!-- App Transport Security - allow HTTPS only -->
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+	</dict>
+	
+	<!-- Prevent automatic screen capture in App Switcher for privacy -->
+	<key>UIFileSharingEnabled</key>
+	<false/>
 </dict>
 </plist>
