@@ -232,7 +232,10 @@ class _DecomposeScreenState extends State<DecomposeScreen> {
                     ? 'Last free breakdown! Upgrade for unlimited.'
                     : '$remaining free breakdowns left',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
+                  color: remaining == 1
+                      ? Theme.of(context).colorScheme.onErrorContainer
+                      : Theme.of(context).colorScheme.onPrimaryContainer,
                 ),
               ),
             ),
