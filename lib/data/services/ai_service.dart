@@ -452,28 +452,109 @@ class AIService {
   }
   
   List<TaskStep> _getMockSubSteps(String stepAction) {
-    return [
-      TaskStep(
-        id: _uuid.v4(),
-        action: '🌬️ Take a deep breath - in for 4, hold for 4, out for 4',
-        estimatedMinutes: 1,
-      ),
-      TaskStep(
-        id: _uuid.v4(),
-        action: '👀 Look around: Name 3 things you can see right now',
-        estimatedMinutes: 1,
-      ),
-      TaskStep(
-        id: _uuid.v4(),
-        action: '🦶 Stand up and take 3 steps toward where you need to be',
-        estimatedMinutes: 1,
-      ),
-      TaskStep(
-        id: _uuid.v4(),
-        action: '🎯 Do just the first 10 seconds of: $stepAction',
-        estimatedMinutes: 2,
-      ),
-    ];
+    // Generate contextual sub-steps based on the original step
+    final lowerStep = stepAction.toLowerCase();
+    
+    // Detect step type and provide contextual breakdown
+    if (lowerStep.contains('email') || lowerStep.contains('message') || lowerStep.contains('write')) {
+      return [
+        TaskStep(
+          id: _uuid.v4(),
+          action: '📱 Open the app/website where you need to write',
+          estimatedMinutes: 1,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '✏️ Type just the first sentence - anything counts',
+          estimatedMinutes: 2,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '📝 Add 1-2 more sentences (that\'s enough!)',
+          estimatedMinutes: 2,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '✅ Quick read and hit send/save',
+          estimatedMinutes: 1,
+        ),
+      ];
+    } else if (lowerStep.contains('clean') || lowerStep.contains('tidy') || lowerStep.contains('organize')) {
+      return [
+        TaskStep(
+          id: _uuid.v4(),
+          action: '🧺 Grab ONE item that\'s in the wrong place',
+          estimatedMinutes: 1,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '🚶 Walk it to where it belongs',
+          estimatedMinutes: 1,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '🔄 Repeat for 3 more items (just 3!)',
+          estimatedMinutes: 3,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '✨ Do one quick wipe of the nearest surface',
+          estimatedMinutes: 2,
+        ),
+      ];
+    } else if (lowerStep.contains('call') || lowerStep.contains('phone')) {
+      return [
+        TaskStep(
+          id: _uuid.v4(),
+          action: '📱 Open your phone and find the contact',
+          estimatedMinutes: 1,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '📝 Jot down 2-3 bullet points of what to say',
+          estimatedMinutes: 2,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '☎️ Press call (you can do this!)',
+          estimatedMinutes: 1,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '🗣️ Say hi and follow your bullet points',
+          estimatedMinutes: 3,
+        ),
+      ];
+    } else {
+      // Generic breakdown for any step
+      return [
+        TaskStep(
+          id: _uuid.v4(),
+          action: '🌬️ Take a deep breath - you\'ve got this',
+          estimatedMinutes: 1,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '🦶 Stand up and move to where you need to be',
+          estimatedMinutes: 1,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '👆 Touch/grab the first thing needed for: $stepAction',
+          estimatedMinutes: 1,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '⏱️ Do just 2 minutes of: $stepAction',
+          estimatedMinutes: 2,
+        ),
+        TaskStep(
+          id: _uuid.v4(),
+          action: '✅ Keep going or mark done - both are wins!',
+          estimatedMinutes: 1,
+        ),
+      ];
+    }
   }
 
   // ============================================

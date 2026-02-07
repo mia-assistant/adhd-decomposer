@@ -329,6 +329,33 @@ class TaskProvider extends ChangeNotifier {
     }
   }
   
+  /// Break down the current step into smaller sub-steps using AI
+  Future<void> breakDownCurrentStep() async {
+    if (_activeTask == null || _activeTask!.currentStep == null) {
+      throw Exception('No active step to break down');
+    }
+    
+    final currentStep = _activeTask!.currentStep!;
+    final currentIndex = _activeTask!.currentStepIndex;
+    
+    // Get sub-steps from AI
+    final apiKey = _settings?.openAIApiKey;
+    final subSteps = await _aiService.getSubSteps(currentStep.action, apiKey);
+    
+    if (subSteps.isEmpty) {
+      throw Exception('Could not break down this step further');
+    }
+    
+    // Remove the current step and insert the sub-steps in its place
+    _activeTask!.steps.removeAt(currentIndex);
+    _activeTask!.steps.insertAll(currentIndex, subSteps);
+    
+    // Save and notify
+    await _saveTasks();
+    _updateWidget();
+    notifyListeners();
+  }
+  
   /// Update home screen widget with current task data
   Future<void> _updateWidget() async {
     await WidgetService.updateCurrentTask(_activeTask);

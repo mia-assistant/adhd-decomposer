@@ -1023,25 +1023,168 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
+            // Break it down further button - the key ADHD feature!
             Semantics(
-              label: 'Mini steps to help you get started',
+              label: 'Break this step into smaller pieces',
+              button: true,
+              child: SizedBox(
+                height: kMinTouchTarget,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _breakDownStep(context, step);
+                  },
+                  icon: const Icon(Icons.call_split),
+                  label: const Text("Break it down smaller"),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Quick mini-steps option
+            Semantics(
+              label: 'Show quick starter steps',
+              button: true,
+              child: SizedBox(
+                height: kMinTouchTarget,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _showQuickStarterSteps(context, step);
+                  },
+                  icon: const Icon(Icons.directions_walk),
+                  label: const Text("Just help me start"),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            // Skip option
+            Semantics(
+              label: 'Skip this step for now',
+              button: true,
+              child: SizedBox(
+                height: kMinTouchTarget,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _skipStep(provider);
+                  },
+                  child: const Text("Skip this one"),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  void _breakDownStep(BuildContext context, TaskStep step) async {
+    final provider = context.read<TaskProvider>();
+    
+    // Show loading dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              'Breaking it down...',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+          ],
+        ),
+      ),
+    );
+    
+    try {
+      // Call the provider to break down the current step
+      await provider.breakDownCurrentStep();
+      
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        
+        // Show success feedback
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('✨ Step broken down into smaller pieces!'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        SemanticsService.announce('Step broken down into smaller pieces', TextDirection.ltr);
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context); // Close loading dialog
+        
+        // Show error
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not break down step: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
+  }
+  
+  void _showQuickStarterSteps(BuildContext context, TaskStep step) {
+    final provider = context.read<TaskProvider>();
+    final coach = provider.selectedCoach;
+    
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              coach.avatar,
+              style: const TextStyle(fontSize: 32),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
+            Semantics(
+              header: true,
+              child: Text(
+                "Let's just get moving",
+                style: Theme.of(context).textTheme.titleLarge,
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Semantics(
+              label: 'Quick starter steps',
               child: Column(
                 children: [
                   _buildMiniStep(context, '1. Take a deep breath'),
-                  _buildMiniStep(context, '2. Stand up from your chair'),
+                  _buildMiniStep(context, '2. Stand up and stretch'),
                   _buildMiniStep(context, '3. Walk to where you need to be'),
+                  _buildMiniStep(context, '4. Touch one thing related to the task'),
                 ],
               ),
             ),
             const SizedBox(height: 24),
             Semantics(
-              label: 'Close help dialog and try again',
+              label: 'Close and try the task',
               button: true,
               child: SizedBox(
                 height: kMinTouchTarget,
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text("Got it, I'll try"),
+                  child: const Text("Okay, I'm moving!"),
                 ),
               ),
             ),
