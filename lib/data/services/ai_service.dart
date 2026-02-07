@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import '../models/task.dart';
+import '../models/coach.dart';
+import '../coaches.dart';
 
 /// Decomposition style modes for different user needs
 enum DecompositionStyle {
@@ -27,22 +29,25 @@ class AIService {
   /// [apiKey] - Optional API key override
   /// [style] - Decomposition style (standard, quick, gentle)
   /// [currentHour] - Current hour (0-23) for time-aware prompting
+  /// [coach] - Optional coach personality for tone/style
   Future<Task> decomposeTask(
     String taskDescription, {
     String? apiKey,
     DecompositionStyle style = DecompositionStyle.standard,
     int? currentHour,
+    Coach? coach,
   }) async {
     final effectiveKey = apiKey ?? defaultApiKey;
     final hour = currentHour ?? DateTime.now().hour;
+    final effectiveCoach = coach ?? Coaches.default_;
     
     if (effectiveKey == null || effectiveKey.isEmpty) {
       // Return mock data for testing without API key
-      return _getMockDecomposition(taskDescription, style: style);
+      return _getMockDecomposition(taskDescription, style: style, coach: effectiveCoach);
     }
     
     try {
-      final systemPrompt = _buildSystemPrompt(taskDescription, style, hour);
+      final systemPrompt = _buildSystemPrompt(taskDescription, style, hour, effectiveCoach);
       final userPrompt = _buildUserPrompt(taskDescription, style);
       
       final response = await http.post(
@@ -77,7 +82,7 @@ class AIService {
       }
     } catch (e) {
       // Fallback to mock on error
-      return _getMockDecomposition(taskDescription, style: style);
+      return _getMockDecomposition(taskDescription, style: style, coach: effectiveCoach);
     }
   }
   
@@ -134,7 +139,7 @@ class AIService {
   }
   
   /// Build the system prompt based on context
-  String _buildSystemPrompt(String task, DecompositionStyle style, int hour) {
+  String _buildSystemPrompt(String task, DecompositionStyle style, int hour, Coach coach) {
     final taskType = _detectTaskType(task);
     final timeContext = _getTimeContext(hour);
     final mentionsADHD = task.toLowerCase().contains('adhd');
@@ -153,6 +158,12 @@ class AIService {
         basePrompt.writeln(_standardModePrompt);
         break;
     }
+    
+    // Add coach personality
+    basePrompt.writeln('\n--- COACH PERSONALITY ---');
+    basePrompt.writeln('You are the "${coach.name}" coach. Your tagline: "${coach.tagline}"');
+    basePrompt.writeln(coach.promptStyle);
+    basePrompt.writeln('--- END COACH PERSONALITY ---');
     
     // Add context-aware elements
     if (taskType != null) {
@@ -298,7 +309,8 @@ class AIService {
     return [];
   }
   
-  Task _getMockDecomposition(String taskDescription, {DecompositionStyle style = DecompositionStyle.standard}) {
+  Task _getMockDecomposition(String taskDescription, {DecompositionStyle style = DecompositionStyle.standard, Coach? coach}) {
+    final effectiveCoach = coach ?? Coaches.default_;
     // Intelligent mock based on common tasks
     final lowerTask = taskDescription.toLowerCase();
     

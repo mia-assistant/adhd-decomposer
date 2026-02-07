@@ -6,6 +6,7 @@ import 'package:confetti/confetti.dart';
 import '../../data/services/stats_service.dart';
 import '../../data/services/achievements_service.dart';
 import '../../data/services/share_service.dart';
+import '../../data/services/siri_service.dart';
 import '../widgets/share_card.dart';
 
 class StatsScreen extends StatefulWidget {
@@ -27,6 +28,8 @@ class _StatsScreenState extends State<StatsScreen> {
     // Check for newly unlocked achievements
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkForCelebration();
+      // Donate intent for Siri to learn this pattern
+      SiriService().donateStatsViewed();
     });
   }
 
@@ -266,29 +269,65 @@ class _StatsScreenState extends State<StatsScreen> {
   }
 
   Widget _buildStatsCards(BuildContext context, StatsService stats) {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: _StatCard(
-            icon: Icons.task_alt,
-            label: 'Tasks Done',
-            value: '${stats.totalTasksCompleted}',
-            color: const Color(0xFF4ECDC4),
-            delay: 0,
-          ),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                icon: Icons.task_alt,
+                label: 'Tasks Done',
+                value: '${stats.totalTasksCompleted}',
+                color: const Color(0xFF4ECDC4),
+                delay: 0,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                icon: Icons.checklist,
+                label: 'Steps Done',
+                value: '${stats.totalStepsCompleted}',
+                color: const Color(0xFFFF6B6B),
+                delay: 100,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: _StatCard(
-            icon: Icons.checklist,
-            label: 'Steps Done',
-            value: '${stats.totalStepsCompleted}',
-            color: const Color(0xFFFF6B6B),
-            delay: 100,
-          ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            Expanded(
+              child: _StatCard(
+                icon: Icons.local_fire_department,
+                label: 'Pomodoros',
+                value: '${stats.totalPomodoros}',
+                color: const Color(0xFFFF9500),
+                delay: 200,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _StatCard(
+                icon: Icons.self_improvement,
+                label: 'Focus Time',
+                value: _formatMinutes(stats.totalBodyDoubleMinutes),
+                color: const Color(0xFF6366F1),
+                delay: 300,
+              ),
+            ),
+          ],
         ),
       ],
     );
+  }
+  
+  String _formatMinutes(int minutes) {
+    if (minutes < 60) return '${minutes}m';
+    final hours = minutes ~/ 60;
+    final mins = minutes % 60;
+    if (mins == 0) return '${hours}h';
+    return '${hours}h ${mins}m';
   }
 
   Widget _buildWeeklyChart(BuildContext context, StatsService stats) {

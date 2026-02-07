@@ -6,6 +6,7 @@ import 'package:adhd_decomposer/data/services/achievements_service.dart';
 import 'package:adhd_decomposer/data/services/notification_service.dart';
 import 'package:adhd_decomposer/data/services/calendar_service.dart';
 import 'package:adhd_decomposer/data/services/routine_service.dart';
+import 'package:adhd_decomposer/data/services/purchase_service.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 void main() {
@@ -32,6 +33,9 @@ void main() {
     final routines = RoutineService();
     await routines.initialize();
     
+    final purchases = PurchaseService();
+    // Skip purchases.initialize() - requires platform channels
+    
     // Build our app and trigger a frame.
     await tester.pumpWidget(ADHDDecomposerApp(
       settings: settings,
@@ -40,6 +44,7 @@ void main() {
       notifications: notifications,
       calendar: calendar,
       routines: routines,
+      purchases: purchases,
     ));
 
     // Verify that the onboarding welcome page shows

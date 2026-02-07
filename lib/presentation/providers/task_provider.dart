@@ -117,6 +117,11 @@ class TaskProvider extends ChangeNotifier {
     notifyListeners();
   }
   
+  void setSelectedCoach(CoachType coachType) {
+    _settings?.selectedCoachType = coachType;
+    notifyListeners();
+  }
+  
   void setOpenAIApiKey(String? key) {
     _settings?.openAIApiKey = key;
     notifyListeners();
