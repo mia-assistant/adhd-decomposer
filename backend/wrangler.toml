@@ -5,15 +5,15 @@ compatibility_date = "2024-01-01"
 # KV Namespaces for rate limiting and caching
 [[kv_namespaces]]
 binding = "RATE_LIMITS"
-id = "PLACEHOLDER_RATE_LIMITS_ID"
+id = "e2f8d0146f8e4fd7bc737f0d15651d0b"
 
 [[kv_namespaces]]
 binding = "CACHE"
-id = "PLACEHOLDER_CACHE_ID"
+id = "1df7cec014fe40d8a7cc3568b5412d41"
 
 [[kv_namespaces]]
 binding = "USERS"
-id = "PLACEHOLDER_USERS_ID"
+id = "bc440f00f5134b0da4e17b05100ecf33"
 
 # Environment variables (secrets set via wrangler secret put)
 # OPENAI_API_KEY - set via: wrangler secret put OPENAI_API_KEY
