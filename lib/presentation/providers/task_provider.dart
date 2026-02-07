@@ -332,13 +332,13 @@ class TaskProvider extends ChangeNotifier {
   /// Check if user can break down current step for free
   bool get canBreakDownForFree {
     if (_activeTask == null) return false;
-    return _isPremium || _activeTask!.canBreakDownForFree;
+    return isPremium || _activeTask!.canBreakDownForFree;
   }
   
   /// Remaining free breakdowns for current task
   int get remainingFreeBreakdowns {
     if (_activeTask == null) return 0;
-    if (_isPremium) return 999; // Unlimited for premium
+    if (isPremium) return 999; // Unlimited for premium
     return _activeTask!.remainingFreeBreakdowns;
   }
   
@@ -350,7 +350,7 @@ class TaskProvider extends ChangeNotifier {
     }
     
     // Check if user can break down (premium or has free uses left)
-    if (!_isPremium && !_activeTask!.canBreakDownForFree) {
+    if (!isPremium && !_activeTask!.canBreakDownForFree) {
       return false; // Signal that user hit the limit
     }
     
@@ -370,7 +370,7 @@ class TaskProvider extends ChangeNotifier {
     }
     
     // Increment usage counter (only for free users)
-    if (!_isPremium) {
+    if (!isPremium) {
       _activeTask!.subStepBreakdownsUsed++;
     }
     
