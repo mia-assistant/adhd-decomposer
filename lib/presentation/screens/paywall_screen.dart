@@ -79,10 +79,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   
                   const SizedBox(height: 12),
                   
-                  // Scrollable features (constrained height)
+                  // Features - centered in available space
                   Expanded(
-                    flex: 2,
-                    child: _buildScrollableFeatures(context),
+                    child: Center(
+                      child: _buildFeatures(context),
+                    ),
                   ),
                   
                   // Error message
@@ -159,7 +160,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     ).animate().fadeIn().slideX(begin: -0.1, end: 0);
   }
   
-  Widget _buildScrollableFeatures(BuildContext context) {
+  Widget _buildFeatures(BuildContext context) {
     final features = [
       (icon: Icons.all_inclusive, text: 'Unlimited task breakdowns'),
       (icon: Icons.psychology, text: 'All AI coaching styles'),
@@ -168,41 +169,30 @@ class _PaywallScreenState extends State<PaywallScreen> {
       (icon: Icons.emoji_events, text: 'Full gamification system'),
     ];
     
-    return ShaderMask(
-      shaderCallback: (Rect bounds) {
-        return LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.white, Colors.white, Colors.white.withOpacity(0)],
-          stops: const [0.0, 0.85, 1.0],
-        ).createShader(bounds);
-      },
-      blendMode: BlendMode.dstIn,
-      child: ListView.builder(
-        padding: const EdgeInsets.only(bottom: 16),
-        itemCount: features.length,
-        itemBuilder: (context, index) {
-          final feature = features[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Row(
-              children: [
-                Container(
-                  width: 28,
-                  height: 28,
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Icon(feature.icon, size: 16, color: Theme.of(context).colorScheme.primary),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: features.asMap().entries.map((entry) {
+        final index = entry.key;
+        final feature = entry.value;
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                const SizedBox(width: 10),
-                Text(feature.text, style: Theme.of(context).textTheme.bodyMedium),
-              ],
-            ),
-          ).animate().fadeIn(delay: Duration(milliseconds: 100 + index * 50)).slideX(begin: -0.05, end: 0);
-        },
-      ),
+                child: Icon(feature.icon, size: 18, color: Theme.of(context).colorScheme.primary),
+              ),
+              const SizedBox(width: 12),
+              Text(feature.text, style: Theme.of(context).textTheme.bodyLarge),
+            ],
+          ),
+        ).animate().fadeIn(delay: Duration(milliseconds: 100 + index * 50)).slideX(begin: -0.05, end: 0);
+      }).toList(),
     );
   }
   
