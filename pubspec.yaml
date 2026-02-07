@@ -48,7 +48,7 @@ dependencies:
   in_app_review: ^2.0.9
   
   # In-app purchases
-  purchases_flutter: ^6.30.0
+  purchases_flutter: ^8.0.0
   
   # Calendar integration
   device_calendar: ^4.3.2
@@ -57,9 +57,7 @@ dependencies:
   flutter_app_intents: ^0.7.0
   
   # Keep screen awake
-  wakelock_plus: ^1.4.0
 
-dev_dependencies:
   flutter_test:
     sdk: flutter
   integration_test:

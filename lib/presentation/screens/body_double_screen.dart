@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:wakelock_plus/wakelock_plus.dart';
 import '../providers/task_provider.dart';
 import '../../data/services/ambient_audio_service.dart';
 import '../../data/services/sound_service.dart';
@@ -72,7 +71,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
     _sessionStart = DateTime.now();
     
     // Keep screen awake during focus session
-    WakelockPlus.enable();
+    // TODO: Re-enable wakelock when plugin is updated
     
     // Hide status bar for immersive experience
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -171,7 +170,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     
     // Allow screen to sleep again
-    WakelockPlus.disable();
+    // Screen can sleep again
     
     super.dispose();
   }
