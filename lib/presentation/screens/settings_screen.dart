@@ -107,9 +107,10 @@ class SettingsScreen extends StatelessWidget {
               _buildSectionHeader(context, 'Body Double'),
               _buildDefaultAmbientSoundTile(context, provider),
               
-              const Divider(height: 32),
-              _buildSectionHeader(context, 'Power User'),
-              _buildApiKeyTile(context, provider),
+              // BYOK hidden for v1 - see GitHub issue for v2 roadmap
+              // const Divider(height: 32),
+              // _buildSectionHeader(context, 'Power User'),
+              // _buildApiKeyTile(context, provider),
               
               const Divider(height: 32),
               _buildSectionHeader(context, 'Support'),
@@ -950,7 +951,6 @@ class SettingsScreen extends StatelessWidget {
   
   Widget _buildUsageStats(BuildContext context, TaskProvider provider) {
     final isPremium = provider.isPremium;
-    final hasKey = provider.hasCustomApiKey;
     
     String statusText;
     IconData statusIcon;
@@ -960,14 +960,10 @@ class SettingsScreen extends StatelessWidget {
       statusText = 'Pro (Unlimited)';
       statusIcon = Icons.workspace_premium;
       statusColor = Colors.amber;
-    } else if (hasKey) {
-      statusText = 'Custom API Key (Unlimited)';
-      statusIcon = Icons.key;
-      statusColor = Colors.green;
     } else {
       final remaining = provider.remainingFreeDecompositions;
       statusText = remaining > 0 
-          ? 'Free ($remaining breakdowns left)'
+          ? 'Free ($remaining breakdowns left today)'
           : 'Free (limit reached)';
       statusIcon = Icons.person_outline;
       statusColor = Theme.of(context).colorScheme.primary;
