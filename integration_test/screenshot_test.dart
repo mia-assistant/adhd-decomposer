@@ -1,387 +1,159 @@
-/// Screenshot automation tests for App Store listing.
-/// 
-/// Run with:
-/// ```bash
-/// flutter drive \
-///   --driver=test_driver/integration_test.dart \
-///   --target=integration_test/screenshot_test.dart \
-///   --dart-define=SCREENSHOT_MODE=true
-/// ```
-/// 
-/// Screenshots are saved to `screenshots/raw/` with naming:
-/// - 01_onboarding_en.png
-/// - 02_decompose_en.png
-/// - etc.
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
-import 'package:hive_flutter/hive_flutter.dart';
-import 'package:provider/provider.dart';
+import 'package:adhd_decomposer/main.dart' as app;
 
-import 'package:adhd_decomposer/main.dart';
-import 'package:adhd_decomposer/core/theme/app_theme.dart';
-import 'package:adhd_decomposer/data/services/settings_service.dart';
-import 'package:adhd_decomposer/data/services/stats_service.dart';
-import 'package:adhd_decomposer/data/services/achievements_service.dart';
-import 'package:adhd_decomposer/data/services/notification_service.dart';
-import 'package:adhd_decomposer/data/services/calendar_service.dart';
-import 'package:adhd_decomposer/data/services/routine_service.dart';
-import 'package:adhd_decomposer/presentation/providers/task_provider.dart';
-import 'package:adhd_decomposer/presentation/screens/onboarding/onboarding_screen.dart';
-import 'package:adhd_decomposer/presentation/screens/onboarding/welcome_page.dart';
-import 'package:adhd_decomposer/presentation/screens/decompose_screen.dart';
-import 'package:adhd_decomposer/presentation/screens/execute_screen.dart';
-import 'package:adhd_decomposer/presentation/screens/stats_screen.dart';
-import 'package:adhd_decomposer/presentation/screens/templates_screen.dart';
-import 'package:adhd_decomposer/presentation/screens/home_screen.dart';
-import 'package:adhd_decomposer/data/models/task.dart';
-
-import 'screenshot_helpers.dart';
-
+/// Screenshot integration test for App Store / Play Store
+/// 
+/// Run with:
+///   flutter test integration_test/screenshot_test.dart
+/// 
+/// Or for specific device:
+///   flutter test integration_test/screenshot_test.dart -d <device_id>
 void main() {
   final binding = IntegrationTestWidgetsFlutterBinding.ensureInitialized();
   
-  // Check if we're in screenshot mode
-  const isScreenshotMode = bool.fromEnvironment('SCREENSHOT_MODE', defaultValue: false);
-  
-  group('App Store Screenshots', () {
-    late SettingsService settings;
-    late StatsService stats;
-    late AchievementsService achievements;
-    late NotificationService notifications;
-    late CalendarService calendar;
-    late RoutineService routines;
-    
-    setUpAll(() async {
-      // Initialize Hive for local storage
-      await Hive.initFlutter();
-    });
-    
-    setUp(() async {
-      // Initialize all services fresh for each test
-      settings = SettingsService();
-      await settings.initialize();
-      
-      stats = StatsService();
-      await stats.initialize();
-      
-      achievements = AchievementsService();
-      await achievements.initialize(stats);
-      
-      notifications = NotificationService();
-      // Skip notification initialization in tests
-      
-      calendar = CalendarService();
-      // Skip calendar initialization in tests
-      
-      routines = RoutineService();
-      await routines.initialize();
-    });
-
-    testWidgets('Screenshot 1: Onboarding Welcome', (tester) async {
-      // Build the onboarding welcome page
-      await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          darkTheme: AppTheme.darkTheme,
-          themeMode: ThemeMode.light,
-          home: WelcomePage(onNext: () {}),
-        ),
-      );
-      
-      // Wait for animations to complete
+  group('Store Screenshots', () {
+    testWidgets('Capture all screens', (WidgetTester tester) async {
+      // Launch app
+      app.main();
       await tester.pumpAndSettle(const Duration(seconds: 2));
       
-      // Take screenshot
-      await binding.takeScreenshot('01_onboarding_en');
-    });
-
-    testWidgets('Screenshot 2: Decompose Screen', (tester) async {
-      // Build the decompose screen with pre-filled text
-      await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider(
-                create: (_) => TaskProvider(
-                  settings: settings,
-                  stats: stats,
-                  achievements: achievements,
-                  notifications: notifications,
-                )..initialize(),
-              ),
-              Provider.value(value: settings),
-            ],
-            child: const DecomposeScreenForScreenshot(),
-          ),
-        ),
-      );
+      // Helper to take screenshot
+      Future<void> takeScreenshot(String name) async {
+        await tester.pumpAndSettle();
+        
+        // For Android
+        if (Platform.isAndroid) {
+          await binding.takeScreenshot(name);
+        }
+        // For iOS, screenshots are captured differently
+        // This creates a file we can use
+        await tester.pumpAndSettle(const Duration(milliseconds: 500));
+      }
       
-      await tester.pumpAndSettle(const Duration(milliseconds: 500));
+      // 1. Welcome / Onboarding (if shown)
+      await takeScreenshot('01_welcome');
       
-      // Enter task text
-      final textField = find.byType(TextField);
-      await tester.enterText(textField, 'Prepare presentation for Monday');
-      await tester.pumpAndSettle();
+      // Check if we're on onboarding
+      final getStartedButton = find.text('Get Started');
+      if (getStartedButton.evaluate().isNotEmpty) {
+        await takeScreenshot('01_welcome');
+        
+        await tester.tap(getStartedButton);
+        await tester.pumpAndSettle();
+        await takeScreenshot('02_challenge');
+        
+        // Select a challenge
+        final challengeOption = find.text('Starting tasks');
+        if (challengeOption.evaluate().isNotEmpty) {
+          await tester.tap(challengeOption);
+          await tester.pumpAndSettle();
+        }
+        
+        final continueButton = find.text('Continue');
+        if (continueButton.evaluate().isNotEmpty) {
+          await tester.tap(continueButton);
+          await tester.pumpAndSettle();
+        }
+        
+        // Skip through remaining onboarding
+        for (var i = 0; i < 5; i++) {
+          final skipOrContinue = find.textContaining(RegExp(r'Continue|Skip|Get Started|Start'));
+          if (skipOrContinue.evaluate().isNotEmpty) {
+            await tester.tap(skipOrContinue.first);
+            await tester.pumpAndSettle();
+          }
+        }
+      }
       
-      await binding.takeScreenshot('02_decompose_en');
-    });
-
-    testWidgets('Screenshot 3: Execute Screen', (tester) async {
-      // Create a task in progress
-      final task = Task(
-        id: 'screenshot_task',
-        title: 'Clean the kitchen',
-        steps: [
-          TaskStep(
-            id: 'step_1',
-            action: 'Clear the countertops',
-            estimatedMinutes: 3,
-            isCompleted: true,
-          ),
-          TaskStep(
-            id: 'step_2',
-            action: 'Load the dishwasher',
-            estimatedMinutes: 5,
-            isCompleted: true,
-          ),
-          TaskStep(
-            id: 'step_3',
-            action: 'Wipe down the stovetop',
-            estimatedMinutes: 4,
-            isCompleted: false,
-          ),
-          TaskStep(
-            id: 'step_4',
-            action: 'Clean the sink',
-            estimatedMinutes: 3,
-            isCompleted: false,
-          ),
-          TaskStep(
-            id: 'step_5',
-            action: 'Take out the trash',
-            estimatedMinutes: 2,
-            isCompleted: false,
-          ),
-        ],
-        totalEstimatedMinutes: 17,
-        createdAt: DateTime.now(),
-      );
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider(
-                create: (_) {
-                  final provider = TaskProvider(
-                    settings: settings,
-                    stats: stats,
-                    achievements: achievements,
-                    notifications: notifications,
-                  );
-                  provider.initialize();
-                  provider.addTask(task);
-                  provider.setActiveTask(task);
-                  return provider;
-                },
-              ),
-              Provider.value(value: settings),
-              Provider.value(value: stats),
-              ChangeNotifierProvider.value(value: achievements),
-              Provider.value(value: notifications),
-              Provider.value(value: calendar),
-            ],
-            child: const ExecuteScreen(),
-          ),
-        ),
-      );
-      
+      // 2. Home screen
       await tester.pumpAndSettle(const Duration(seconds: 1));
+      await takeScreenshot('03_home');
       
-      await binding.takeScreenshot('03_execute_en');
-    });
-
-    testWidgets('Screenshot 4: Celebration', (tester) async {
-      // Create a completed task
-      final completedTask = Task(
-        id: 'completed_task',
-        title: 'Organize my desk',
-        steps: [
-          TaskStep(
-            id: 'step_1',
-            action: 'Remove everything from desk',
-            estimatedMinutes: 2,
-            isCompleted: true,
-          ),
-          TaskStep(
-            id: 'step_2',
-            action: 'Wipe down the surface',
-            estimatedMinutes: 3,
-            isCompleted: true,
-          ),
-          TaskStep(
-            id: 'step_3',
-            action: 'Sort papers into piles',
-            estimatedMinutes: 5,
-            isCompleted: true,
-          ),
-          TaskStep(
-            id: 'step_4',
-            action: 'File or discard papers',
-            estimatedMinutes: 5,
-            isCompleted: true,
-          ),
-          TaskStep(
-            id: 'step_5',
-            action: 'Arrange items neatly',
-            estimatedMinutes: 3,
-            isCompleted: true,
-          ),
-        ],
-        totalEstimatedMinutes: 18,
-        createdAt: DateTime.now().subtract(const Duration(minutes: 20)),
-        completedAt: DateTime.now(),
-      );
+      // 3. Tap New Task
+      final newTaskButton = find.text('New Task');
+      if (newTaskButton.evaluate().isNotEmpty) {
+        await tester.tap(newTaskButton);
+        await tester.pumpAndSettle();
+        await takeScreenshot('04_new_task');
+        
+        // Type a task
+        final textField = find.byType(TextField).first;
+        await tester.enterText(textField, 'Clean my room before guests arrive');
+        await tester.pumpAndSettle();
+        await takeScreenshot('04_new_task_typed');
+        
+        // Tap break it down
+        final breakDownButton = find.text('Break it down');
+        if (breakDownButton.evaluate().isNotEmpty) {
+          await tester.tap(breakDownButton);
+          // Wait for AI response (mock should be instant)
+          await tester.pumpAndSettle(const Duration(seconds: 3));
+          await takeScreenshot('05_breakdown');
+        }
+        
+        // Start the task
+        final startButton = find.text('Start');
+        if (startButton.evaluate().isNotEmpty) {
+          await tester.tap(startButton);
+          await tester.pumpAndSettle();
+          await takeScreenshot('06_execute');
+          
+          // Complete a step to show progress
+          final doneButton = find.text('Done!');
+          if (doneButton.evaluate().isNotEmpty) {
+            await tester.tap(doneButton);
+            await tester.pumpAndSettle(const Duration(seconds: 2));
+            await takeScreenshot('06_execute_progress');
+          }
+          
+          // Go back
+          final backButton = find.byType(BackButton);
+          if (backButton.evaluate().isNotEmpty) {
+            await tester.tap(backButton);
+            await tester.pumpAndSettle();
+          } else {
+            // Try navigator pop
+            await tester.pageBack();
+            await tester.pumpAndSettle();
+          }
+        }
+      }
       
-      await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider(
-                create: (_) {
-                  final provider = TaskProvider(
-                    settings: settings,
-                    stats: stats,
-                    achievements: achievements,
-                    notifications: notifications,
-                  );
-                  provider.initialize();
-                  provider.addTask(completedTask);
-                  provider.setActiveTask(completedTask);
-                  return provider;
-                },
-              ),
-              Provider.value(value: settings),
-              Provider.value(value: stats),
-              ChangeNotifierProvider.value(value: achievements),
-              Provider.value(value: notifications),
-              Provider.value(value: calendar),
-            ],
-            child: const ExecuteScreen(),
-          ),
-        ),
-      );
+      // 4. Templates
+      final templatesButton = find.text('Templates');
+      if (templatesButton.evaluate().isNotEmpty) {
+        await tester.tap(templatesButton);
+        await tester.pumpAndSettle();
+        await takeScreenshot('07_templates');
+        
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+      }
       
-      // Wait for celebration animation
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+      // 5. Stats (via app bar icon)
+      final statsIcon = find.byIcon(Icons.bar_chart_rounded);
+      if (statsIcon.evaluate().isNotEmpty) {
+        await tester.tap(statsIcon);
+        await tester.pumpAndSettle();
+        await takeScreenshot('08_stats');
+        
+        await tester.pageBack();
+        await tester.pumpAndSettle();
+      }
       
-      await binding.takeScreenshot('04_celebration_en');
-    });
-
-    testWidgets('Screenshot 5: Templates Browser', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          home: MultiProvider(
-            providers: [
-              ChangeNotifierProvider(
-                create: (_) => TaskProvider(
-                  settings: settings,
-                  stats: stats,
-                  achievements: achievements,
-                  notifications: notifications,
-                )..initialize(),
-              ),
-              Provider.value(value: settings),
-            ],
-            child: const TemplatesScreen(),
-          ),
-        ),
-      );
+      // 6. Settings
+      final settingsIcon = find.byIcon(Icons.settings_outlined);
+      if (settingsIcon.evaluate().isNotEmpty) {
+        await tester.tap(settingsIcon);
+        await tester.pumpAndSettle();
+        await takeScreenshot('09_settings');
+      }
       
-      await tester.pumpAndSettle(const Duration(milliseconds: 500));
-      
-      await binding.takeScreenshot('05_templates_en');
-    });
-
-    testWidgets('Screenshot 6: Stats Screen', (tester) async {
-      // Pre-populate stats with impressive data
-      await _populateStatsForScreenshot(stats);
-      await _populateAchievementsForScreenshot(achievements, stats);
-      
-      await tester.pumpWidget(
-        MaterialApp(
-          debugShowCheckedModeBanner: false,
-          theme: AppTheme.lightTheme,
-          home: MultiProvider(
-            providers: [
-              Provider.value(value: stats),
-              ChangeNotifierProvider.value(value: achievements),
-            ],
-            child: const StatsScreen(),
-          ),
-        ),
-      );
-      
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      
-      await binding.takeScreenshot('06_stats_en');
+      // Done!
+      debugPrint('Screenshots complete!');
     });
   });
-}
-
-/// Helper to populate stats with screenshot-friendly data
-Future<void> _populateStatsForScreenshot(StatsService stats) async {
-  // Directly set stats values for screenshots
-  stats.totalTasksCompleted = 47;
-  stats.totalStepsCompleted = 234;
-  stats.totalMinutesSpent = 892;
-  stats.currentStreak = 7;
-  stats.longestStreak = 14;
-  
-  // Set up last 7 days of completions for the chart
-  final now = DateTime.now();
-  final daily = <String, int>{};
-  final weeklyData = [3, 2, 4, 2, 5, 3, 4]; // Tasks per day, most recent last
-  
-  for (var i = 0; i < 7; i++) {
-    final date = DateTime(now.year, now.month, now.day).subtract(Duration(days: 6 - i));
-    final dateKey = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    daily[dateKey] = weeklyData[i];
-  }
-  stats.dailyCompletions = daily;
-  
-  // Set last completion date to today
-  final todayKey = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-  stats.lastCompletionDate = todayKey;
-}
-
-/// Helper to unlock achievements for screenshot
-Future<void> _populateAchievementsForScreenshot(
-  AchievementsService achievements,
-  StatsService stats,
-) async {
-  // Achievements auto-unlock based on stats
-  // This depends on the achievements system implementation
-}
-
-/// A wrapper for DecomposeScreen that allows screenshot customization
-class DecomposeScreenForScreenshot extends StatelessWidget {
-  const DecomposeScreenForScreenshot({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const DecomposeScreen();
-  }
 }

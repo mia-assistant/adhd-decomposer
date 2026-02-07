@@ -1,0 +1,5 @@
+app_identifier("com.manuelpa.tinysteps")
+apple_id("your-apple-id@email.com") # Your Apple ID email
+team_id("YOUR_TEAM_ID") # Your Apple Developer Team ID
+
+# For more info: https://docs.fastlane.tools/actions/appfile/

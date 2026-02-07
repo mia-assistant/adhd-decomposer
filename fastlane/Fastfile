@@ -1,0 +1,65 @@
+# Fastfile for Tiny Steps - ADHD Task Decomposer
+# Run: fastlane screenshots (iOS) or fastlane android_screenshots (Android)
+
+default_platform(:ios)
+
+# ================================
+# iOS Screenshots
+# ================================
+platform :ios do
+  desc "Capture iOS screenshots"
+  lane :screenshots do
+    capture_screenshots(
+      workspace: "ios/Runner.xcworkspace",
+      scheme: "Runner",
+      output_directory: "./fastlane/screenshots/ios",
+      clear_previous_screenshots: true,
+      devices: [
+        "iPhone 16 Pro Max",
+        "iPhone 16",
+        "iPad Pro (12.9-inch) (6th generation)"
+      ],
+      languages: ["en-US"],
+      concurrent_simulators: true,
+      stop_after_first_error: false
+    )
+  end
+
+  desc "Upload screenshots to App Store Connect"
+  lane :upload_screenshots do
+    upload_to_app_store(
+      skip_binary_upload: true,
+      skip_metadata: true,
+      screenshots_path: "./fastlane/screenshots/ios"
+    )
+  end
+end
+
+# ================================
+# Android Screenshots
+# ================================
+platform :android do
+  desc "Capture Android screenshots"
+  lane :screenshots do
+    capture_android_screenshots(
+      app_package_name: "com.manuelpa.tinysteps",
+      app_apk_path: "build/app/outputs/flutter-apk/app-release.apk",
+      tests_apk_path: "build/app/outputs/apk/androidTest/debug/app-debug-androidTest.apk",
+      locales: ["en-US"],
+      clear_previous_screenshots: true,
+      output_directory: "./fastlane/screenshots/android",
+      use_tests_in_packages: "com.manuelpa.tinysteps.screenshots"
+    )
+  end
+
+  desc "Upload screenshots to Play Store"
+  lane :upload_screenshots do
+    upload_to_play_store(
+      skip_upload_apk: true,
+      skip_upload_aab: true,
+      skip_upload_metadata: true,
+      skip_upload_changelogs: true,
+      images_path: "./fastlane/screenshots/android"
+    )
+  end
+end

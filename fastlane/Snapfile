@@ -1,0 +1,21 @@
+# Snapfile - Configure screenshot capture
+
+devices([
+  "iPhone 16 Pro Max",
+  "iPhone 16", 
+  "iPad Pro (12.9-inch) (6th generation)"
+])
+
+languages(["en-US"])
+
+scheme("Runner")
+workspace("./ios/Runner.xcworkspace")
+
+output_directory("./fastlane/screenshots/ios")
+clear_previous_screenshots(true)
+
+# Don't stop on first error
+stop_after_first_error(false)
+
+# Take concurrent screenshots
+concurrent_simulators(true)
