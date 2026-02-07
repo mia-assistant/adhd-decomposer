@@ -1,5 +1,7 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'ai_service.dart';
+import '../models/coach.dart';
+import '../coaches.dart';
 
 /// Ambient sound options for Body Double mode
 enum DefaultAmbientSound {
@@ -25,6 +27,7 @@ class SettingsService {
   static const String keyOpenAIApiKey = 'openAIApiKey';
   static const String keyDecompositionStyle = 'decompositionStyle';
   static const String keyDefaultAmbientSound = 'defaultAmbientSound';
+  static const String keySelectedCoach = 'selectedCoach';
   
   // Rate app settings
   static const String keyHasRated = 'hasRated';
@@ -242,4 +245,18 @@ class SettingsService {
     }
     _safeBox.put(keyDefaultAmbientSound, stringValue);
   }
+  
+  // AI Coach settings
+  /// Selected AI coach personality
+  CoachType get selectedCoachType {
+    final stored = _safeBox.get(keySelectedCoach, defaultValue: 'default_');
+    return Coaches.typeFromString(stored);
+  }
+  
+  set selectedCoachType(CoachType value) {
+    _safeBox.put(keySelectedCoach, Coaches.typeToString(value));
+  }
+  
+  /// Get the currently selected coach
+  Coach get selectedCoach => Coaches.getByType(selectedCoachType);
 }

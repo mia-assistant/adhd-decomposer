@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../data/models/task.dart';
+import '../../data/models/coach.dart';
+import '../../data/coaches.dart';
 import '../../data/services/ai_service.dart';
 import '../../data/services/settings_service.dart';
 import '../../data/services/stats_service.dart';
@@ -14,6 +16,9 @@ import '../../data/services/purchase_service.dart';
 export '../../data/services/ai_service.dart' show DecompositionStyle;
 // Re-export DefaultAmbientSound for UI access
 export '../../data/services/settings_service.dart' show DefaultAmbientSound;
+// Re-export Coach types for UI access
+export '../../data/models/coach.dart' show Coach, CoachType;
+export '../../data/coaches.dart' show Coaches;
 
 class TaskProvider extends ChangeNotifier {
   final AIService _aiService;
@@ -65,6 +70,10 @@ class TaskProvider extends ChangeNotifier {
   bool get autoAdvanceEnabled => _settings?.autoAdvanceEnabled ?? true;
   // Body Double settings getters
   DefaultAmbientSound get defaultAmbientSound => _settings?.defaultAmbientSound ?? DefaultAmbientSound.none;
+  
+  // AI Coach settings getters
+  CoachType get selectedCoachType => _settings?.selectedCoachType ?? CoachType.default_;
+  Coach get selectedCoach => _settings?.selectedCoach ?? Coaches.default_;
   
   // Notification settings getters for UI
   bool get notificationsEnabled => _notifications?.notificationsEnabled ?? false;
@@ -150,7 +159,7 @@ class TaskProvider extends ChangeNotifier {
     _purchases = purchases;
     // Sync cached premium status
     if (purchases != null && _settings != null) {
-      _settings!.syncPremiumStatus(purchases.isPremium);
+      _settings.syncPremiumStatus(purchases.isPremium);
     }
     notifyListeners();
   }

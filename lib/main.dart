@@ -12,6 +12,7 @@ import 'data/services/analytics_service.dart';
 import 'data/services/calendar_service.dart';
 import 'data/services/routine_service.dart';
 import 'data/services/purchase_service.dart';
+import 'data/services/siri_service.dart';
 import 'presentation/providers/task_provider.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/onboarding/onboarding_screen.dart';
@@ -19,6 +20,7 @@ import 'presentation/screens/decompose_screen.dart';
 import 'presentation/screens/execute_screen.dart';
 import 'presentation/screens/stats_screen.dart';
 import 'presentation/screens/routines_screen.dart';
+import 'presentation/screens/body_double_screen.dart';
 
 // Global navigator key for deep linking
 final GlobalKey<NavigatorState> globalNavigatorKey = GlobalKey<NavigatorState>();
@@ -63,6 +65,10 @@ void main() async {
   // Initialize purchase service
   final purchases = PurchaseService();
   await purchases.initialize();
+  
+  // Initialize Siri Shortcuts service
+  final siri = SiriService();
+  await siri.initialize();
   
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
@@ -115,6 +121,54 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
     _handleWidgetLaunch();
     _listenToWidgetClicks();
     _setupNotificationHandling();
+    _setupSiriHandlers();
+  }
+  
+  /// Set up Siri Shortcuts navigation handlers
+  void _setupSiriHandlers() {
+    final siri = SiriService();
+    
+    // Start new task - navigate to decompose screen
+    siri.onStartNewTask = () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navigateToRoute('decompose');
+      });
+    };
+    
+    // Continue task - navigate to execute screen
+    siri.onContinueTask = () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navigateToRoute('execute');
+      });
+    };
+    
+    // Show progress - navigate to stats screen
+    siri.onShowProgress = () {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navigateToRoute('stats');
+      });
+    };
+    
+    // Start routine - navigate to routines and try to start the named routine
+    siri.onStartRoutine = (routineName) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _navigateToRoutine(routineName);
+      });
+    };
+  }
+  
+  /// Navigate to a specific routine by name
+  void _navigateToRoutine(String routineName) {
+    final context = globalNavigatorKey.currentContext;
+    if (context == null) return;
+    
+    // First navigate to routines screen
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const RoutinesScreen()),
+    );
+    
+    // TODO: In future, could auto-start the routine matching the name
+    // For MVP, just navigate to the routines screen
   }
   
   Future<void> _handleWidgetLaunch() async {
@@ -207,6 +261,11 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
           MaterialPageRoute(builder: (_) => const RoutinesScreen()),
         );
         break;
+      case 'bodydouble':
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const BodyDoubleScreen()),
+        );
+        break;
     }
   }
   
@@ -226,6 +285,7 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
             stats: widget.stats,
             achievements: widget.achievements,
             notifications: widget.notifications,
+            purchases: widget.purchases,
           )..initialize(),
         ),
         Provider.value(value: widget.settings),

@@ -45,6 +45,19 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.tinysteps.app</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>tinysteps</string>
+			</array>
+		</dict>
+	</array>
 	
 	<!-- Privacy Permission Descriptions -->
 	<key>NSCalendarsUsageDescription</key>
@@ -86,6 +99,19 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
 	</dict>
+	
+	<!-- Siri Shortcuts Configuration -->
+	<key>NSSiriUsageDescription</key>
+	<string>Tiny Steps uses Siri to let you start tasks, continue your work, and check your progress using voice commands.</string>
+	
+	<!-- NSUserActivityTypes for Siri Shortcuts -->
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>StartNewTaskIntent</string>
+		<string>ContinueTaskIntent</string>
+		<string>ShowProgressIntent</string>
+		<string>StartRoutineIntent</string>
+	</array>
 	
 	<!-- Prevent automatic screen capture in App Switcher for privacy -->
 	<key>UIFileSharingEnabled</key>

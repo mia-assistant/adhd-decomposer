@@ -1,6 +1,8 @@
 import Flutter
 import UIKit
 import UserNotifications
+import AppIntents
+import flutter_app_intents
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -207,5 +209,180 @@ import UserNotifications
             return true
         }
         return super.application(application, continue: userActivity, restorationHandler: restorationHandler)
+    }
+}
+
+// MARK: - Siri Shortcuts / App Intents
+
+/// Error type for App Intent failures
+enum AppIntentError: Error {
+    case executionFailed(String)
+}
+
+// MARK: - Start New Task Intent
+/// Opens the decompose screen to break down a new task
+@available(iOS 16.0, *)
+struct StartNewTaskIntent: AppIntent {
+    static var title: LocalizedStringResource = "Start a New Task"
+    static var description = IntentDescription("Open Tiny Steps to break down a new task into manageable steps")
+    static var isDiscoverable = true
+    static var openAppWhenRun = true
+    
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & OpensIntent {
+        let plugin = FlutterAppIntentsPlugin.shared
+        let result = await plugin.handleIntentInvocation(
+            identifier: "start_new_task",
+            parameters: [:]
+        )
+        
+        if let success = result["success"] as? Bool, success {
+            let value = result["value"] as? String ?? "Opening task breakdown"
+            return .result(value: value)
+        } else {
+            let errorMessage = result["error"] as? String ?? "Failed to start new task"
+            throw AppIntentError.executionFailed(errorMessage)
+        }
+    }
+}
+
+// MARK: - Continue Task Intent
+/// Resumes working on the current active task
+@available(iOS 16.0, *)
+struct ContinueTaskIntent: AppIntent {
+    static var title: LocalizedStringResource = "Continue My Task"
+    static var description = IntentDescription("Resume working on your current task in Tiny Steps")
+    static var isDiscoverable = true
+    static var openAppWhenRun = true
+    
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & OpensIntent {
+        let plugin = FlutterAppIntentsPlugin.shared
+        let result = await plugin.handleIntentInvocation(
+            identifier: "continue_task",
+            parameters: [:]
+        )
+        
+        if let success = result["success"] as? Bool, success {
+            let value = result["value"] as? String ?? "Continuing your task"
+            return .result(value: value)
+        } else {
+            let errorMessage = result["error"] as? String ?? "Failed to continue task"
+            throw AppIntentError.executionFailed(errorMessage)
+        }
+    }
+}
+
+// MARK: - Show Progress Intent
+/// Opens the stats screen to view progress
+@available(iOS 16.0, *)
+struct ShowProgressIntent: AppIntent {
+    static var title: LocalizedStringResource = "Show My Progress"
+    static var description = IntentDescription("View your task completion statistics in Tiny Steps")
+    static var isDiscoverable = true
+    static var openAppWhenRun = true
+    
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & OpensIntent {
+        let plugin = FlutterAppIntentsPlugin.shared
+        let result = await plugin.handleIntentInvocation(
+            identifier: "show_progress",
+            parameters: [:]
+        )
+        
+        if let success = result["success"] as? Bool, success {
+            let value = result["value"] as? String ?? "Opening your progress"
+            return .result(value: value)
+        } else {
+            let errorMessage = result["error"] as? String ?? "Failed to show progress"
+            throw AppIntentError.executionFailed(errorMessage)
+        }
+    }
+}
+
+// MARK: - Start Routine Intent
+/// Starts a specific routine by name
+@available(iOS 16.0, *)
+struct StartRoutineIntent: AppIntent {
+    static var title: LocalizedStringResource = "Start Routine"
+    static var description = IntentDescription("Start a routine in Tiny Steps")
+    static var isDiscoverable = true
+    static var openAppWhenRun = true
+    
+    @Parameter(title: "Routine Name")
+    var routineName: String?
+    
+    func perform() async throws -> some IntentResult & ReturnsValue<String> & OpensIntent {
+        let plugin = FlutterAppIntentsPlugin.shared
+        let result = await plugin.handleIntentInvocation(
+            identifier: "start_routine",
+            parameters: ["routineName": routineName ?? "morning routine"]
+        )
+        
+        if let success = result["success"] as? Bool, success {
+            let value = result["value"] as? String ?? "Starting routine"
+            return .result(value: value)
+        } else {
+            let errorMessage = result["error"] as? String ?? "Failed to start routine"
+            throw AppIntentError.executionFailed(errorMessage)
+        }
+    }
+}
+
+// MARK: - App Shortcuts Provider
+/// Provides Siri voice command phrases for the app
+@available(iOS 16.0, *)
+struct TinyStepsShortcuts: AppShortcutsProvider {
+    static var appShortcuts: [AppShortcut] {
+        return [
+            // Start new task shortcut
+            AppShortcut(
+                intent: StartNewTaskIntent(),
+                phrases: [
+                    "Break down a task with \(.applicationName)",
+                    "Start a new task in \(.applicationName)",
+                    "Decompose a task using \(.applicationName)",
+                    "Break down my task with \(.applicationName)"
+                ],
+                shortTitle: "New Task",
+                systemImageName: "square.split.2x1"
+            ),
+            
+            // Continue task shortcut
+            AppShortcut(
+                intent: ContinueTaskIntent(),
+                phrases: [
+                    "Continue my task in \(.applicationName)",
+                    "Resume my task with \(.applicationName)",
+                    "Keep working in \(.applicationName)",
+                    "Continue with \(.applicationName)"
+                ],
+                shortTitle: "Continue",
+                systemImageName: "play.fill"
+            ),
+            
+            // Show progress shortcut
+            AppShortcut(
+                intent: ShowProgressIntent(),
+                phrases: [
+                    "Show my progress in \(.applicationName)",
+                    "Check my progress with \(.applicationName)",
+                    "View my stats in \(.applicationName)",
+                    "How am I doing in \(.applicationName)"
+                ],
+                shortTitle: "Progress",
+                systemImageName: "chart.bar.fill"
+            ),
+            
+            // Start routine shortcut
+            AppShortcut(
+                intent: StartRoutineIntent(),
+                phrases: [
+                    "Start my routine in \(.applicationName)",
+                    "Start morning routine with \(.applicationName)",
+                    "Begin my routine using \(.applicationName)",
+                    "Start \(\.$routineName) in \(.applicationName)"
+                ],
+                shortTitle: "Routine",
+                systemImageName: "repeat"
+            )
+        ]
     }
 }
