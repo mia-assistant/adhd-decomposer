@@ -5,6 +5,7 @@ import '../providers/task_provider.dart';
 import '../../data/services/calendar_service.dart';
 import 'paywall_screen.dart';
 import 'feedback_screen.dart';
+import 'coach_selector_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -88,6 +89,10 @@ class SettingsScreen extends StatelessWidget {
               const Divider(height: 32),
               _buildSectionHeader(context, 'Calendar'),
               _buildCalendarSettings(context),
+              
+              const Divider(height: 32),
+              _buildSectionHeader(context, 'AI Coach'),
+              _buildCoachSelectorTile(context, provider),
               
               const Divider(height: 32),
               _buildSectionHeader(context, 'AI Decomposition'),
@@ -650,6 +655,23 @@ class SettingsScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+  
+  Widget _buildCoachSelectorTile(BuildContext context, TaskProvider provider) {
+    final coach = provider.selectedCoach;
+    
+    return ListTile(
+      leading: Text(
+        coach.avatar,
+        style: const TextStyle(fontSize: 24),
+      ),
+      title: const Text('Your Coach'),
+      subtitle: Text('${coach.name} - ${coach.tagline}'),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const CoachSelectorScreen()),
       ),
     );
   }

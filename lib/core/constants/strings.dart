@@ -41,12 +41,20 @@ class AppStrings {
   static const String enableSounds = "Enable Sounds";
   static const String about = "About";
   
+  // Coach
+  static const String aiCoach = "AI Coach";
+  static const String meetYourCoaches = "Meet Your Coaches";
+  static const String chooseYourCoach = "Choose Your Coach";
+  static const String coachDescription = "Different coaching styles for different moods";
+  
   // Errors
   static const String somethingWentWrong = "Something went wrong";
   static const String tryAgain = "Try Again";
   static const String noInternet = "No internet connection";
 }
 
+/// Default encouragement messages (used as fallback)
+/// The app now primarily uses Coach-specific messages
 class Encouragements {
   static const List<String> stepComplete = [
     "Nice work!",

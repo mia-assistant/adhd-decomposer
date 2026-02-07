@@ -57,7 +57,7 @@ dependencies:
   flutter_app_intents: ^0.7.0
   
   # Keep screen awake
-  wakelock_plus: ^1.2.10
+  wakelock_plus: ^1.4.0
 
 dev_dependencies:
   flutter_test:

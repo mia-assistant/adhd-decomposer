@@ -11,6 +11,8 @@ import '../../data/services/achievements_service.dart';
 import '../../data/services/widget_service.dart';
 import '../../data/services/notification_service.dart';
 import '../../data/services/purchase_service.dart';
+import '../../data/services/xp_service.dart';
+import '../../data/services/siri_service.dart';
 
 // Re-export DecompositionStyle for UI access
 export '../../data/services/ai_service.dart' show DecompositionStyle;
@@ -27,10 +29,13 @@ class TaskProvider extends ChangeNotifier {
   final AchievementsService? _achievements;
   final NotificationService? _notifications;
   PurchaseService? _purchases;
+  XPService? _xpService;
   List<Task> _tasks = [];
   Task? _activeTask;
   bool _isLoading = false;
   String? _error;
+  bool _usedTimerThisTask = false;
+  bool _isFromTemplate = false;
   
   TaskProvider({
     AIService? aiService,
@@ -39,12 +44,14 @@ class TaskProvider extends ChangeNotifier {
     AchievementsService? achievements,
     NotificationService? notifications,
     PurchaseService? purchases,
+    XPService? xpService,
   }) : _aiService = aiService ?? AIService(),
        _settings = settings,
        _stats = stats,
        _achievements = achievements,
        _notifications = notifications,
-       _purchases = purchases;
+       _purchases = purchases,
+       _xpService = xpService;
   
   List<Task> get tasks => _tasks;
   List<Task> get activeTasks => _tasks.where((t) => !t.isCompleted).toList();
@@ -212,10 +219,12 @@ class TaskProvider extends ChangeNotifier {
       // Use custom API key if available
       final apiKey = _settings?.openAIApiKey;
       final style = _settings?.decompositionStyle ?? DecompositionStyle.standard;
+      final coach = _settings?.selectedCoach ?? Coaches.default_;
       final task = await _aiService.decomposeTask(
         description,
         apiKey: apiKey,
         style: style,
+        coach: coach,
       );
       _tasks.insert(0, task);
       await _saveTasks();
@@ -238,6 +247,10 @@ class TaskProvider extends ChangeNotifier {
     _activeTask = task;
     _updateWidget();
     
+    // Reset task-specific tracking flags
+    _usedTimerThisTask = false;
+    _isFromTemplate = false;
+    
     // Schedule unfinished task reminder if task is set
     if (task != null && !task.isCompleted) {
       _notifications?.scheduleUnfinishedTaskReminder(task.id);
@@ -256,6 +269,9 @@ class TaskProvider extends ChangeNotifier {
       // Record step completion
       _stats?.recordStepCompletion();
       
+      // Award XP for step completion
+      _xpService?.awardStepComplete();
+      
       // Update notification activity (resets 2-hour timer)
       _notifications?.updateTaskActivity();
       
@@ -264,12 +280,31 @@ class TaskProvider extends ChangeNotifier {
         _stats?.recordTaskCompletion(
           stepsCompleted: _activeTask!.completedStepsCount,
         );
+        
+        // Award XP for task completion
+        _xpService?.awardTaskComplete(
+          usedTimer: _usedTimerThisTask,
+          isFromTemplate: _isFromTemplate,
+        );
+        
+        // Award streak bonus if applicable
+        final currentStreak = _stats?.currentStreak ?? 0;
+        if (currentStreak > 0) {
+          _xpService?.awardStreakBonus(currentStreak);
+        }
+        
+        // Reset task-specific flags
+        _usedTimerThisTask = false;
+        _isFromTemplate = false;
+        
         // Check for new achievements
         _achievements?.checkAndUnlockAchievements();
         
+        // Donate intent for Siri to suggest starting another task
+        SiriService().donateTaskCompleted();
+        
         // Clear unfinished task reminder and schedule streak reminder
         _notifications?.clearUnfinishedTaskReminder();
-        final currentStreak = _stats?.currentStreak ?? 0;
         if (currentStreak >= 2) {
           _notifications?.scheduleStreakReminder(currentStreak);
         }
@@ -337,6 +372,7 @@ class TaskProvider extends ChangeNotifier {
   /// Record timer usage for stats tracking
   void recordTimerUsage(int minutes) {
     _stats?.recordTimerUsage(minutes);
+    _usedTimerThisTask = true;
     _achievements?.checkAndUnlockAchievements();
   }
   
@@ -354,6 +390,13 @@ class TaskProvider extends ChangeNotifier {
   /// Record template usage for stats tracking
   void recordTemplateUsed(String templateId) {
     _stats?.recordTemplateUsed(templateId);
+    _isFromTemplate = true;
     _achievements?.checkAndUnlockAchievements();
+  }
+  
+  /// Set the XP service reference
+  void setXPService(XPService? xpService) {
+    _xpService = xpService;
+    notifyListeners();
   }
 }

@@ -13,6 +13,7 @@ import 'data/services/calendar_service.dart';
 import 'data/services/routine_service.dart';
 import 'data/services/purchase_service.dart';
 import 'data/services/siri_service.dart';
+import 'data/services/xp_service.dart';
 import 'presentation/providers/task_provider.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/onboarding/onboarding_screen.dart';
@@ -70,6 +71,10 @@ void main() async {
   final siri = SiriService();
   await siri.initialize();
   
+  // Initialize XP service
+  final xpService = XPService();
+  await xpService.initialize();
+  
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -84,6 +89,7 @@ void main() async {
     calendar: calendar,
     routines: routines,
     purchases: purchases,
+    xpService: xpService,
   ));
 }
 
@@ -95,6 +101,7 @@ class ADHDDecomposerApp extends StatefulWidget {
   final CalendarService calendar;
   final RoutineService routines;
   final PurchaseService purchases;
+  final XPService xpService;
   
   const ADHDDecomposerApp({
     super.key,
@@ -105,6 +112,7 @@ class ADHDDecomposerApp extends StatefulWidget {
     required this.calendar,
     required this.routines,
     required this.purchases,
+    required this.xpService,
   });
 
   @override
@@ -286,6 +294,7 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
             achievements: widget.achievements,
             notifications: widget.notifications,
             purchases: widget.purchases,
+            xpService: widget.xpService,
           )..initialize(),
         ),
         Provider.value(value: widget.settings),
@@ -295,6 +304,7 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
         Provider.value(value: widget.calendar),
         ChangeNotifierProvider.value(value: widget.routines),
         ChangeNotifierProvider.value(value: widget.purchases),
+        ChangeNotifierProvider.value(value: widget.xpService),
       ],
       child: MaterialApp(
         title: 'Tiny Steps',

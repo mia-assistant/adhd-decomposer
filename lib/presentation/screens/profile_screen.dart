@@ -1,11 +1,9 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
 import '../../data/services/xp_service.dart';
-import '../../data/services/settings_service.dart';
 import '../../data/models/player_profile.dart';
 
 /// Minimum touch target size for accessibility (48x48dp per WCAG guidelines)

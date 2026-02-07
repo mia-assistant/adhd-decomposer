@@ -17,6 +17,7 @@ import '../../data/services/stats_service.dart';
 import '../../data/services/settings_service.dart';
 import '../../data/services/analytics_service.dart';
 import '../../data/services/calendar_service.dart';
+import '../../data/services/siri_service.dart';
 import '../widgets/time_slot_picker.dart';
 import 'body_double_screen.dart';
 import 'routines_screen.dart';
@@ -52,6 +53,11 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
   void initState() {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+    
+    // Donate intent when user continues a task
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      SiriService().donateContinueTask();
+    });
   }
 
   @override
@@ -129,6 +135,7 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
     final stepNum = task.currentStepIndex + 1;
     final totalSteps = task.steps.length;
     final reduceAnimations = _shouldReduceAnimations(context);
+    final coach = provider.selectedCoach;
 
     return SafeArea(
       child: Padding(
@@ -136,7 +143,7 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Header with proper accessibility
+            // Header with coach avatar and task info
             Row(
               children: [
                 Semantics(
@@ -152,6 +159,15 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
                     ),
                   ),
                 ),
+                // Coach avatar
+                Semantics(
+                  label: '${coach.name} coaching you',
+                  child: Text(
+                    coach.avatar,
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                ),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Semantics(
                     label: 'Current task: ${task.title}',
@@ -486,9 +502,9 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
       }
     }
     
-    final message = Encouragements.stepComplete[
-      _random.nextInt(Encouragements.stepComplete.length)
-    ];
+    // Use coach-specific completion message
+    final coach = provider.selectedCoach;
+    final message = coach.getRandomCompletionMessage();
     
     // Announce completion for screen readers
     SemanticsService.announce('Step completed! $message', TextDirection.ltr);
@@ -575,11 +591,13 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
   }
 
   Widget _buildCompletionScreen(BuildContext context, Task task) {
+    final provider = context.read<TaskProvider>();
+    final coach = provider.selectedCoach;
+    
     // Play confetti on first build
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!_hasTriggeredCompletion) {
         _hasTriggeredCompletion = true;
-        final provider = context.read<TaskProvider>();
         
         if (_shouldShowConfetti(context)) {
           _confettiController.play();
@@ -610,12 +628,12 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Coach avatar and celebration
             Semantics(
-              label: 'Celebration icon',
-              child: Icon(
-                Icons.celebration,
-                size: 80,
-                color: Theme.of(context).colorScheme.primary,
+              label: '${coach.name} celebrating with you',
+              child: Text(
+                coach.avatar,
+                style: const TextStyle(fontSize: 64),
               ),
             ),
             const SizedBox(height: 24),
@@ -628,10 +646,9 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
               ),
             ),
             const SizedBox(height: 16),
+            // Use coach-specific completion message
             Text(
-              Encouragements.taskComplete[
-                _random.nextInt(Encouragements.taskComplete.length)
-              ],
+              coach.getRandomCompletionMessage(),
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                 height: 1.5, // Improved line spacing
               ),
@@ -969,6 +986,9 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
   }
 
   void _showStuckDialog(BuildContext context, TaskStep step) {
+    final provider = context.read<TaskProvider>();
+    final coach = provider.selectedCoach;
+    
     showModalBottomSheet(
       context: context,
       shape: const RoundedRectangleBorder(
@@ -980,6 +1000,13 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Coach avatar
+            Text(
+              coach.avatar,
+              style: const TextStyle(fontSize: 48),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 12),
             Semantics(
               header: true,
               child: Text(
@@ -989,8 +1016,9 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
               ),
             ),
             const SizedBox(height: 8),
+            // Use coach-specific stuck message
             Text(
-              "Let's break it down even smaller.",
+              coach.getRandomStuckMessage(),
               style: Theme.of(context).textTheme.bodyMedium,
               textAlign: TextAlign.center,
             ),

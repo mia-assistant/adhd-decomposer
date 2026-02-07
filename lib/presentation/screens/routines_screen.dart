@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../data/models/routine.dart';
 import '../../data/models/task.dart';
 import '../../data/services/routine_service.dart';
+import '../../data/services/siri_service.dart';
 import '../providers/task_provider.dart';
 import 'execute_screen.dart';
 
@@ -262,6 +263,9 @@ class _RoutinesScreenState extends State<RoutinesScreen> {
     final task = routine.toTask();
     context.read<TaskProvider>().addTask(task);
     context.read<TaskProvider>().setActiveTask(task);
+    
+    // Donate intent for Siri to suggest this routine next time
+    SiriService().donateRoutineUsed(routine);
     
     // Navigate to execute screen with callback to mark routine complete
     Navigator.of(context).push(

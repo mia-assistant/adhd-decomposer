@@ -4,12 +4,14 @@ import '../providers/task_provider.dart';
 import '../../core/constants/strings.dart';
 import '../../data/models/task.dart';
 import '../../data/services/routine_service.dart';
+import '../../data/services/xp_service.dart';
 import 'decompose_screen.dart';
 import 'execute_screen.dart';
 import 'settings_screen.dart';
 import 'stats_screen.dart';
 import 'templates_screen.dart';
 import 'routines_screen.dart';
+import 'profile_screen.dart';
 
 /// Minimum touch target size for accessibility (48x48dp per WCAG guidelines)
 const double kMinTouchTarget = 48.0;
@@ -26,6 +28,60 @@ class HomeScreen extends StatelessWidget {
           child: const Text(AppStrings.appName),
         ),
         actions: [
+          // Level badge - tappable to go to profile
+          Consumer<XPService>(
+            builder: (context, xpService, _) {
+              return Semantics(
+                label: 'Level ${xpService.level}. Tap to view profile',
+                button: true,
+                child: InkWell(
+                  onTap: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'Lv ${xpService.level}',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            value: xpService.progressToNextLevel,
+                            strokeWidth: 2.5,
+                            backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Theme.of(context).colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
           Semantics(
             label: 'View routines',
             button: true,
@@ -179,6 +235,10 @@ class HomeScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       children: [
+        // Coach greeting card
+        _CoachGreetingCard(),
+        const SizedBox(height: 16),
+        
         // Streak celebration banner
         if (hasStreakCelebration)
           _buildStreakBanner(context, routineService),
@@ -694,6 +754,65 @@ class _TaskCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A compact card showing a greeting from the selected coach
+class _CoachGreetingCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<TaskProvider>(
+      builder: (context, provider, _) {
+        final coach = provider.selectedCoach;
+        
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                // Coach avatar
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Text(
+                      coach.avatar,
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                
+                // Greeting message
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        coach.name,
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        coach.getRandomGreeting(),
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

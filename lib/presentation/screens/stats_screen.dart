@@ -7,7 +7,9 @@ import '../../data/services/stats_service.dart';
 import '../../data/services/achievements_service.dart';
 import '../../data/services/share_service.dart';
 import '../../data/services/siri_service.dart';
+import '../../data/services/xp_service.dart';
 import '../widgets/share_card.dart';
+import 'profile_screen.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -130,6 +132,7 @@ class _StatsScreenState extends State<StatsScreen> {
   Widget build(BuildContext context) {
     final stats = context.watch<StatsService>();
     final achievements = context.watch<AchievementsService>();
+    final xpService = context.watch<XPService>();
     
     return Scaffold(
       appBar: AppBar(
@@ -147,6 +150,8 @@ class _StatsScreenState extends State<StatsScreen> {
           ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              _buildLevelCard(context, xpService),
+              const SizedBox(height: 24),
               _buildStreakSection(context, stats),
               const SizedBox(height: 24),
               _buildStatsCards(context, stats),
@@ -177,6 +182,101 @@ class _StatsScreenState extends State<StatsScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildLevelCard(BuildContext context, XPService xpService) {
+    return Card(
+      child: InkWell(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+          );
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              // Level badge
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [
+                      Theme.of(context).colorScheme.primary,
+                      Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                    ],
+                  ),
+                ),
+                child: Center(
+                  child: Text(
+                    '${xpService.level}',
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      xpService.currentTitle,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${xpService.totalXP} XP total',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    // XP progress bar
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: xpService.progressToNextLevel,
+                        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                        minHeight: 6,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '+${xpService.xpEarnedToday}',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    'XP today',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
+        ),
+      ),
+    )
+        .animate()
+        .fadeIn(duration: const Duration(milliseconds: 300))
+        .slideY(begin: -0.1, end: 0);
   }
 
   Widget _buildStreakSection(BuildContext context, StatsService stats) {

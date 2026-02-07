@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/task_provider.dart';
 import '../../core/constants/strings.dart';
+import '../../data/services/siri_service.dart';
 import 'execute_screen.dart';
 import 'paywall_screen.dart';
 
@@ -312,6 +313,9 @@ class _DecomposeScreenState extends State<DecomposeScreen> {
       _showPaywall(context);
       return;
     }
+    
+    // Donate intent for Siri to learn this pattern
+    SiriService().donateDecomposeStarted();
     
     // Announce loading state for screen readers
     SemanticsService.announce('Breaking down your task. Please wait.', TextDirection.ltr);
