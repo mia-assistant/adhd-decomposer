@@ -22,6 +22,7 @@ class SettingsService {
   static const String keySoundEnabled = 'soundEnabled';
   static const String keyHapticEnabled = 'hapticEnabled';
   static const String keyConfettiEnabled = 'confettiEnabled';
+  static const String keyCelebrationSoundEnabled = 'celebrationSoundEnabled';
   static const String keyDecompositionCount = 'decompositionCount';
   static const String keyIsPremium = 'isPremium';
   static const String keyOpenAIApiKey = 'openAIApiKey';
@@ -81,6 +82,9 @@ class SettingsService {
   
   bool get confettiEnabled => _safeBox.get(keyConfettiEnabled, defaultValue: true);
   set confettiEnabled(bool value) => _safeBox.put(keyConfettiEnabled, value);
+  
+  bool get celebrationSoundEnabled => _safeBox.get(keyCelebrationSoundEnabled, defaultValue: true);
+  set celebrationSoundEnabled(bool value) => _safeBox.put(keyCelebrationSoundEnabled, value);
   
   // Usage tracking
   int get decompositionCount => _safeBox.get(keyDecompositionCount, defaultValue: 0);

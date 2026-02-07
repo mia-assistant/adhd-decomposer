@@ -64,6 +64,7 @@ class TaskProvider extends ChangeNotifier {
   bool get soundEnabled => _settings?.soundEnabled ?? true;
   bool get hapticEnabled => _settings?.hapticEnabled ?? true;
   bool get confettiEnabled => _settings?.confettiEnabled ?? true;
+  bool get celebrationSoundEnabled => _settings?.celebrationSoundEnabled ?? true;
   bool get canDecompose => isPremium || hasCustomApiKey || !(_settings?.hasReachedFreeLimit ?? false);
   int get remainingFreeDecompositions => _settings?.remainingFreeDecompositions ?? -1;
   
@@ -101,6 +102,11 @@ class TaskProvider extends ChangeNotifier {
   
   void setConfettiEnabled(bool value) {
     _settings?.confettiEnabled = value;
+    notifyListeners();
+  }
+  
+  void setCelebrationSoundEnabled(bool value) {
+    _settings?.celebrationSoundEnabled = value;
     notifyListeners();
   }
   

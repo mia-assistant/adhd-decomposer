@@ -67,6 +67,14 @@ class SettingsScreen extends StatelessWidget {
                 value: provider.confettiEnabled,
                 onChanged: (value) => provider.setConfettiEnabled(value),
               ),
+              _buildSwitchTile(
+                context,
+                icon: Icons.music_note_outlined,
+                title: 'Celebration Sounds',
+                subtitle: 'Play sounds when completing tasks',
+                value: provider.celebrationSoundEnabled,
+                onChanged: (value) => provider.setCelebrationSoundEnabled(value),
+              ),
               
               const Divider(height: 32),
               _buildSectionHeader(context, 'Accessibility'),

@@ -20,7 +20,7 @@ class SoundService {
   }
 
   Future<void> playTaskComplete() async {
-    if (!_settings.soundEnabled) return;
+    if (!_settings.celebrationSoundEnabled) return;
     try {
       await _player.play(AssetSource('sounds/task_complete.mp3'));
     } catch (e) {
