@@ -52,6 +52,9 @@ dependencies:
   
   # Calendar integration
   device_calendar: ^4.3.2
+  
+  # Siri Shortcuts integration
+  flutter_app_intents: ^0.7.0
 
 dev_dependencies:
   flutter_test:

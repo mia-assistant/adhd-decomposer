@@ -11,6 +11,7 @@ import 'data/services/notification_service.dart';
 import 'data/services/analytics_service.dart';
 import 'data/services/calendar_service.dart';
 import 'data/services/routine_service.dart';
+import 'data/services/purchase_service.dart';
 import 'presentation/providers/task_provider.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/onboarding/onboarding_screen.dart';
@@ -59,6 +60,10 @@ void main() async {
   final routines = RoutineService();
   await routines.initialize();
   
+  // Initialize purchase service
+  final purchases = PurchaseService();
+  await purchases.initialize();
+  
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -72,6 +77,7 @@ void main() async {
     notifications: notifications,
     calendar: calendar,
     routines: routines,
+    purchases: purchases,
   ));
 }
 
@@ -82,6 +88,7 @@ class ADHDDecomposerApp extends StatefulWidget {
   final NotificationService notifications;
   final CalendarService calendar;
   final RoutineService routines;
+  final PurchaseService purchases;
   
   const ADHDDecomposerApp({
     super.key,
@@ -91,6 +98,7 @@ class ADHDDecomposerApp extends StatefulWidget {
     required this.notifications,
     required this.calendar,
     required this.routines,
+    required this.purchases,
   });
 
   @override
@@ -226,6 +234,7 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
         Provider.value(value: widget.notifications),
         Provider.value(value: widget.calendar),
         ChangeNotifierProvider.value(value: widget.routines),
+        ChangeNotifierProvider.value(value: widget.purchases),
       ],
       child: MaterialApp(
         title: 'Tiny Steps',

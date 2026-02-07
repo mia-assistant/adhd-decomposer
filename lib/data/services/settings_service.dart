@@ -89,9 +89,18 @@ class SettingsService {
   
   bool get hasReachedFreeLimit => !isPremium && decompositionCount >= freeDecompositionLimit;
   
-  // Premium status
+  // Premium status (cached locally, verified via PurchaseService on launch)
+  // Note: This is a cache - the source of truth is PurchaseService.isPremium
   bool get isPremium => _safeBox.get(keyIsPremium, defaultValue: false);
   set isPremium(bool value) => _safeBox.put(keyIsPremium, value);
+  
+  /// Sync premium status from PurchaseService
+  /// Call this after PurchaseService initialization
+  void syncPremiumStatus(bool isPremiumFromPurchases) {
+    if (isPremium != isPremiumFromPurchases) {
+      isPremium = isPremiumFromPurchases;
+    }
+  }
   
   // API key (power user feature)
   String? get openAIApiKey => _safeBox.get(keyOpenAIApiKey);

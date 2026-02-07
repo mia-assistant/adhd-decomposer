@@ -8,6 +8,7 @@ import '../../data/services/stats_service.dart';
 import '../../data/services/achievements_service.dart';
 import '../../data/services/widget_service.dart';
 import '../../data/services/notification_service.dart';
+import '../../data/services/purchase_service.dart';
 
 // Re-export DecompositionStyle for UI access
 export '../../data/services/ai_service.dart' show DecompositionStyle;
@@ -20,6 +21,7 @@ class TaskProvider extends ChangeNotifier {
   final StatsService? _stats;
   final AchievementsService? _achievements;
   final NotificationService? _notifications;
+  PurchaseService? _purchases;
   List<Task> _tasks = [];
   Task? _activeTask;
   bool _isLoading = false;
@@ -31,11 +33,13 @@ class TaskProvider extends ChangeNotifier {
     StatsService? stats,
     AchievementsService? achievements,
     NotificationService? notifications,
+    PurchaseService? purchases,
   }) : _aiService = aiService ?? AIService(),
        _settings = settings,
        _stats = stats,
        _achievements = achievements,
-       _notifications = notifications;
+       _notifications = notifications,
+       _purchases = purchases;
   
   List<Task> get tasks => _tasks;
   List<Task> get activeTasks => _tasks.where((t) => !t.isCompleted).toList();
@@ -48,9 +52,12 @@ class TaskProvider extends ChangeNotifier {
   bool get soundEnabled => _settings?.soundEnabled ?? true;
   bool get hapticEnabled => _settings?.hapticEnabled ?? true;
   bool get confettiEnabled => _settings?.confettiEnabled ?? true;
-  bool get canDecompose => _settings?.canDecompose ?? true;
+  bool get canDecompose => isPremium || hasCustomApiKey || !(_settings?.hasReachedFreeLimit ?? false);
   int get remainingFreeDecompositions => _settings?.remainingFreeDecompositions ?? -1;
-  bool get isPremium => _settings?.isPremium ?? false;
+  
+  /// Check if user has premium access (from PurchaseService or settings cache)
+  bool get isPremium => _purchases?.isPremium ?? _settings?.isPremium ?? false;
+  
   bool get hasCustomApiKey => _settings?.hasCustomApiKey ?? false;
   DecompositionStyle get decompositionStyle => _settings?.decompositionStyle ?? DecompositionStyle.standard;
   // Accessibility settings getters
@@ -135,6 +142,17 @@ class TaskProvider extends ChangeNotifier {
   
   Future<void> showTestNotification() async {
     await _notifications?.showTestNotification();
+  }
+  
+  /// Set or update the PurchaseService reference
+  /// This allows premium status updates to propagate
+  void setPurchaseService(PurchaseService? purchases) {
+    _purchases = purchases;
+    // Sync cached premium status
+    if (purchases != null && _settings != null) {
+      _settings!.syncPremiumStatus(purchases.isPremium);
+    }
+    notifyListeners();
   }
   
   Future<void> initialize() async {
@@ -306,6 +324,17 @@ class TaskProvider extends ChangeNotifier {
   void recordTimerUsage(int minutes) {
     _stats?.recordTimerUsage(minutes);
     _achievements?.checkAndUnlockAchievements();
+  }
+  
+  /// Record pomodoro completion for stats tracking
+  void recordPomodoroCompleted() {
+    _stats?.recordPomodoroCompleted();
+    _achievements?.checkAndUnlockAchievements();
+  }
+  
+  /// Record time spent in Body Double mode for stats tracking
+  void recordBodyDoubleMinutes(int minutes) {
+    _stats?.recordBodyDoubleMinutes(minutes);
   }
   
   /// Record template usage for stats tracking

@@ -16,6 +16,8 @@ class StatsService {
   static const String keyTimerUsageCount = 'timerUsageCount';
   static const String keyTemplatesUsed = 'templatesUsed';
   static const String keyTotalShares = 'totalShares';
+  static const String keyTotalPomodoros = 'totalPomodoros';
+  static const String keyTotalBodyDoubleMinutes = 'totalBodyDoubleMinutes';
   
   Box<dynamic>? _box;
   
@@ -61,6 +63,14 @@ class StatsService {
   // Total shares
   int get totalShares => _safeBox.get(keyTotalShares, defaultValue: 0);
   set totalShares(int value) => _safeBox.put(keyTotalShares, value);
+  
+  // Total pomodoros completed (in Body Double mode)
+  int get totalPomodoros => _safeBox.get(keyTotalPomodoros, defaultValue: 0);
+  set totalPomodoros(int value) => _safeBox.put(keyTotalPomodoros, value);
+  
+  // Total minutes spent in Body Double mode
+  int get totalBodyDoubleMinutes => _safeBox.get(keyTotalBodyDoubleMinutes, defaultValue: 0);
+  set totalBodyDoubleMinutes(int value) => _safeBox.put(keyTotalBodyDoubleMinutes, value);
   
   // Templates used (stored as JSON list)
   Set<String> get templatesUsed {
@@ -153,6 +163,16 @@ class StatsService {
   /// Record a share action
   void recordShare() {
     totalShares = totalShares + 1;
+  }
+  
+  /// Record a completed pomodoro session
+  void recordPomodoroCompleted() {
+    totalPomodoros = totalPomodoros + 1;
+  }
+  
+  /// Record time spent in Body Double mode
+  void recordBodyDoubleMinutes(int minutes) {
+    totalBodyDoubleMinutes = totalBodyDoubleMinutes + minutes;
   }
   
   void _updateStreak(DateTime now) {
