@@ -39,6 +39,9 @@ class SettingsService {
   static const String keyReduceAnimations = 'reduceAnimations';
   static const String keyAutoAdvanceEnabled = 'autoAdvanceEnabled';
   
+  // Display settings
+  static const String keyShowCompletedTasks = 'showCompletedTasks';
+  
   // Calendar settings
   static const String keyCalendarEnabled = 'calendarEnabled';
   static const String keyDefaultCalendarId = 'defaultCalendarId';
@@ -201,6 +204,11 @@ class SettingsService {
   /// Auto-advance to next step after completion (can be disabled for accessibility)
   bool get autoAdvanceEnabled => _safeBox.get(keyAutoAdvanceEnabled, defaultValue: true);
   set autoAdvanceEnabled(bool value) => _safeBox.put(keyAutoAdvanceEnabled, value);
+  
+  // Display settings
+  /// Show completed tasks on home screen
+  bool get showCompletedTasks => _safeBox.get(keyShowCompletedTasks, defaultValue: true);
+  set showCompletedTasks(bool value) => _safeBox.put(keyShowCompletedTasks, value);
   
   // Calendar settings
   /// Enable/disable calendar integration

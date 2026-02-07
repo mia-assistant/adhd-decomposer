@@ -4,6 +4,7 @@ import '../providers/task_provider.dart';
 import '../../core/constants/strings.dart';
 import '../../data/models/task.dart';
 import '../../data/services/routine_service.dart';
+import '../../data/services/settings_service.dart';
 import '../../data/services/xp_service.dart';
 import 'decompose_screen.dart';
 import 'execute_screen.dart';
@@ -123,9 +124,9 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Consumer2<TaskProvider, RoutineService>(
-        builder: (context, taskProvider, routineService, _) {
-          return _buildBody(context, taskProvider, routineService);
+      body: Consumer3<TaskProvider, RoutineService, SettingsService>(
+        builder: (context, taskProvider, routineService, settings, _) {
+          return _buildBody(context, taskProvider, routineService, settings);
         },
       ),
       floatingActionButton: Row(
@@ -165,7 +166,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildBody(BuildContext context, TaskProvider taskProvider, RoutineService routineService) {
+  Widget _buildBody(BuildContext context, TaskProvider taskProvider, RoutineService routineService, SettingsService settings) {
     final hasTasks = taskProvider.tasks.isNotEmpty;
     final hasRoutinesDue = routineService.hasRoutinesDue;
     final hasStreakCelebration = routineService.hasStreakCelebration;
@@ -174,7 +175,7 @@ class HomeScreen extends StatelessWidget {
       return _buildEmptyState(context, routineService);
     }
     
-    return _buildTaskList(context, taskProvider, routineService, hasRoutinesDue, hasStreakCelebration);
+    return _buildTaskList(context, taskProvider, routineService, settings, hasRoutinesDue, hasStreakCelebration);
   }
 
   Widget _buildEmptyState(BuildContext context, RoutineService routineService) {
@@ -226,11 +227,13 @@ class HomeScreen extends StatelessWidget {
     BuildContext context, 
     TaskProvider provider, 
     RoutineService routineService,
+    SettingsService settings,
     bool hasRoutinesDue,
     bool hasStreakCelebration,
   ) {
     final activeTasks = provider.activeTasks;
     final completedTasks = provider.completedTasks;
+    final showCompleted = settings.showCompletedTasks;
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
@@ -275,23 +278,45 @@ class HomeScreen extends StatelessWidget {
         // Completed tasks section
         if (completedTasks.isNotEmpty) ...[
           const SizedBox(height: 24),
-          Semantics(
-            header: true,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(
-                'Completed',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Semantics(
+                header: true,
+                child: Text(
+                  'Completed (${completedTasks.length})',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
-            ),
+              Semantics(
+                label: showCompleted ? 'Hide completed tasks' : 'Show completed tasks',
+                button: true,
+                child: TextButton.icon(
+                  onPressed: () {
+                    settings.showCompletedTasks = !showCompleted;
+                  },
+                  icon: Icon(
+                    showCompleted ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    size: 18,
+                  ),
+                  label: Text(showCompleted ? 'Hide' : 'Show'),
+                ),
+              ),
+            ],
           ),
-          ...completedTasks.map((task) => _TaskCard(
-            task: task,
-            onTap: null,
-            onDelete: () => provider.deleteTask(task.id),
-          )),
+          const SizedBox(height: 8),
+          if (showCompleted)
+            ...completedTasks.map((task) => Opacity(
+              opacity: 0.7,
+              child: _TaskCard(
+                task: task,
+                onTap: null,
+                onDelete: () => provider.deleteTask(task.id),
+                isCompleted: true,
+              ),
+            )),
         ],
       ],
     );
@@ -641,11 +666,13 @@ class _TaskCard extends StatelessWidget {
   final Task task;
   final VoidCallback? onTap;
   final VoidCallback onDelete;
+  final bool isCompleted;
 
   const _TaskCard({
     required this.task,
     required this.onTap,
     required this.onDelete,
+    this.isCompleted = false,
   });
 
   @override
