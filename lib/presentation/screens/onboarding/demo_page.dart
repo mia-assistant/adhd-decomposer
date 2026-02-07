@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -17,6 +18,7 @@ class _DemoPageState extends State<DemoPage> {
   int _visibleSteps = 0;
   int _completedSteps = 0;
   bool _showCelebration = false;
+  Timer? _autoCompleteTimer;
   
   final _demoTask = "Clean my room";
   final _demoSteps = [
@@ -28,6 +30,12 @@ class _DemoPageState extends State<DemoPage> {
     "Take a breath - you did it! 🎉",
   ];
   
+  @override
+  void dispose() {
+    _autoCompleteTimer?.cancel();
+    super.dispose();
+  }
+  
   void _startDemo() async {
     setState(() {
       _showInput = false;
@@ -37,6 +45,8 @@ class _DemoPageState extends State<DemoPage> {
     // Simulate AI thinking
     await Future.delayed(const Duration(milliseconds: 1500));
     
+    if (!mounted) return;
+    
     setState(() {
       _isDecomposing = false;
       _showSteps = true;
@@ -44,63 +54,81 @@ class _DemoPageState extends State<DemoPage> {
     
     // Reveal steps one by one
     for (int i = 0; i < _demoSteps.length; i++) {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 250));
       if (mounted) {
         setState(() => _visibleSteps = i + 1);
       }
     }
+    
+    // Start auto-complete timer after all steps are visible
+    _startAutoCompleteTimer();
+  }
+  
+  void _startAutoCompleteTimer() {
+    _autoCompleteTimer?.cancel();
+    
+    // Auto-complete current step after 2.5 seconds of inactivity
+    _autoCompleteTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (mounted && _completedSteps < _demoSteps.length && !_showCelebration) {
+        _completeStep(_completedSteps);
+      }
+    });
   }
   
   void _completeStep(int index) async {
     if (index != _completedSteps) return;
     
+    _autoCompleteTimer?.cancel();
+    
     setState(() => _completedSteps++);
     
     // If all steps completed, show celebration
     if (_completedSteps == _demoSteps.length) {
-      await Future.delayed(const Duration(milliseconds: 500));
-      setState(() => _showCelebration = true);
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (mounted) {
+        setState(() => _showCelebration = true);
+      }
+    } else {
+      // Continue auto-complete for next step
+      _startAutoCompleteTimer();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
       child: Column(
         children: [
-          const Spacer(),
-          
-          // Title
+          // Title - compact
           Text(
             'See it in action',
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
             textAlign: TextAlign.center,
           ).animate().fadeIn().slideY(begin: 0.3, end: 0),
           
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           
           Text(
             'Watch how Tiny Steps breaks down a task',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: Theme.of(context).textTheme.bodySmall?.color,
             ),
             textAlign: TextAlign.center,
           ).animate().fadeIn(delay: 100.ms).slideY(begin: 0.3, end: 0),
           
-          const SizedBox(height: 32),
+          const SizedBox(height: 16),
           
-          // Demo card
+          // Demo card - takes most of the space
           Expanded(
-            flex: 3,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(20),
                 border: Border.all(
                   color: Theme.of(context).colorScheme.outline.withOpacity(0.2),
                 ),
@@ -115,7 +143,7 @@ class _DemoPageState extends State<DemoPage> {
             ),
           ),
           
-          const Spacer(),
+          const SizedBox(height: 16),
           
           // Continue button (shown after celebration)
           if (_showCelebration)
@@ -124,11 +152,14 @@ class _DemoPageState extends State<DemoPage> {
               child: FilledButton(
                 onPressed: widget.onNext,
                 style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: const Text('That\'s amazing! Continue'),
               ),
-            ).animate().fadeIn().slideY(begin: 0.5, end: 0),
+            ).animate().fadeIn().slideY(begin: 0.5, end: 0)
+          else
+            // Placeholder to maintain layout
+            const SizedBox(height: 48),
         ],
       ),
     );
@@ -140,7 +171,7 @@ class _DemoPageState extends State<DemoPage> {
       children: [
         // Fake input field
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
             color: Theme.of(context).colorScheme.surface,
             borderRadius: BorderRadius.circular(12),
@@ -164,7 +195,7 @@ class _DemoPageState extends State<DemoPage> {
           ),
         ).animate().fadeIn().scale(begin: const Offset(0.95, 0.95)),
         
-        const SizedBox(height: 24),
+        const SizedBox(height: 20),
         
         // Tap to start
         FilledButton.icon(
@@ -216,117 +247,135 @@ class _DemoPageState extends State<DemoPage> {
   }
   
   Widget _buildSteps(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            _demoTask,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              fontWeight: FontWeight.bold,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                _demoTask,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          ),
-          
-          const SizedBox(height: 4),
-          
-          Text(
-            '${_demoSteps.length} tiny steps • ~15 min',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
+            Text(
+              '~15 min',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.primary,
+              ),
             ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Steps list
-          ...List.generate(_demoSteps.length, (index) {
-            if (index >= _visibleSteps) return const SizedBox.shrink();
-            
-            final isCompleted = index < _completedSteps;
-            final isCurrent = index == _completedSteps;
-            
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Material(
-                color: isCompleted
-                    ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5)
-                    : isCurrent
-                        ? Theme.of(context).colorScheme.surface
-                        : Theme.of(context).colorScheme.surface.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(12),
-                child: InkWell(
-                  onTap: isCurrent ? () => _completeStep(index) : null,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: isCurrent
-                          ? Border.all(
-                              color: Theme.of(context).colorScheme.primary,
-                              width: 2,
-                            )
-                          : null,
-                    ),
-                    child: Row(
-                      children: [
-                        // Checkbox
-                        Container(
-                          width: 24,
-                          height: 24,
-                          decoration: BoxDecoration(
-                            color: isCompleted
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(6),
-                            border: Border.all(
+          ],
+        ),
+        
+        const SizedBox(height: 12),
+        
+        // Steps list - expanded to fill
+        Expanded(
+          child: ListView.builder(
+            padding: EdgeInsets.zero,
+            itemCount: _demoSteps.length,
+            itemBuilder: (context, index) {
+              if (index >= _visibleSteps) {
+                return const SizedBox.shrink();
+              }
+              
+              final isCompleted = index < _completedSteps;
+              final isCurrent = index == _completedSteps;
+              
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Material(
+                  color: isCompleted
+                      ? Theme.of(context).colorScheme.primaryContainer.withOpacity(0.5)
+                      : isCurrent
+                          ? Theme.of(context).colorScheme.surface
+                          : Theme.of(context).colorScheme.surface.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(10),
+                  child: InkWell(
+                    onTap: isCurrent ? () => _completeStep(index) : null,
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: isCurrent
+                            ? Border.all(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 2,
+                              )
+                            : null,
+                      ),
+                      child: Row(
+                        children: [
+                          // Checkbox
+                          Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
                               color: isCompleted
                                   ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.outline,
-                              width: 2,
+                                  : Colors.transparent,
+                              borderRadius: BorderRadius.circular(5),
+                              border: Border.all(
+                                color: isCompleted
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.outline,
+                                width: 2,
+                              ),
+                            ),
+                            child: isCompleted
+                                ? const Icon(Icons.check, size: 14, color: Colors.white)
+                                : null,
+                          ),
+                          
+                          const SizedBox(width: 10),
+                          
+                          // Step text
+                          Expanded(
+                            child: Text(
+                              _demoSteps[index],
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                decoration: isCompleted ? TextDecoration.lineThrough : null,
+                                color: isCompleted
+                                    ? Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6)
+                                    : null,
+                              ),
                             ),
                           ),
-                          child: isCompleted
-                              ? const Icon(Icons.check, size: 16, color: Colors.white)
-                              : null,
-                        ),
-                        
-                        const SizedBox(width: 12),
-                        
-                        // Step text
-                        Expanded(
-                          child: Text(
-                            _demoSteps[index],
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              decoration: isCompleted ? TextDecoration.lineThrough : null,
-                              color: isCompleted
-                                  ? Theme.of(context).textTheme.bodySmall?.color
-                                  : null,
-                            ),
-                          ),
-                        ),
-                        
-                        // Tap hint for current
-                        if (isCurrent)
-                          Text(
-                            'Tap!',
-                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ).animate(onPlay: (c) => c.repeat(reverse: true))
-                              .fadeIn()
-                              .then()
-                              .fadeOut(delay: 500.ms),
-                      ],
+                          
+                          // Tap hint for current
+                          if (isCurrent)
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'Tap!',
+                                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ).animate(onPlay: (c) => c.repeat(reverse: true))
+                                .fadeIn()
+                                .then(delay: 800.ms)
+                                .fadeOut(duration: 400.ms),
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ).animate().fadeIn().slideX(begin: 0.1, end: 0);
-          }),
-        ],
-      ),
+              ).animate().fadeIn(duration: 200.ms).slideX(begin: 0.05, end: 0);
+            },
+          ),
+        ),
+      ],
     );
   }
   
@@ -335,20 +384,20 @@ class _DemoPageState extends State<DemoPage> {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         // Confetti emoji
-        Text(
+        const Text(
           '🎉',
-          style: const TextStyle(fontSize: 64),
+          style: TextStyle(fontSize: 56),
         )
             .animate(onPlay: (c) => c.repeat(reverse: true))
-            .scale(begin: const Offset(1, 1), end: const Offset(1.2, 1.2))
+            .scale(begin: const Offset(1, 1), end: const Offset(1.15, 1.15))
             .then()
             .shake(),
         
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         
         Text(
           'Task complete!',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
             fontWeight: FontWeight.bold,
             color: Theme.of(context).colorScheme.primary,
           ),
