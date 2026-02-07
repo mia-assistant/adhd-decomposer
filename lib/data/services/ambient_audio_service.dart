@@ -7,6 +7,8 @@ enum AmbientSound {
   cafe,
   rain,
   whiteNoise,
+  nature,
+  fireplace,
 }
 
 /// Service for playing ambient background sounds during focus sessions.
@@ -128,6 +130,10 @@ class AmbientAudioService {
         return 'audio/ambient/rain.mp3';
       case AmbientSound.whiteNoise:
         return 'audio/ambient/white_noise.mp3';
+      case AmbientSound.nature:
+        return 'audio/ambient/nature.mp3';
+      case AmbientSound.fireplace:
+        return 'audio/ambient/fireplace.mp3';
       case AmbientSound.none:
         return '';
     }
@@ -144,6 +150,10 @@ class AmbientAudioService {
         return 'Rain';
       case AmbientSound.whiteNoise:
         return 'Noise';
+      case AmbientSound.nature:
+        return 'Nature';
+      case AmbientSound.fireplace:
+        return 'Fire';
     }
   }
 
@@ -158,6 +168,10 @@ class AmbientAudioService {
         return 'water_drop';
       case AmbientSound.whiteNoise:
         return 'waves';
+      case AmbientSound.nature:
+        return 'park';
+      case AmbientSound.fireplace:
+        return 'local_fire_department';
     }
   }
 }
