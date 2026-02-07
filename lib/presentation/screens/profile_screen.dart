@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:confetti/confetti.dart';
 import '../../data/services/xp_service.dart';
 import '../../data/models/player_profile.dart';
+import 'stats_screen.dart';
 
 /// Minimum touch target size for accessibility (48x48dp per WCAG guidelines)
 const double kMinTouchTarget = 48.0;
@@ -88,6 +89,8 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
                   _buildThemesSection(context, xpService),
                   const SizedBox(height: 24),
                   _buildSoundsSection(context, xpService),
+                  const SizedBox(height: 24),
+                  _buildViewStatsButton(context),
                   const SizedBox(height: 32),
                 ],
               );
@@ -361,6 +364,22 @@ class _ProfileScreenState extends State<ProfileScreen> with SingleTickerProvider
           );
         }),
       ],
+    );
+  }
+  
+  Widget _buildViewStatsButton(BuildContext context) {
+    return OutlinedButton.icon(
+      onPressed: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const StatsScreen()),
+        );
+      },
+      icon: const Icon(Icons.bar_chart_rounded),
+      label: const Text('View Stats & Achievements'),
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        minimumSize: const Size(double.infinity, kMinTouchTarget),
+      ),
     );
   }
 }
