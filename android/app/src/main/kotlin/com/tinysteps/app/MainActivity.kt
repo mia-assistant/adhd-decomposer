@@ -1,4 +1,4 @@
-package com.example.adhd_decomposer
+package com.tinysteps.app
 
 import io.flutter.embedding.android.FlutterActivity
 
