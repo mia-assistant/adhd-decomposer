@@ -301,7 +301,7 @@ class TaskProvider extends ChangeNotifier {
         _achievements?.checkAndUnlockAchievements();
         
         // Donate intent for Siri to suggest starting another task
-        SiriService().donateTaskCompleted();
+        SiriService().donateTaskCompleted('task');
         
         // Clear unfinished task reminder and schedule streak reminder
         _notifications?.clearUnfinishedTaskReminder();

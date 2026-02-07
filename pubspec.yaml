@@ -54,7 +54,6 @@ dependencies:
   device_calendar: ^4.3.2
   
   # Siri Shortcuts integration
-  flutter_app_intents: ^0.7.0
   
   # Keep screen awake
 

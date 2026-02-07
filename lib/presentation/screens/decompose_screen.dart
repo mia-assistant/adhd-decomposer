@@ -315,7 +315,7 @@ class _DecomposeScreenState extends State<DecomposeScreen> {
     }
     
     // Donate intent for Siri to learn this pattern
-    SiriService().donateDecomposeStarted();
+    SiriService().donateDecomposeStarted('task');
     
     // Announce loading state for screen readers
     SemanticsService.announce('Breaking down your task. Please wait.', TextDirection.ltr);
