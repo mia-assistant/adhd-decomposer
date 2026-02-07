@@ -125,7 +125,7 @@ class _ChallengeCard extends StatelessWidget {
             border: Border.all(
               color: isSelected
                   ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
+                  : Theme.of(context).colorScheme.outline.withOpacity(0.3),
               width: 2,
             ),
           ),

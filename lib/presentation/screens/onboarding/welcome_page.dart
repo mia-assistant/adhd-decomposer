@@ -12,6 +12,7 @@ class WelcomePage extends StatelessWidget {
       padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           const Spacer(),
           
@@ -36,6 +37,7 @@ class WelcomePage extends StatelessWidget {
             style: Theme.of(context).textTheme.displaySmall?.copyWith(
               fontWeight: FontWeight.bold,
             ),
+            textAlign: TextAlign.center,
           )
               .animate()
               .fadeIn(delay: 200.ms)
@@ -57,25 +59,25 @@ class WelcomePage extends StatelessWidget {
           
           const Spacer(),
           
-          // Feature highlights
+          // Feature highlights - centered
           _FeatureRow(
             icon: Icons.psychology_outlined,
             text: 'AI breaks down your tasks',
-          ).animate().fadeIn(delay: 600.ms).slideX(begin: -0.2, end: 0),
+          ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2, end: 0),
           
           const SizedBox(height: 12),
           
           _FeatureRow(
             icon: Icons.timer_outlined,
             text: 'Each step takes minutes, not hours',
-          ).animate().fadeIn(delay: 700.ms).slideX(begin: -0.2, end: 0),
+          ).animate().fadeIn(delay: 700.ms).slideY(begin: 0.2, end: 0),
           
           const SizedBox(height: 12),
           
           _FeatureRow(
             icon: Icons.celebration_outlined,
             text: 'Celebrate every tiny win',
-          ).animate().fadeIn(delay: 800.ms).slideX(begin: -0.2, end: 0),
+          ).animate().fadeIn(delay: 800.ms).slideY(begin: 0.2, end: 0),
           
           const Spacer(),
           
@@ -109,6 +111,8 @@ class _FeatureRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Icon(
           icon,
@@ -116,11 +120,9 @@ class _FeatureRow extends StatelessWidget {
           color: Theme.of(context).colorScheme.primary,
         ),
         const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+        Text(
+          text,
+          style: Theme.of(context).textTheme.bodyMedium,
         ),
       ],
     );
