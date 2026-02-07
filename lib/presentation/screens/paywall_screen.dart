@@ -3,6 +3,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
 import '../../data/services/purchase_service.dart';
 
+enum PricingOption { monthly, yearly, lifetime }
+
 class PaywallScreen extends StatefulWidget {
   final VoidCallback? onPurchaseComplete;
   final VoidCallback? onSkip;
@@ -20,7 +22,7 @@ class PaywallScreen extends StatefulWidget {
 }
 
 class _PaywallScreenState extends State<PaywallScreen> {
-  bool _isYearlySelected = true;
+  PricingOption _selectedOption = PricingOption.lifetime; // Default to lifetime for ADHD users
   bool _isLoading = false;
   bool _isLoadingPackages = true;
   String? _errorMessage;
@@ -28,6 +30,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   // Fallback prices if packages can't be loaded
   static const double fallbackMonthlyPrice = 4.99;
   static const double fallbackYearlyPrice = 29.99;
+  static const double fallbackLifetimePrice = 49.99;
   
   @override
   void initState() {
@@ -70,7 +73,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                       padding: const EdgeInsets.all(16),
                       child: TextButton(
                         onPressed: _isLoading ? null : widget.onSkip,
-                        child: const Text('Skip'),
+                        child: const Text('Maybe later'),
                       ),
                     ),
                   ),
@@ -125,7 +128,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
                         
                         // Terms
                         Text(
-                          'Cancel anytime. Subscription auto-renews.',
+                          _selectedOption == PricingOption.lifetime
+                              ? 'One-time purchase. Yours forever.'
+                              : 'Cancel anytime. Subscription auto-renews.',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
                           ),
@@ -220,7 +225,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
         const SizedBox(height: 8),
         
         Text(
-          'Get unlimited task breakdowns and more',
+          'Get unlimited task breakdowns and focus tools',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: Theme.of(context).textTheme.bodySmall?.color,
           ),
@@ -235,11 +240,11 @@ class _PaywallScreenState extends State<PaywallScreen> {
   
   Widget _buildFeatures(BuildContext context) {
     final features = [
-      (icon: Icons.all_inclusive, text: 'Unlimited task decompositions'),
-      (icon: Icons.volume_up, text: 'All celebration sounds'),
-      (icon: Icons.palette, text: 'Premium themes'),
-      (icon: Icons.block, text: 'No ads, ever'),
-      (icon: Icons.rocket_launch, text: 'Priority AI processing'),
+      (icon: Icons.all_inclusive, text: 'Unlimited task breakdowns'),
+      (icon: Icons.psychology, text: 'All AI coaching styles'),
+      (icon: Icons.palette, text: 'Premium themes & sounds'),
+      (icon: Icons.people, text: 'Body doubling mode'),
+      (icon: Icons.emoji_events, text: 'Full gamification system'),
     ];
     
     return Column(
@@ -315,31 +320,41 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
   
   Widget _buildLoadingPricing() {
-    return Row(
+    return Column(
       children: [
-        Expanded(
-          child: Container(
-            height: 140,
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
             ),
-            child: const Center(
-              child: CircularProgressIndicator(strokeWidth: 2),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Container(
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.grey.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
             ),
-          ),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Container(
-            height: 140,
-            decoration: BoxDecoration(
-              color: Colors.grey.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Center(
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
+        const SizedBox(height: 8),
+        Container(
+          height: 100,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: Colors.grey.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: const Center(
+            child: CircularProgressIndicator(strokeWidth: 2),
           ),
         ),
       ],
@@ -350,6 +365,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     // Get packages from service or use fallback
     final monthlyPackage = purchaseService.monthlyPackage;
     final yearlyPackage = purchaseService.yearlyPackage;
+    final lifetimePackage = purchaseService.lifetimePackage;
     
     // Determine prices to show
     final monthlyPrice = monthlyPackage != null
@@ -360,66 +376,108 @@ class _PaywallScreenState extends State<PaywallScreen> {
         ? purchaseService.getFormattedPrice(yearlyPackage)
         : '\$${fallbackYearlyPrice.toStringAsFixed(2)}';
     
+    final lifetimePrice = lifetimePackage != null
+        ? purchaseService.getFormattedPrice(lifetimePackage)
+        : '\$${fallbackLifetimePrice.toStringAsFixed(2)}';
+    
     // Calculate savings
-    final savings = purchaseService.getYearlySavings() ?? 
+    final yearlySavings = purchaseService.getYearlySavings() ?? 
         ((fallbackMonthlyPrice * 12) - fallbackYearlyPrice);
     
     final monthlyEquiv = purchaseService.getYearlyMonthlyEquivalent() ??
         (fallbackYearlyPrice / 12);
     
-    return Row(
+    return Column(
       children: [
-        // Monthly
-        Expanded(
-          child: _PricingCard(
-            title: 'Monthly',
-            price: monthlyPrice,
-            period: '/month',
-            isSelected: !_isYearlySelected,
-            onTap: () => setState(() => _isYearlySelected = false),
-          )
-              .animate()
-              .fadeIn(delay: 500.ms)
-              .slideY(begin: 0.3, end: 0),
+        // Monthly & Yearly row
+        Row(
+          children: [
+            // Monthly
+            Expanded(
+              child: _PricingCard(
+                title: 'Monthly',
+                price: monthlyPrice,
+                period: '/month',
+                isSelected: _selectedOption == PricingOption.monthly,
+                onTap: () => setState(() => _selectedOption = PricingOption.monthly),
+              )
+                  .animate()
+                  .fadeIn(delay: 500.ms)
+                  .slideY(begin: 0.3, end: 0),
+            ),
+            
+            const SizedBox(width: 8),
+            
+            // Yearly
+            Expanded(
+              child: _PricingCard(
+                title: 'Yearly',
+                price: yearlyPrice,
+                period: '/year',
+                subtitle: '\$${monthlyEquiv.toStringAsFixed(2)}/mo',
+                savingsText: 'Save \$${yearlySavings.toStringAsFixed(0)}',
+                isSelected: _selectedOption == PricingOption.yearly,
+                onTap: () => setState(() => _selectedOption = PricingOption.yearly),
+              )
+                  .animate()
+                  .fadeIn(delay: 550.ms)
+                  .slideY(begin: 0.3, end: 0),
+            ),
+          ],
         ),
         
-        const SizedBox(width: 12),
+        const SizedBox(height: 8),
         
-        // Yearly
-        Expanded(
-          child: _PricingCard(
-            title: 'Yearly',
-            price: yearlyPrice,
-            period: '/year',
-            subtitle: '\$${monthlyEquiv.toStringAsFixed(2)}/mo',
-            badge: 'BEST VALUE',
-            savingsText: 'Save \$${savings.toStringAsFixed(0)}',
-            isSelected: _isYearlySelected,
-            onTap: () => setState(() => _isYearlySelected = true),
-          )
-              .animate()
-              .fadeIn(delay: 600.ms)
-              .slideY(begin: 0.3, end: 0),
-        ),
+        // Lifetime - full width, highlighted
+        _PricingCard(
+          title: 'Lifetime',
+          price: lifetimePrice,
+          period: ' once',
+          subtitle: 'Pay once, own forever',
+          badge: '🧠 ADHD FRIENDLY',
+          savingsText: 'Best for commitment',
+          isSelected: _selectedOption == PricingOption.lifetime,
+          isHighlighted: true,
+          onTap: () => setState(() => _selectedOption = PricingOption.lifetime),
+        )
+            .animate()
+            .fadeIn(delay: 600.ms)
+            .slideY(begin: 0.3, end: 0),
       ],
     );
   }
   
   Widget _buildPurchaseButton(BuildContext context, PurchaseService purchaseService) {
-    final selectedPackage = _isYearlySelected 
-        ? purchaseService.yearlyPackage 
-        : purchaseService.monthlyPackage;
-    
-    // Button text
+    // Button text based on selection
     String buttonText;
+    String price;
+    
+    switch (_selectedOption) {
+      case PricingOption.monthly:
+        final pkg = purchaseService.monthlyPackage;
+        price = pkg != null 
+            ? purchaseService.getFormattedPrice(pkg) 
+            : '\$${fallbackMonthlyPrice.toStringAsFixed(2)}';
+        buttonText = 'Start Monthly — $price/mo';
+        break;
+      case PricingOption.yearly:
+        final pkg = purchaseService.yearlyPackage;
+        price = pkg != null 
+            ? purchaseService.getFormattedPrice(pkg) 
+            : '\$${fallbackYearlyPrice.toStringAsFixed(2)}';
+        buttonText = 'Start Yearly — $price/yr';
+        break;
+      case PricingOption.lifetime:
+        final pkg = purchaseService.lifetimePackage;
+        price = pkg != null 
+            ? purchaseService.getFormattedPrice(pkg) 
+            : '\$${fallbackLifetimePrice.toStringAsFixed(2)}';
+        buttonText = 'Get Lifetime Access — $price';
+        break;
+    }
+    
     if (_isLoading) {
       buttonText = 'Processing...';
-    } else if (selectedPackage != null) {
-      buttonText = 'Continue — ${purchaseService.getFormattedPrice(selectedPackage)}';
-    } else {
-      final price = _isYearlySelected ? fallbackYearlyPrice : fallbackMonthlyPrice;
-      final period = _isYearlySelected ? 'year' : 'month';
-      buttonText = 'Continue — \$${price.toStringAsFixed(2)}/$period';
     }
     
     return SizedBox(
@@ -449,11 +507,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
   
   Future<void> _purchase(PurchaseService purchaseService) async {
-    final selectedPackage = _isYearlySelected 
-        ? purchaseService.yearlyPackage 
-        : purchaseService.monthlyPackage;
+    // Get selected package
+    final package = switch (_selectedOption) {
+      PricingOption.monthly => purchaseService.monthlyPackage,
+      PricingOption.yearly => purchaseService.yearlyPackage,
+      PricingOption.lifetime => purchaseService.lifetimePackage,
+    };
     
-    if (selectedPackage == null) {
+    if (package == null) {
       setState(() {
         _errorMessage = 'Subscription not available. Please try again later.';
       });
@@ -466,13 +527,15 @@ class _PaywallScreenState extends State<PaywallScreen> {
     });
     
     try {
-      final success = await purchaseService.purchasePackage(selectedPackage);
+      final success = await purchaseService.purchasePackage(package);
       
       if (success && mounted) {
         // Purchase successful!
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Welcome to Tiny Steps Pro! 🎉'),
+          SnackBar(
+            content: Text(_selectedOption == PricingOption.lifetime
+                ? 'Welcome to Tiny Steps Pro — forever! 🎉'
+                : 'Welcome to Tiny Steps Pro! 🎉'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.green,
           ),
@@ -489,7 +552,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           // Already premium - treat as success
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('You already have an active subscription! 🎉'),
+              content: Text('You already have Pro access! 🎉'),
               behavior: SnackBarBehavior.floating,
               backgroundColor: Colors.green,
             ),
@@ -570,6 +633,7 @@ class _PricingCard extends StatelessWidget {
   final String? badge;
   final String? savingsText;
   final bool isSelected;
+  final bool isHighlighted;
   final VoidCallback onTap;
   
   const _PricingCard({
@@ -580,13 +644,16 @@ class _PricingCard extends StatelessWidget {
     this.badge,
     this.savingsText,
     required this.isSelected,
+    this.isHighlighted = false,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final effectiveHighlight = isHighlighted || isSelected;
+    
     return Material(
-      color: isSelected
+      color: effectiveHighlight
           ? Theme.of(context).colorScheme.primaryContainer
           : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
       borderRadius: BorderRadius.circular(16),
@@ -601,8 +668,10 @@ class _PricingCard extends StatelessWidget {
             border: Border.all(
               color: isSelected
                   ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
-              width: 2,
+                  : isHighlighted
+                      ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
+                      : Colors.transparent,
+              width: isSelected ? 2 : 1,
             ),
           ),
           child: Column(
@@ -622,10 +691,13 @@ class _PricingCard extends StatelessWidget {
                     ),
                   ),
                 )
+              else if (isHighlighted)
+                const SizedBox(height: 20)
               else
-                const SizedBox(height: 20),
+                const SizedBox(height: 0),
               
-              const SizedBox(height: 8),
+              if (badge != null || isHighlighted)
+                const SizedBox(height: 8),
               
               Text(
                 title,
@@ -666,6 +738,7 @@ class _PricingCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ],
               

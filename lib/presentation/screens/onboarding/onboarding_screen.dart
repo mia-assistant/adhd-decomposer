@@ -3,8 +3,9 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../../data/services/settings_service.dart';
 import 'welcome_page.dart';
 import 'challenge_page.dart';
+import 'demo_page.dart';
 import 'name_page.dart';
-import 'ready_page.dart';
+import '../paywall_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final VoidCallback onComplete;
@@ -18,6 +19,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  final int _totalPages = 5; // Welcome, Challenge, Demo, Name, Paywall
   
   String? _selectedChallenge;
   String? _userName;
@@ -42,7 +44,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
   
   void _nextPage() {
-    if (_currentPage < 3) {
+    if (_currentPage < _totalPages - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 400),
         curve: Curves.easeOutCubic,
@@ -79,11 +81,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             Padding(
               padding: const EdgeInsets.all(24),
               child: Row(
-                children: List.generate(4, (index) {
+                children: List.generate(_totalPages, (index) {
                   return Expanded(
                     child: Container(
                       height: 4,
-                      margin: EdgeInsets.only(right: index < 3 ? 8 : 0),
+                      margin: EdgeInsets.only(right: index < _totalPages - 1 ? 8 : 0),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(2),
                         color: index <= _currentPage
@@ -110,10 +112,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     selectedChallenge: _selectedChallenge,
                     onChallengeSelected: _onChallengeSelected,
                   ),
+                  DemoPage(onNext: _nextPage),
                   NamePage(onSubmit: _onNameSubmitted),
-                  ReadyPage(
-                    userName: _userName,
-                    onStart: _completeOnboarding,
+                  PaywallScreen(
+                    showSkip: true,
+                    onSkip: _completeOnboarding,
+                    onPurchaseComplete: _completeOnboarding,
                   ),
                 ],
               ),

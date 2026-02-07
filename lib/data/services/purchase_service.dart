@@ -54,6 +54,7 @@ class PurchaseService extends ChangeNotifier {
   // Product identifiers (must match RevenueCat/App Store/Play Store)
   static const String productIdMonthly = 'tiny_steps_premium_monthly';
   static const String productIdYearly = 'tiny_steps_premium_yearly';
+  static const String productIdLifetime = 'tiny_steps_premium_lifetime';
   
   bool _isInitialized = false;
   bool _isPremium = false;
@@ -269,6 +270,17 @@ class PurchaseService extends ChangeNotifier {
     try {
       return _availablePackages.firstWhere(
         (p) => p.packageType == PackageType.annual,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+  
+  /// Get the lifetime package from available offerings
+  Package? get lifetimePackage {
+    try {
+      return _availablePackages.firstWhere(
+        (p) => p.packageType == PackageType.lifetime,
       );
     } catch (_) {
       return null;
