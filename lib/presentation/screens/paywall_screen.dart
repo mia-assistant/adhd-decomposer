@@ -114,12 +114,12 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
   
   Widget _buildCompactHeader(BuildContext context) {
-    return Row(
+    return Column(
       children: [
         // Icon
         Container(
-          width: 48,
-          height: 48,
+          width: 64,
+          height: 64,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -129,35 +129,31 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 Theme.of(context).colorScheme.tertiary,
               ],
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(16),
           ),
-          child: const Icon(Icons.workspace_premium, size: 24, color: Colors.white),
+          child: const Icon(Icons.workspace_premium, size: 32, color: Colors.white),
         ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
         
-        const SizedBox(width: 12),
+        const SizedBox(height: 16),
         
-        // Text
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Unlock Tiny Steps Pro',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                'Unlimited breakdowns & focus tools',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
-                ),
-              ),
-            ],
+        // Text - centered
+        Text(
+          'Unlock Tiny Steps Pro',
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.bold,
           ),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Unlimited breakdowns & focus tools',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+          ),
+          textAlign: TextAlign.center,
         ),
       ],
-    ).animate().fadeIn().slideX(begin: -0.1, end: 0);
+    ).animate().fadeIn().slideY(begin: -0.1, end: 0);
   }
   
   Widget _buildFeatures(BuildContext context) {
@@ -171,27 +167,30 @@ class _PaywallScreenState extends State<PaywallScreen> {
     
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: features.asMap().entries.map((entry) {
         final index = entry.key;
         final feature = entry.value;
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Container(
-                width: 32,
-                height: 32,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(feature.icon, size: 18, color: Theme.of(context).colorScheme.primary),
+                child: Icon(feature.icon, size: 20, color: Theme.of(context).colorScheme.primary),
               ),
               const SizedBox(width: 12),
               Text(feature.text, style: Theme.of(context).textTheme.bodyLarge),
             ],
           ),
-        ).animate().fadeIn(delay: Duration(milliseconds: 100 + index * 50)).slideX(begin: -0.05, end: 0);
+        ).animate().fadeIn(delay: Duration(milliseconds: 100 + index * 50)).slideY(begin: 0.1, end: 0);
       }).toList(),
     );
   }
@@ -272,7 +271,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
           title: 'Lifetime',
           price: lifetimePrice,
           period: ' once',
-          badge: '🧠 ADHD FRIENDLY',
+          badge: '⭐ BEST VALUE',
           subtitle: 'Pay once, yours forever',
           isSelected: _selectedOption == PricingOption.lifetime,
           isHighlighted: true,
@@ -490,7 +489,7 @@ class _CompactPricingCard extends StatelessWidget {
             border: Border.all(
               color: isSelected
                   ? Theme.of(context).colorScheme.primary
-                  : Colors.transparent,
+                  : Theme.of(context).colorScheme.outline.withOpacity(0.3),
               width: 2,
             ),
           ),
