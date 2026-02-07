@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:device_calendar/device_calendar.dart';
 import '../providers/task_provider.dart';
+import '../providers/theme_provider.dart';
 import '../../data/services/calendar_service.dart';
 import 'paywall_screen.dart';
 import 'feedback_screen.dart';
@@ -85,6 +86,10 @@ class SettingsScreen extends StatelessWidget {
                 value: provider.autoAdvanceEnabled,
                 onChanged: (value) => provider.setAutoAdvanceEnabled(value),
               ),
+              
+              const Divider(height: 32),
+              _buildSectionHeader(context, 'Appearance'),
+              _buildThemeSelector(context),
               
               const Divider(height: 32),
               _buildSectionHeader(context, 'Calendar'),
@@ -213,6 +218,109 @@ class SettingsScreen extends StatelessWidget {
           color: Theme.of(context).colorScheme.primary,
           fontWeight: FontWeight.bold,
         ),
+      ),
+    );
+  }
+  
+  Widget _buildThemeSelector(BuildContext context) {
+    final themeProvider = context.watch<ThemeProvider>();
+    final currentPreference = themeProvider.preference;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                ThemeProvider.getIcon(currentPreference),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Theme',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                    Text(
+                      'Choose your preferred appearance',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Segmented control for theme selection
+          Container(
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.all(4),
+            child: Row(
+              children: ThemePreference.values.map((pref) {
+                final isSelected = pref == currentPreference;
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      themeProvider.setPreference(pref);
+                      // Haptic feedback
+                      ScaffoldMessenger.of(context).clearSnackBars();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Theme set to ${ThemeProvider.getDisplayName(pref)}'),
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      curve: Curves.easeInOut,
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Theme.of(context).colorScheme.primaryContainer
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            ThemeProvider.getIcon(pref),
+                            size: 18,
+                            color: isSelected
+                                ? Theme.of(context).colorScheme.onPrimaryContainer
+                                : Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            ThemeProvider.getDisplayName(pref),
+                            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                              color: isSelected
+                                  ? Theme.of(context).colorScheme.onPrimaryContainer
+                                  : Theme.of(context).colorScheme.onSurfaceVariant,
+                              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+        ],
       ),
     );
   }

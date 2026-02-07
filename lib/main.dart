@@ -15,6 +15,7 @@ import 'data/services/purchase_service.dart';
 import 'data/services/siri_service.dart';
 import 'data/services/xp_service.dart';
 import 'presentation/providers/task_provider.dart';
+import 'presentation/providers/theme_provider.dart';
 import 'presentation/screens/home_screen.dart';
 import 'presentation/screens/onboarding/onboarding_screen.dart';
 import 'presentation/screens/decompose_screen.dart';
@@ -35,6 +36,10 @@ void main() async {
   // Initialize settings
   final settings = SettingsService();
   await settings.initialize();
+  
+  // Initialize theme provider
+  final themeProvider = ThemeProvider();
+  await themeProvider.initialize();
   
   // Initialize stats
   final stats = StatsService();
@@ -90,6 +95,7 @@ void main() async {
     routines: routines,
     purchases: purchases,
     xpService: xpService,
+    themeProvider: themeProvider,
   ));
 }
 
@@ -102,6 +108,7 @@ class ADHDDecomposerApp extends StatefulWidget {
   final RoutineService routines;
   final PurchaseService purchases;
   final XPService xpService;
+  final ThemeProvider themeProvider;
   
   const ADHDDecomposerApp({
     super.key,
@@ -113,6 +120,7 @@ class ADHDDecomposerApp extends StatefulWidget {
     required this.routines,
     required this.purchases,
     required this.xpService,
+    required this.themeProvider,
   });
 
   @override
@@ -305,17 +313,22 @@ class _ADHDDecomposerAppState extends State<ADHDDecomposerApp> {
         ChangeNotifierProvider.value(value: widget.routines),
         ChangeNotifierProvider.value(value: widget.purchases),
         ChangeNotifierProvider.value(value: widget.xpService),
+        ChangeNotifierProvider.value(value: widget.themeProvider),
       ],
-      child: MaterialApp(
-        title: 'Tiny Steps',
-        navigatorKey: globalNavigatorKey,
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.system,
-        home: _showOnboarding
-            ? OnboardingScreen(onComplete: _completeOnboarding)
-            : const HomeScreen(),
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) {
+          return MaterialApp(
+            title: 'Tiny Steps',
+            navigatorKey: globalNavigatorKey,
+            debugShowCheckedModeBanner: false,
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            home: _showOnboarding
+                ? OnboardingScreen(onComplete: _completeOnboarding)
+                : const HomeScreen(),
+          );
+        },
       ),
     );
   }
