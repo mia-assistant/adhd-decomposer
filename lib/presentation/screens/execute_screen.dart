@@ -1106,10 +1106,16 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
     
     try {
       // Call the provider to break down the current step
-      await provider.breakDownCurrentStep();
+      final success = await provider.breakDownCurrentStep();
       
       if (mounted) {
         Navigator.pop(context); // Close loading dialog
+        
+        if (!success) {
+          // User hit the free limit - show upgrade prompt
+          _showBreakdownLimitDialog(context);
+          return;
+        }
         
         // Show success feedback
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1133,6 +1139,32 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
         );
       }
     }
+  }
+  
+  void _showBreakdownLimitDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Need more breakdowns?'),
+        content: const Text(
+          'You\'ve used your 2 free step breakdowns for this task. '
+          'Upgrade to Pro for unlimited breakdowns and help whenever you\'re stuck!',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Maybe later'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              Navigator.pushNamed(context, '/paywall');
+            },
+            child: const Text('See Pro'),
+          ),
+        ],
+      ),
+    );
   }
   
   void _showQuickStarterSteps(BuildContext context, TaskStep step) {

@@ -329,21 +329,49 @@ class TaskProvider extends ChangeNotifier {
     }
   }
   
+  /// Check if user can break down current step for free
+  bool get canBreakDownForFree {
+    if (_activeTask == null) return false;
+    return _isPremium || _activeTask!.canBreakDownForFree;
+  }
+  
+  /// Remaining free breakdowns for current task
+  int get remainingFreeBreakdowns {
+    if (_activeTask == null) return 0;
+    if (_isPremium) return 999; // Unlimited for premium
+    return _activeTask!.remainingFreeBreakdowns;
+  }
+  
   /// Break down the current step into smaller sub-steps using AI
-  Future<void> breakDownCurrentStep() async {
+  /// Returns false if user hit the limit and isn't premium
+  Future<bool> breakDownCurrentStep() async {
     if (_activeTask == null || _activeTask!.currentStep == null) {
       throw Exception('No active step to break down');
+    }
+    
+    // Check if user can break down (premium or has free uses left)
+    if (!_isPremium && !_activeTask!.canBreakDownForFree) {
+      return false; // Signal that user hit the limit
     }
     
     final currentStep = _activeTask!.currentStep!;
     final currentIndex = _activeTask!.currentStepIndex;
     
-    // Get sub-steps from AI
+    // Get sub-steps from AI (pass task title as context)
     final apiKey = _settings?.openAIApiKey;
-    final subSteps = await _aiService.getSubSteps(currentStep.action, apiKey);
+    final subSteps = await _aiService.getSubSteps(
+      currentStep.action, 
+      apiKey,
+      taskContext: _activeTask!.title,
+    );
     
     if (subSteps.isEmpty) {
       throw Exception('Could not break down this step further');
+    }
+    
+    // Increment usage counter (only for free users)
+    if (!_isPremium) {
+      _activeTask!.subStepBreakdownsUsed++;
     }
     
     // Remove the current step and insert the sub-steps in its place
@@ -354,6 +382,8 @@ class TaskProvider extends ChangeNotifier {
     await _saveTasks();
     _updateWidget();
     notifyListeners();
+    
+    return true;
   }
   
   /// Update home screen widget with current task data

@@ -6,6 +6,7 @@ class Task {
   DateTime createdAt;
   DateTime? completedAt;
   int currentStepIndex;
+  int subStepBreakdownsUsed; // Track how many times user broke down steps
 
   Task({
     required this.id,
@@ -15,7 +16,17 @@ class Task {
     required this.createdAt,
     this.completedAt,
     this.currentStepIndex = 0,
+    this.subStepBreakdownsUsed = 0,
   });
+  
+  /// Free sub-step breakdowns per task
+  static const int freeSubStepLimit = 2;
+  
+  /// Whether user can still break down steps for free on this task
+  bool get canBreakDownForFree => subStepBreakdownsUsed < freeSubStepLimit;
+  
+  /// Remaining free breakdowns for this task
+  int get remainingFreeBreakdowns => (freeSubStepLimit - subStepBreakdownsUsed).clamp(0, freeSubStepLimit);
 
   bool get isCompleted => completedAt != null;
   
@@ -61,6 +72,7 @@ class Task {
     'createdAt': createdAt.toIso8601String(),
     'completedAt': completedAt?.toIso8601String(),
     'currentStepIndex': currentStepIndex,
+    'subStepBreakdownsUsed': subStepBreakdownsUsed,
   };
 
   factory Task.fromJson(Map<String, dynamic> json) => Task(
@@ -71,6 +83,7 @@ class Task {
     createdAt: DateTime.parse(json['createdAt']),
     completedAt: json['completedAt'] != null ? DateTime.parse(json['completedAt']) : null,
     currentStepIndex: json['currentStepIndex'] ?? 0,
+    subStepBreakdownsUsed: json['subStepBreakdownsUsed'] ?? 0,
   );
 }
 

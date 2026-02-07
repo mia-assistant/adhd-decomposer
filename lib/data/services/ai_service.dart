@@ -7,7 +7,7 @@ import '../coaches.dart';
 import 'backend_service.dart';
 
 // Re-export for convenience
-export 'backend_service.dart' show RateLimitException, UsageStats;
+export 'backend_service.dart' show RateLimitException, UsageStats, SubStepsResult;
 
 /// Decomposition style modes for different user needs
 enum DecompositionStyle {
@@ -139,53 +139,29 @@ class AIService {
   /// Get smaller sub-steps when user is stuck
   /// 
   /// [stepAction] - The step they're stuck on
-  /// [apiKey] - Optional API key
-  /// [stuckReason] - Optional reason why they're stuck
+  /// [apiKey] - Optional API key (for BYOK, currently disabled)
+  /// [taskContext] - Optional context about the overall task
   Future<List<TaskStep>> getSubSteps(
     String stepAction,
     String? apiKey, {
-    String? stuckReason,
+    String? taskContext,
   }) async {
-    final effectiveKey = apiKey ?? defaultApiKey;
-    
-    if (effectiveKey == null || effectiveKey.isEmpty) {
-      return _getMockSubSteps(stepAction);
-    }
-    
+    // Try backend first
     try {
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $effectiveKey',
-        },
-        body: jsonEncode({
-          'model': 'gpt-4o-mini',
-          'messages': [
-            {
-              'role': 'system',
-              'content': _stuckPrompt,
-            },
-            {
-              'role': 'user',
-              'content': _buildStuckUserPrompt(stepAction, stuckReason),
-            },
-          ],
-          'temperature': 0.7,
-          'max_tokens': 700,
-        }),
-      );
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['choices'][0]['message']['content'];
-        return _parseSubSteps(content);
-      } else {
-        throw Exception('API error: ${response.statusCode}');
+      final result = await _backend.getSubSteps(stepAction, taskContext: taskContext);
+      if (result != null && result.substeps.isNotEmpty) {
+        return result.substeps.map((s) => TaskStep(
+          id: _uuid.v4(),
+          action: s,
+          estimatedMinutes: 2,
+        )).toList();
       }
     } catch (e) {
-      return _getMockSubSteps(stepAction);
+      // Backend failed, continue to fallback
     }
+    
+    // Fallback to mock
+    return _getMockSubSteps(stepAction);
   }
   
   /// Build the system prompt based on context

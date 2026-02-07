@@ -183,3 +183,84 @@ export async function decomposeTask(
     };
   }
 }
+
+// Sub-steps prompt for when users are stuck
+const SUBSTEPS_PROMPT = `You are an ADHD task coach helping someone who is stuck on a step.
+
+Break this step into 3-5 MICRO-steps that are:
+- Extremely small (1-3 minutes each)
+- Physical and concrete (stand up, open app, move hand)
+- Include the very first tiny action to start
+- No thinking or decision-making required
+
+The goal is to make starting feel effortless.
+
+Respond with JSON only:
+{
+  "substeps": ["micro-step 1", "micro-step 2", ...],
+  "encouragement": "<brief, warm encouragement>"
+}`;
+
+export async function getSubSteps(
+  env: Env,
+  step: string,
+  taskContext?: string
+): Promise<{ success: boolean; substeps?: string[]; encouragement?: string; error?: string }> {
+  const userMessage = taskContext 
+    ? `Task context: ${taskContext}\n\nStep I'm stuck on: ${step}`
+    : `Step I'm stuck on: ${step}`;
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: 'gpt-5-mini',
+        messages: [
+          { role: 'system', content: SUBSTEPS_PROMPT },
+          { role: 'user', content: userMessage },
+        ],
+        temperature: 0.7,
+        max_tokens: 500,
+        response_format: { type: 'json_object' },
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('OpenAI API error:', error);
+      return {
+        success: false,
+        error: 'AI service temporarily unavailable',
+      };
+    }
+
+    const data = await response.json() as {
+      choices: Array<{ message: { content: string } }>;
+    };
+
+    const content = data.choices[0]?.message?.content;
+    if (!content) {
+      return {
+        success: false,
+        error: 'Empty response from AI',
+      };
+    }
+
+    const parsed = JSON.parse(content);
+    return {
+      success: true,
+      substeps: parsed.substeps,
+      encouragement: parsed.encouragement,
+    };
+  } catch (error) {
+    console.error('SubSteps error:', error);
+    return {
+      success: false,
+      error: 'Failed to break down step',
+    };
+  }
+}

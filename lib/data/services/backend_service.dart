@@ -182,6 +182,61 @@ class BackendService {
       return false;
     }
   }
+  
+  /// Get sub-steps for a step the user is stuck on
+  /// Returns null if backend is unavailable
+  Future<SubStepsResult?> getSubSteps(
+    String step, {
+    String? taskContext,
+  }) async {
+    await initialize();
+    
+    if (_token == null) return null;
+    
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/v1/substeps'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $_token',
+        },
+        body: jsonEncode({
+          'step': step,
+          if (taskContext != null) 'taskContext': taskContext,
+        }),
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+          return SubStepsResult(
+            substeps: List<String>.from(data['substeps']),
+            encouragement: data['encouragement'] as String?,
+          );
+        }
+      } else if (response.statusCode == 401) {
+        // Token expired - re-register
+        _token = null;
+        await _register();
+        return getSubSteps(step, taskContext: taskContext);
+      }
+      
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+}
+
+/// Result from sub-steps API
+class SubStepsResult {
+  final List<String> substeps;
+  final String? encouragement;
+  
+  SubStepsResult({
+    required this.substeps,
+    this.encouragement,
+  });
 }
 
 /// Usage statistics from the backend

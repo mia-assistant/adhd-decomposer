@@ -1,7 +1,7 @@
 import { Env, TokenPayload, DecomposeRequest, DecomposeResponse, UsageResponse } from './types';
 import { createToken, verifyToken, generateDeviceId } from './auth';
 import { checkRateLimit, incrementUsage, getUsageStats } from './ratelimit';
-import { getCachedResponse, cacheResponse, decomposeTask } from './openai';
+import { getCachedResponse, cacheResponse, decomposeTask, getSubSteps } from './openai';
 
 // CORS headers
 const corsHeaders = {
@@ -190,6 +190,35 @@ async function handleUpgradeToPremium(request: Request, env: Env): Promise<Respo
   });
 }
 
+async function handleSubSteps(request: Request, env: Env): Promise<Response> {
+  // Authenticate
+  const auth = await authenticate(request, env);
+  if (!auth) {
+    return errorResponse('Unauthorized', 401);
+  }
+
+  // Parse request body
+  let body: { step: string; taskContext?: string };
+  try {
+    body = await request.json();
+  } catch {
+    return errorResponse('Invalid JSON body');
+  }
+
+  if (!body.step || typeof body.step !== 'string' || body.step.trim().length === 0) {
+    return errorResponse('Invalid request: step is required');
+  }
+
+  if (body.step.length > 300) {
+    return errorResponse('Step text too long (max 300 chars)');
+  }
+
+  // Call OpenAI for sub-steps
+  const result = await getSubSteps(env, body.step.trim(), body.taskContext);
+  
+  return jsonResponse(result);
+}
+
 async function handleHealth(): Promise<Response> {
   return jsonResponse({
     status: 'healthy',
@@ -232,6 +261,11 @@ export default {
       // Verify subscription status
       if (path === '/v1/verify-subscription' && request.method === 'POST') {
         return handleVerifySubscription(request, env);
+      }
+
+      // Get sub-steps for a stuck step
+      if (path === '/v1/substeps' && request.method === 'POST') {
+        return handleSubSteps(request, env);
       }
 
       // Webhook for RevenueCat (premium upgrade)
