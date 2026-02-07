@@ -4,6 +4,10 @@ import 'package:uuid/uuid.dart';
 import '../models/task.dart';
 import '../models/coach.dart';
 import '../coaches.dart';
+import 'backend_service.dart';
+
+// Re-export for convenience
+export 'backend_service.dart' show RateLimitException, UsageStats;
 
 /// Decomposition style modes for different user needs
 enum DecompositionStyle {
@@ -20,13 +24,14 @@ class AIService {
   
   final String? defaultApiKey;
   final Uuid _uuid = const Uuid();
+  final BackendService _backend = BackendService();
   
   AIService({this.defaultApiKey});
   
   /// Decompose a task into manageable steps
   /// 
   /// [taskDescription] - The task to break down
-  /// [apiKey] - Optional API key override
+  /// [apiKey] - Optional API key override (for BYOK, currently disabled)
   /// [style] - Decomposition style (standard, quick, gentle)
   /// [currentHour] - Current hour (0-23) for time-aware prompting
   /// [coach] - Optional coach personality for tone/style
@@ -37,53 +42,98 @@ class AIService {
     int? currentHour,
     Coach? coach,
   }) async {
-    final effectiveKey = apiKey ?? defaultApiKey;
-    final hour = currentHour ?? DateTime.now().hour;
     final effectiveCoach = coach ?? Coaches.default_;
     
-    if (effectiveKey == null || effectiveKey.isEmpty) {
-      // Return mock data for testing without API key
-      return _getMockDecomposition(taskDescription, style: style, coach: effectiveCoach);
+    // Try backend first
+    try {
+      final result = await _backend.decomposeTask(taskDescription, style: style);
+      if (result != null && result['task'] != null) {
+        return _parseBackendResponse(result);
+      }
+    } on RateLimitException {
+      rethrow; // Let the UI handle rate limiting
+    } catch (e) {
+      // Backend failed, continue to fallback
     }
     
-    try {
-      final systemPrompt = _buildSystemPrompt(taskDescription, style, hour, effectiveCoach);
-      final userPrompt = _buildUserPrompt(taskDescription, style);
-      
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $effectiveKey',
-        },
-        body: jsonEncode({
-          'model': 'gpt-4o-mini',
-          'messages': [
-            {
-              'role': 'system',
-              'content': systemPrompt,
-            },
-            {
-              'role': 'user',
-              'content': userPrompt,
-            },
-          ],
-          'temperature': style == DecompositionStyle.quick ? 0.5 : 0.7,
-          'max_tokens': style == DecompositionStyle.quick ? 600 : 1200,
-        }),
-      );
-      
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final content = data['choices'][0]['message']['content'];
-        return _parseAIResponse(taskDescription, content);
-      } else {
-        throw Exception('API error: ${response.statusCode}');
+    // Fallback: Use custom API key if provided (BYOK - currently hidden)
+    final effectiveKey = apiKey ?? defaultApiKey;
+    final hour = currentHour ?? DateTime.now().hour;
+    
+    if (effectiveKey != null && effectiveKey.isNotEmpty) {
+      try {
+        final systemPrompt = _buildSystemPrompt(taskDescription, style, hour, effectiveCoach);
+        final userPrompt = _buildUserPrompt(taskDescription, style);
+        
+        final response = await http.post(
+          Uri.parse(_baseUrl),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $effectiveKey',
+          },
+          body: jsonEncode({
+            'model': 'gpt-4o-mini',
+            'messages': [
+              {'role': 'system', 'content': systemPrompt},
+              {'role': 'user', 'content': userPrompt},
+            ],
+            'temperature': style == DecompositionStyle.quick ? 0.5 : 0.7,
+            'max_tokens': style == DecompositionStyle.quick ? 600 : 1200,
+          }),
+        );
+        
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final content = data['choices'][0]['message']['content'];
+          return _parseAIResponse(taskDescription, content);
+        }
+      } catch (e) {
+        // BYOK failed, continue to mock
       }
-    } catch (e) {
-      // Fallback to mock on error
-      return _getMockDecomposition(taskDescription, style: style, coach: effectiveCoach);
     }
+    
+    // Final fallback: mock data
+    return _getMockDecomposition(taskDescription, style: style, coach: effectiveCoach);
+  }
+  
+  /// Parse response from our backend API
+  Task _parseBackendResponse(Map<String, dynamic> result) {
+    final taskData = result['task'];
+    final steps = (taskData['steps'] as List).map((s) => TaskStep(
+      id: _uuid.v4(),
+      action: s['action'] as String,
+      estimatedMinutes: s['estimatedMinutes'] as int? ?? 5,
+    )).toList();
+    
+    final totalMinutes = steps.fold<int>(0, (sum, s) => sum + s.estimatedMinutes);
+    
+    return Task(
+      id: _uuid.v4(),
+      title: taskData['title'] as String,
+      steps: steps,
+      totalEstimatedMinutes: totalMinutes,
+      createdAt: DateTime.now(),
+    );
+  }
+  
+  /// Get usage stats from backend
+  Future<UsageStats?> getUsageStats() async {
+    return _backend.getUsage();
+  }
+  
+  /// Verify subscription with backend
+  Future<bool> verifySubscription({
+    required String userId,
+    required String productId,
+    required String transactionId,
+    required String platform,
+  }) async {
+    return _backend.verifySubscription(
+      userId: userId,
+      productId: productId,
+      transactionId: transactionId,
+      platform: platform,
+    );
   }
   
   /// Get smaller sub-steps when user is stuck
