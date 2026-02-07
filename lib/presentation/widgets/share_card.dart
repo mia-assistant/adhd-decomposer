@@ -107,13 +107,13 @@ class CompletionShareCard extends StatelessWidget {
                     child: Text(
                       taskName,
                       style: GoogleFonts.nunito(
-                        fontSize: 28,
+                        fontSize: 26,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                         height: 1.2,
                       ),
                       textAlign: TextAlign.center,
-                      maxLines: 3,
+                      maxLines: 4,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -133,12 +133,15 @@ class CompletionShareCard extends StatelessWidget {
                         style: TextStyle(fontSize: 18),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        '$stepsCompleted ${stepsCompleted == 1 ? 'step' : 'steps'} done',
-                        style: GoogleFonts.nunito(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                      Flexible(
+                        child: Text(
+                          '$stepsCompleted ${stepsCompleted == 1 ? 'step' : 'steps'} done',
+                          style: GoogleFonts.nunito(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -160,26 +163,30 @@ class CompletionShareCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tiny Steps',
-                          style: GoogleFonts.nunito(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tiny Steps',
+                            style: GoogleFonts.nunito(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        Text(
-                          'Break tasks down, get things done',
-                          style: GoogleFonts.inter(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white.withOpacity(0.8),
+                          Text(
+                            'Break tasks down, get things done',
+                            style: GoogleFonts.inter(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.white.withOpacity(0.8),
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
@@ -270,12 +277,15 @@ class StatsShareCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    Text(
-                      'My Tiny Steps Progress',
-                      style: GoogleFonts.nunito(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                    Flexible(
+                      child: Text(
+                        'My Tiny Steps Progress',
+                        style: GoogleFonts.nunito(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -321,21 +331,28 @@ class StatsShareCard extends StatelessWidget {
                         style: TextStyle(fontSize: 24),
                       ),
                       const SizedBox(width: 12),
-                      Text(
-                        '$totalSteps',
-                        style: GoogleFonts.nunito(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                      Flexible(
+                        child: Text(
+                          '$totalSteps',
+                          style: GoogleFonts.nunito(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        'total steps completed',
-                        style: GoogleFonts.inter(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.white.withOpacity(0.7),
+                      Flexible(
+                        flex: 2,
+                        child: Text(
+                          'total steps completed',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white.withOpacity(0.7),
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -351,6 +368,7 @@ class StatsShareCard extends StatelessWidget {
                     color: Colors.white.withOpacity(0.5),
                   ),
                   textAlign: TextAlign.center,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
