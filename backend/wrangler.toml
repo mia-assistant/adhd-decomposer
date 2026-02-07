@@ -1,0 +1,25 @@
+name = "tinysteps-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+# KV Namespaces for rate limiting and caching
+[[kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "PLACEHOLDER_RATE_LIMITS_ID"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "PLACEHOLDER_CACHE_ID"
+
+[[kv_namespaces]]
+binding = "USERS"
+id = "PLACEHOLDER_USERS_ID"
+
+# Environment variables (secrets set via wrangler secret put)
+# OPENAI_API_KEY - set via: wrangler secret put OPENAI_API_KEY
+# JWT_SECRET - set via: wrangler secret put JWT_SECRET
+
+[vars]
+ENVIRONMENT = "production"
+FREE_DAILY_LIMIT = "3"
+CACHE_TTL_SECONDS = "86400"
