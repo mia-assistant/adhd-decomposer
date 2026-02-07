@@ -22,12 +22,11 @@ class PaywallScreen extends StatefulWidget {
 }
 
 class _PaywallScreenState extends State<PaywallScreen> {
-  PricingOption _selectedOption = PricingOption.lifetime; // Default to lifetime for ADHD users
+  PricingOption _selectedOption = PricingOption.lifetime;
   bool _isLoading = false;
   bool _isLoadingPackages = true;
   String? _errorMessage;
   
-  // Fallback prices if packages can't be loaded
   static const double fallbackMonthlyPrice = 4.99;
   static const double fallbackYearlyPrice = 29.99;
   static const double fallbackLifetimePrice = 49.99;
@@ -39,21 +38,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
   }
   
   Future<void> _loadPackages() async {
-    setState(() {
-      _isLoadingPackages = true;
-      _errorMessage = null;
-    });
-    
+    setState(() => _isLoadingPackages = true);
     try {
       final purchaseService = Provider.of<PurchaseService>(context, listen: false);
       await purchaseService.getOfferings();
     } catch (e) {
-      // Don't show error for loading - just use fallback prices
       debugPrint('Error loading packages: $e');
     } finally {
-      if (mounted) {
-        setState(() => _isLoadingPackages = false);
-      }
+      if (mounted) setState(() => _isLoadingPackages = false);
     }
   }
 
@@ -63,118 +55,56 @@ class _PaywallScreenState extends State<PaywallScreen> {
       builder: (context, purchaseService, _) {
         return Scaffold(
           body: SafeArea(
-            child: Column(
-              children: [
-                // Skip button
-                if (widget.showSkip)
-                  Align(
-                    alignment: Alignment.topRight,
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+              child: Column(
+                children: [
+                  // Skip button - compact
+                  if (widget.showSkip)
+                    Align(
+                      alignment: Alignment.topRight,
                       child: TextButton(
                         onPressed: _isLoading ? null : widget.onSkip,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
                         child: const Text('Maybe later'),
                       ),
                     ),
+                  
+                  // Compact header
+                  _buildCompactHeader(context),
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Scrollable features (constrained height)
+                  Expanded(
+                    flex: 2,
+                    child: _buildScrollableFeatures(context),
                   ),
-                
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: Column(
-                      children: [
-                        if (!widget.showSkip) const SizedBox(height: 32),
-                        
-                        // Header
-                        _buildHeader(context),
-                        
-                        const SizedBox(height: 32),
-                        
-                        // Premium features
-                        _buildFeatures(context),
-                        
-                        const SizedBox(height: 32),
-                        
-                        // Error message
-                        if (_errorMessage != null)
-                          _buildErrorBanner(context),
-                        
-                        // Pricing cards
-                        if (_isLoadingPackages)
-                          _buildLoadingPricing()
-                        else
-                          _buildPricingCards(context, purchaseService),
-                        
-                        const SizedBox(height: 24),
-                        
-                        // Purchase button
-                        _buildPurchaseButton(context, purchaseService),
-                        
-                        const SizedBox(height: 16),
-                        
-                        // Restore purchases
-                        TextButton(
-                          onPressed: _isLoading ? null : () => _restorePurchases(purchaseService),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                )
-                              : const Text('Restore Purchases'),
-                        ),
-                        
-                        const SizedBox(height: 8),
-                        
-                        // Terms
-                        Text(
-                          _selectedOption == PricingOption.lifetime
-                              ? 'One-time purchase. Yours forever.'
-                              : 'Cancel anytime. Subscription auto-renews.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        
-                        const SizedBox(height: 8),
-                        
-                        // Links
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            TextButton(
-                              onPressed: () {
-                                // TODO: Navigate to privacy policy
-                              },
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                              ),
-                              child: Text(
-                                'Privacy Policy',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ),
-                            Text('•', style: Theme.of(context).textTheme.bodySmall),
-                            TextButton(
-                              onPressed: () {
-                                // TODO: Navigate to terms
-                              },
-                              style: TextButton.styleFrom(
-                                padding: const EdgeInsets.symmetric(horizontal: 8),
-                              ),
-                              child: Text(
-                                'Terms of Service',
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+                  
+                  // Error message
+                  if (_errorMessage != null) ...[
+                    _buildErrorBanner(context),
+                    const SizedBox(height: 8),
+                  ],
+                  
+                  // Pricing cards - always visible
+                  _buildPricingCards(context, purchaseService),
+                  
+                  const SizedBox(height: 12),
+                  
+                  // Purchase button - always visible
+                  _buildPurchaseButton(context, purchaseService),
+                  
+                  const SizedBox(height: 8),
+                  
+                  // Footer row
+                  _buildFooter(context, purchaseService),
+                ],
+              ),
             ),
           ),
         );
@@ -182,12 +112,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
     );
   }
   
-  Widget _buildHeader(BuildContext context) {
-    return Column(
+  Widget _buildCompactHeader(BuildContext context) {
+    return Row(
       children: [
+        // Icon
         Container(
-          width: 80,
-          height: 80,
+          width: 48,
+          height: 48,
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
@@ -197,48 +128,38 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 Theme.of(context).colorScheme.tertiary,
               ],
             ),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(12),
           ),
-          child: const Icon(
-            Icons.workspace_premium,
-            size: 40,
-            color: Colors.white,
+          child: const Icon(Icons.workspace_premium, size: 24, color: Colors.white),
+        ).animate().scale(duration: 400.ms, curve: Curves.elasticOut),
+        
+        const SizedBox(width: 12),
+        
+        // Text
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Unlock Tiny Steps Pro',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'Unlimited breakdowns & focus tools',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
+                ),
+              ),
+            ],
           ),
-        )
-            .animate()
-            .scale(duration: 600.ms, curve: Curves.elasticOut)
-            .fadeIn(),
-        
-        const SizedBox(height: 24),
-        
-        Text(
-          'Unlock Tiny Steps Pro',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
-          textAlign: TextAlign.center,
-        )
-            .animate()
-            .fadeIn(delay: 100.ms)
-            .slideY(begin: 0.3, end: 0),
-        
-        const SizedBox(height: 8),
-        
-        Text(
-          'Get unlimited task breakdowns and focus tools',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Theme.of(context).textTheme.bodySmall?.color,
-          ),
-          textAlign: TextAlign.center,
-        )
-            .animate()
-            .fadeIn(delay: 200.ms)
-            .slideY(begin: 0.3, end: 0),
+        ),
       ],
-    );
+    ).animate().fadeIn().slideX(begin: -0.1, end: 0);
   }
   
-  Widget _buildFeatures(BuildContext context) {
+  Widget _buildScrollableFeatures(BuildContext context) {
     final features = [
       (icon: Icons.all_inclusive, text: 'Unlimited task breakdowns'),
       (icon: Icons.psychology, text: 'All AI coaching styles'),
@@ -247,267 +168,221 @@ class _PaywallScreenState extends State<PaywallScreen> {
       (icon: Icons.emoji_events, text: 'Full gamification system'),
     ];
     
-    return Column(
-      children: features.asMap().entries.map((entry) {
-        final index = entry.key;
-        final feature = entry.value;
-        
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  borderRadius: BorderRadius.circular(8),
+    return ShaderMask(
+      shaderCallback: (Rect bounds) {
+        return LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.white, Colors.white, Colors.white.withOpacity(0)],
+          stops: const [0.0, 0.85, 1.0],
+        ).createShader(bounds);
+      },
+      blendMode: BlendMode.dstIn,
+      child: ListView.builder(
+        padding: const EdgeInsets.only(bottom: 16),
+        itemCount: features.length,
+        itemBuilder: (context, index) {
+          final feature = features[index];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8),
+            child: Row(
+              children: [
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Icon(feature.icon, size: 16, color: Theme.of(context).colorScheme.primary),
                 ),
-                child: Icon(
-                  feature.icon,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                feature.text,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
-            ],
-          ),
-        )
-            .animate()
-            .fadeIn(delay: Duration(milliseconds: 300 + index * 50))
-            .slideX(begin: -0.1, end: 0);
-      }).toList(),
+                const SizedBox(width: 10),
+                Text(feature.text, style: Theme.of(context).textTheme.bodyMedium),
+              ],
+            ),
+          ).animate().fadeIn(delay: Duration(milliseconds: 100 + index * 50)).slideX(begin: -0.05, end: 0);
+        },
+      ),
     );
   }
   
   Widget _buildErrorBanner(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.errorContainer,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.error_outline,
-            color: Theme.of(context).colorScheme.error,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
+          Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error, size: 18),
+          const SizedBox(width: 8),
           Expanded(
             child: Text(
               _errorMessage!,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onErrorContainer,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.onErrorContainer, fontSize: 13),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.close, size: 18),
-            onPressed: () => setState(() => _errorMessage = null),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+          GestureDetector(
+            onTap: () => setState(() => _errorMessage = null),
+            child: const Icon(Icons.close, size: 16),
           ),
         ],
       ),
     );
   }
   
-  Widget _buildLoadingPricing() {
-    return Column(
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Container(
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.grey.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          height: 100,
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.grey.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: const Center(
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
-        ),
-      ],
-    );
-  }
-  
   Widget _buildPricingCards(BuildContext context, PurchaseService purchaseService) {
-    // Get packages from service or use fallback
-    final monthlyPackage = purchaseService.monthlyPackage;
-    final yearlyPackage = purchaseService.yearlyPackage;
-    final lifetimePackage = purchaseService.lifetimePackage;
-    
-    // Determine prices to show
-    final monthlyPrice = monthlyPackage != null
-        ? purchaseService.getFormattedPrice(monthlyPackage)
+    final monthlyPrice = purchaseService.monthlyPackage != null
+        ? purchaseService.getFormattedPrice(purchaseService.monthlyPackage!)
         : '\$${fallbackMonthlyPrice.toStringAsFixed(2)}';
     
-    final yearlyPrice = yearlyPackage != null
-        ? purchaseService.getFormattedPrice(yearlyPackage)
+    final yearlyPrice = purchaseService.yearlyPackage != null
+        ? purchaseService.getFormattedPrice(purchaseService.yearlyPackage!)
         : '\$${fallbackYearlyPrice.toStringAsFixed(2)}';
     
-    final lifetimePrice = lifetimePackage != null
-        ? purchaseService.getFormattedPrice(lifetimePackage)
+    final lifetimePrice = purchaseService.lifetimePackage != null
+        ? purchaseService.getFormattedPrice(purchaseService.lifetimePackage!)
         : '\$${fallbackLifetimePrice.toStringAsFixed(2)}';
     
-    // Calculate savings
-    final yearlySavings = purchaseService.getYearlySavings() ?? 
-        ((fallbackMonthlyPrice * 12) - fallbackYearlyPrice);
-    
-    final monthlyEquiv = purchaseService.getYearlyMonthlyEquivalent() ??
-        (fallbackYearlyPrice / 12);
+    final monthlyEquiv = purchaseService.getYearlyMonthlyEquivalent() ?? (fallbackYearlyPrice / 12);
     
     return Column(
       children: [
         // Monthly & Yearly row
         Row(
           children: [
-            // Monthly
             Expanded(
-              child: _PricingCard(
+              child: _CompactPricingCard(
                 title: 'Monthly',
                 price: monthlyPrice,
-                period: '/month',
+                period: '/mo',
                 isSelected: _selectedOption == PricingOption.monthly,
                 onTap: () => setState(() => _selectedOption = PricingOption.monthly),
-              )
-                  .animate()
-                  .fadeIn(delay: 500.ms)
-                  .slideY(begin: 0.3, end: 0),
+              ),
             ),
-            
             const SizedBox(width: 8),
-            
-            // Yearly
             Expanded(
-              child: _PricingCard(
+              child: _CompactPricingCard(
                 title: 'Yearly',
                 price: yearlyPrice,
-                period: '/year',
+                period: '/yr',
                 subtitle: '\$${monthlyEquiv.toStringAsFixed(2)}/mo',
-                savingsText: 'Save \$${yearlySavings.toStringAsFixed(0)}',
                 isSelected: _selectedOption == PricingOption.yearly,
                 onTap: () => setState(() => _selectedOption = PricingOption.yearly),
-              )
-                  .animate()
-                  .fadeIn(delay: 550.ms)
-                  .slideY(begin: 0.3, end: 0),
+              ),
             ),
           ],
-        ),
+        ).animate().fadeIn(delay: 300.ms),
         
         const SizedBox(height: 8),
         
-        // Lifetime - full width, highlighted
-        _PricingCard(
+        // Lifetime - full width
+        _CompactPricingCard(
           title: 'Lifetime',
           price: lifetimePrice,
           period: ' once',
-          subtitle: 'Pay once, own forever',
           badge: '🧠 ADHD FRIENDLY',
-          savingsText: 'Best for commitment',
+          subtitle: 'Pay once, yours forever',
           isSelected: _selectedOption == PricingOption.lifetime,
           isHighlighted: true,
           onTap: () => setState(() => _selectedOption = PricingOption.lifetime),
-        )
-            .animate()
-            .fadeIn(delay: 600.ms)
-            .slideY(begin: 0.3, end: 0),
+        ).animate().fadeIn(delay: 350.ms),
       ],
     );
   }
   
   Widget _buildPurchaseButton(BuildContext context, PurchaseService purchaseService) {
-    // Button text based on selection
     String buttonText;
-    String price;
-    
-    switch (_selectedOption) {
-      case PricingOption.monthly:
-        final pkg = purchaseService.monthlyPackage;
-        price = pkg != null 
-            ? purchaseService.getFormattedPrice(pkg) 
-            : '\$${fallbackMonthlyPrice.toStringAsFixed(2)}';
-        buttonText = 'Start Monthly — $price/mo';
-        break;
-      case PricingOption.yearly:
-        final pkg = purchaseService.yearlyPackage;
-        price = pkg != null 
-            ? purchaseService.getFormattedPrice(pkg) 
-            : '\$${fallbackYearlyPrice.toStringAsFixed(2)}';
-        buttonText = 'Start Yearly — $price/yr';
-        break;
-      case PricingOption.lifetime:
-        final pkg = purchaseService.lifetimePackage;
-        price = pkg != null 
-            ? purchaseService.getFormattedPrice(pkg) 
-            : '\$${fallbackLifetimePrice.toStringAsFixed(2)}';
-        buttonText = 'Get Lifetime Access — $price';
-        break;
-    }
     
     if (_isLoading) {
       buttonText = 'Processing...';
+    } else {
+      final price = switch (_selectedOption) {
+        PricingOption.monthly => purchaseService.monthlyPackage != null
+            ? purchaseService.getFormattedPrice(purchaseService.monthlyPackage!)
+            : '\$${fallbackMonthlyPrice.toStringAsFixed(2)}',
+        PricingOption.yearly => purchaseService.yearlyPackage != null
+            ? purchaseService.getFormattedPrice(purchaseService.yearlyPackage!)
+            : '\$${fallbackYearlyPrice.toStringAsFixed(2)}',
+        PricingOption.lifetime => purchaseService.lifetimePackage != null
+            ? purchaseService.getFormattedPrice(purchaseService.lifetimePackage!)
+            : '\$${fallbackLifetimePrice.toStringAsFixed(2)}',
+      };
+      
+      buttonText = _selectedOption == PricingOption.lifetime
+          ? 'Get Lifetime Access — $price'
+          : 'Continue — $price';
     }
     
     return SizedBox(
       width: double.infinity,
       child: FilledButton(
-        onPressed: _isLoading || _isLoadingPackages 
-            ? null 
-            : () => _purchase(purchaseService),
-        style: FilledButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-        ),
+        onPressed: _isLoading || _isLoadingPackages ? null : () => _purchase(purchaseService),
+        style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
         child: _isLoading
-            ? const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
+            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
             : Text(buttonText),
       ),
-    )
-        .animate()
-        .fadeIn(delay: 700.ms)
-        .slideY(begin: 0.5, end: 0);
+    ).animate().fadeIn(delay: 400.ms);
+  }
+  
+  Widget _buildFooter(BuildContext context, PurchaseService purchaseService) {
+    return Column(
+      children: [
+        // Restore + terms row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton(
+              onPressed: _isLoading ? null : () => _restorePurchases(purchaseService),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text('Restore', style: Theme.of(context).textTheme.bodySmall),
+            ),
+            Text(' • ', style: Theme.of(context).textTheme.bodySmall),
+            TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text('Privacy', style: Theme.of(context).textTheme.bodySmall),
+            ),
+            Text(' • ', style: Theme.of(context).textTheme.bodySmall),
+            TextButton(
+              onPressed: () {},
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text('Terms', style: Theme.of(context).textTheme.bodySmall),
+            ),
+          ],
+        ),
+        
+        const SizedBox(height: 4),
+        
+        Text(
+          _selectedOption == PricingOption.lifetime
+              ? 'One-time purchase. Yours forever.'
+              : 'Cancel anytime. Auto-renews.',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.5),
+            fontSize: 11,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
   }
   
   Future<void> _purchase(PurchaseService purchaseService) async {
-    // Get selected package
     final package = switch (_selectedOption) {
       PricingOption.monthly => purchaseService.monthlyPackage,
       PricingOption.yearly => purchaseService.yearlyPackage,
@@ -515,9 +390,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
     };
     
     if (package == null) {
-      setState(() {
-        _errorMessage = 'Subscription not available. Please try again later.';
-      });
+      setState(() => _errorMessage = 'Not available. Try again later.');
       return;
     }
     
@@ -528,52 +401,35 @@ class _PaywallScreenState extends State<PaywallScreen> {
     
     try {
       final success = await purchaseService.purchasePackage(package);
-      
       if (success && mounted) {
-        // Purchase successful!
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_selectedOption == PricingOption.lifetime
-                ? 'Welcome to Tiny Steps Pro — forever! 🎉'
-                : 'Welcome to Tiny Steps Pro! 🎉'),
+                ? 'Welcome to Pro — forever! 🎉'
+                : 'Welcome to Pro! 🎉'),
             behavior: SnackBarBehavior.floating,
             backgroundColor: Colors.green,
           ),
         );
-        
         widget.onPurchaseComplete?.call();
       }
     } on PurchaseException catch (e) {
       if (mounted) {
         if (e.type == PurchaseErrorType.userCancelled) {
-          // User cancelled - don't show as error
-          debugPrint('User cancelled purchase');
+          // Ignore
         } else if (e.type == PurchaseErrorType.alreadyPurchased) {
-          // Already premium - treat as success
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('You already have Pro access! 🎉'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.green,
-            ),
+            const SnackBar(content: Text('You already have Pro! 🎉'), backgroundColor: Colors.green),
           );
           widget.onPurchaseComplete?.call();
         } else {
-          setState(() {
-            _errorMessage = e.userMessage;
-          });
+          setState(() => _errorMessage = e.userMessage);
         }
       }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Something went wrong. Please try again.';
-        });
-      }
+      if (mounted) setState(() => _errorMessage = 'Something went wrong.');
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
   
@@ -585,64 +441,42 @@ class _PaywallScreenState extends State<PaywallScreen> {
     
     try {
       final success = await purchaseService.restorePurchases();
-      
       if (mounted) {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Purchases restored successfully! 🎉'),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: Colors.green,
-            ),
+            const SnackBar(content: Text('Restored! 🎉'), backgroundColor: Colors.green),
           );
           widget.onPurchaseComplete?.call();
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('No previous purchases found'),
-              behavior: SnackBarBehavior.floating,
-            ),
+            const SnackBar(content: Text('No purchases found')),
           );
         }
       }
-    } on PurchaseException catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = e.userMessage;
-        });
-      }
     } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = 'Could not restore purchases. Please try again.';
-        });
-      }
+      if (mounted) setState(() => _errorMessage = 'Restore failed.');
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 }
 
-class _PricingCard extends StatelessWidget {
+class _CompactPricingCard extends StatelessWidget {
   final String title;
   final String price;
   final String period;
   final String? subtitle;
   final String? badge;
-  final String? savingsText;
   final bool isSelected;
   final bool isHighlighted;
   final VoidCallback onTap;
   
-  const _PricingCard({
+  const _CompactPricingCard({
     required this.title,
     required this.price,
     required this.period,
     this.subtitle,
     this.badge,
-    this.savingsText,
     required this.isSelected,
     this.isHighlighted = false,
     required this.onTap,
@@ -650,35 +484,32 @@ class _PricingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final effectiveHighlight = isHighlighted || isSelected;
-    
     return Material(
-      color: effectiveHighlight
+      color: isSelected || isHighlighted
           ? Theme.of(context).colorScheme.primaryContainer
           : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.all(16),
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected
                   ? Theme.of(context).colorScheme.primary
-                  : isHighlighted
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.3)
-                      : Colors.transparent,
-              width: isSelected ? 2 : 1,
+                  : Colors.transparent,
+              width: 2,
             ),
           ),
           child: Column(
             children: [
               if (badge != null)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  margin: const EdgeInsets.only(bottom: 4),
                   decoration: BoxDecoration(
                     color: Theme.of(context).colorScheme.primary,
                     borderRadius: BorderRadius.circular(4),
@@ -688,77 +519,38 @@ class _PricingCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: Theme.of(context).colorScheme.onPrimary,
                       fontWeight: FontWeight.bold,
+                      fontSize: 10,
                     ),
                   ),
-                )
-              else if (isHighlighted)
-                const SizedBox(height: 20)
-              else
-                const SizedBox(height: 0),
-              
-              if (badge != null || isHighlighted)
-                const SizedBox(height: 8),
-              
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w500,
                 ),
-              ),
               
-              const SizedBox(height: 4),
+              Text(title, style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w500)),
+              
+              const SizedBox(height: 2),
               
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Flexible(
-                    child: Text(
-                      price,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
+                  Text(
+                    price,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                   ),
                   Padding(
                     padding: const EdgeInsets.only(bottom: 2),
-                    child: Text(
-                      period,
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
+                    child: Text(period, style: Theme.of(context).textTheme.bodySmall),
                   ),
                 ],
               ),
               
-              if (subtitle != null) ...[
-                const SizedBox(height: 4),
+              if (subtitle != null)
                 Text(
                   subtitle!,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7),
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-              
-              if (savingsText != null) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    savingsText!,
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.green.shade700,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    fontSize: 11,
                   ),
                 ),
-              ],
             ],
           ),
         ),
