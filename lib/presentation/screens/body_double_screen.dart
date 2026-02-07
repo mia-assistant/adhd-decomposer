@@ -647,45 +647,51 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: AmbientSound.values.map((sound) {
               final isSelected = currentSound == sound;
-              return Semantics(
-                label: '${AmbientAudioService.getLabel(sound)} sound${isSelected ? ', selected' : ''}',
-                button: true,
-                selected: isSelected,
-                child: GestureDetector(
-                  onTap: () => _selectSound(sound),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected 
-                          ? const Color(0xFF6366f1).withOpacity(0.3)
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(20),
-                      border: isSelected 
-                          ? Border.all(color: const Color(0xFF6366f1))
-                          : null,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          _getSoundIcon(sound),
-                          size: 24,
-                          color: isSelected 
-                              ? const Color(0xFF818cf8)
-                              : Colors.white.withOpacity(0.4),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          AmbientAudioService.getLabel(sound),
-                          style: TextStyle(
-                            fontSize: 11,
+              return Expanded(
+                child: Semantics(
+                  label: '${AmbientAudioService.getLabel(sound)} sound${isSelected ? ', selected' : ''}',
+                  button: true,
+                  selected: isSelected,
+                  child: GestureDetector(
+                    onTap: () => _selectSound(sound),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: isSelected 
+                            ? const Color(0xFF6366f1).withOpacity(0.3)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(20),
+                        border: isSelected 
+                            ? Border.all(color: const Color(0xFF6366f1))
+                            : null,
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _getSoundIcon(sound),
+                            size: 24,
                             color: isSelected 
                                 ? const Color(0xFF818cf8)
                                 : Colors.white.withOpacity(0.4),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            AmbientAudioService.getLabel(sound),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: isSelected 
+                                  ? const Color(0xFF818cf8)
+                                  : Colors.white.withOpacity(0.4),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

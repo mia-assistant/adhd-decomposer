@@ -189,7 +189,7 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
                     width: kMinTouchTarget,
                     height: kMinTouchTarget,
                     child: IconButton(
-                      icon: const Icon(Icons.person_add_alt_1),
+                      icon: const Icon(Icons.spa_outlined),
                       onPressed: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const BodyDoubleScreen(),
