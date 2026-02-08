@@ -70,8 +70,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
     super.initState();
     _sessionStart = DateTime.now();
     
-    // Keep screen awake during focus session
-    // TODO: Re-enable wakelock when plugin is updated
+    // Wakelock disabled for v1 — screen stays awake via system settings if needed
     
     // Hide status bar for immersive experience
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);

@@ -31,7 +31,7 @@ class SiriService {
     }
 
     try {
-      // TODO: Re-enable when flutter_app_intents is stable
+      // Siri Shortcuts disabled for v1 — re-enable when flutter_app_intents is stable
       _initialized = true;
       debugPrint('SiriService: Initialized successfully');
     } catch (e) {

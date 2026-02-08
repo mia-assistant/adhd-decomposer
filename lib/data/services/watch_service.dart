@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 /// Service for communicating with the Apple Watch companion app.
@@ -96,7 +97,7 @@ class WatchService {
       await _channel.invokeMethod('syncTask', task.toJson());
       return true;
     } on PlatformException catch (e) {
-      print('Failed to sync task to watch: ${e.message}');
+      debugPrint('WatchService: Failed to sync task to watch: ${e.message}');
       return false;
     }
   }
@@ -107,7 +108,7 @@ class WatchService {
       await _channel.invokeMethod('clearTask');
       return true;
     } on PlatformException catch (e) {
-      print('Failed to clear watch task: ${e.message}');
+      debugPrint('WatchService: Failed to clear watch task: ${e.message}');
       return false;
     }
   }
@@ -124,7 +125,7 @@ class WatchService {
       });
       return true;
     } on PlatformException catch (e) {
-      print('Failed to update watch step: ${e.message}');
+      debugPrint('WatchService: Failed to update watch step: ${e.message}');
       return false;
     }
   }
@@ -141,22 +142,21 @@ class WatchService {
       });
       return true;
     } on PlatformException catch (e) {
-      print('Failed to start watch timer: ${e.message}');
+      debugPrint('WatchService: Failed to start watch timer: ${e.message}');
       return false;
     }
   }
 
   /// Handle step completion from watch
   static void _handleStepCompleted(String taskId, String stepId) {
-    // TODO: Connect to task repository to mark step complete
-    // This would typically emit an event or call a callback
-    print('Watch completed step: $stepId in task: $taskId');
+    // v2: Connect to task repository to mark step complete
+    debugPrint('WatchService: Step completed from watch: $stepId in task: $taskId');
   }
 
   /// Handle step skip from watch
   static void _handleStepSkipped(String taskId, String stepId) {
-    // TODO: Connect to task repository to mark step skipped
-    print('Watch skipped step: $stepId in task: $taskId');
+    // v2: Connect to task repository to mark step skipped
+    debugPrint('WatchService: Step skipped from watch: $stepId in task: $taskId');
   }
 
   /// Dispose resources

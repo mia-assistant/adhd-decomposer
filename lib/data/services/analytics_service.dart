@@ -1,5 +1,7 @@
+import 'package:flutter/foundation.dart';
+
 /// Analytics service for tracking user events
-/// Currently a stub implementation - prints to console for debugging
+/// Currently a stub implementation - uses debugPrint (stripped in release)
 /// Replace with real analytics (Firebase, Mixpanel, etc.) later
 class AnalyticsService {
   static final AnalyticsService _instance = AnalyticsService._internal();
@@ -66,7 +68,6 @@ class AnalyticsService {
   }
   
   void _log(String message) {
-    // ignore: avoid_print
-    print('[Analytics] $message');
+    debugPrint('[Analytics] $message');
   }
 }

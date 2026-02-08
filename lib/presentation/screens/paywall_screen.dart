@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../data/services/purchase_service.dart';
 
 enum PricingOption { monthly, yearly, lifetime }
@@ -334,7 +335,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             ),
             Text(' • ', style: Theme.of(context).textTheme.bodySmall),
             TextButton(
-              onPressed: () {},
+              onPressed: () => _openUrl('https://mia-assistant.github.io/adhd-decomposer/privacy-policy'),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: Size.zero,
@@ -344,7 +345,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
             ),
             Text(' • ', style: Theme.of(context).textTheme.bodySmall),
             TextButton(
-              onPressed: () {},
+              onPressed: () => _openUrl('https://mia-assistant.github.io/adhd-decomposer/terms-of-service'),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: Size.zero,
@@ -369,6 +370,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
         ),
       ],
     );
+  }
+  
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
   
   Future<void> _purchase(PurchaseService purchaseService) async {

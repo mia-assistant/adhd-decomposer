@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../../data/services/analytics_service.dart';
 
 /// Simple feedback form for users who want to share what could be better
@@ -41,11 +42,9 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
     );
     
     // For MVP: just log and show success
-    // ignore: avoid_print
-    print('[Feedback] Message: ${_feedbackController.text}');
+    debugPrint('[Feedback] Message: ${_feedbackController.text}');
     if (_emailController.text.isNotEmpty) {
-      // ignore: avoid_print
-      print('[Feedback] Email: ${_emailController.text}');
+      debugPrint('[Feedback] Email: ${_emailController.text}');
     }
     
     if (mounted) {

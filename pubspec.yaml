@@ -53,6 +53,9 @@ dependencies:
   # Calendar integration
   device_calendar: ^4.3.2
   
+  # URL launcher (for privacy policy, terms links)
+  url_launcher: ^6.2.5
+  
   # Siri Shortcuts integration
   
   # Keep screen awake

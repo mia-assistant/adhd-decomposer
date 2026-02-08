@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:device_calendar/device_calendar.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/task_provider.dart';
 import '../providers/theme_provider.dart';
 import '../../data/services/calendar_service.dart';
@@ -151,6 +152,18 @@ class SettingsScreen extends StatelessWidget {
                 leading: const Icon(Icons.info_outlined),
                 title: const Text('Tiny Steps'),
                 subtitle: const Text('Version 1.0.0'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.privacy_tip_outlined),
+                title: const Text('Privacy Policy'),
+                trailing: const Icon(Icons.open_in_new, size: 18),
+                onTap: () => _openUrl('https://mia-assistant.github.io/adhd-decomposer/privacy-policy'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.description_outlined),
+                title: const Text('Terms of Service'),
+                trailing: const Icon(Icons.open_in_new, size: 18),
+                onTap: () => _openUrl('https://mia-assistant.github.io/adhd-decomposer/terms-of-service'),
               ),
               ListTile(
                 leading: const Icon(Icons.favorite_outline),
@@ -982,6 +995,13 @@ class SettingsScreen extends StatelessWidget {
       title: const Text('Account Status'),
       subtitle: Text(statusText),
     );
+  }
+
+  void _openUrl(String url) async {
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    }
   }
 
   void _showClearConfirmation(BuildContext context) {
