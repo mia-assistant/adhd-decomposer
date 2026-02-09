@@ -243,88 +243,89 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
               // Main content - always visible
               LayoutBuilder(
                 builder: (context, constraints) {
-                  final isCompact = constraints.maxHeight < 700;
-                  final contentPadding = isCompact ? 16.0 : 24.0;
-                  final avatarSize = isCompact ? 96.0 : 120.0;
-                  final innerAvatarSize = isCompact ? 64.0 : 80.0;
-                  final messageFontSize = isCompact ? 16.0 : 18.0;
-                  final messageHeight = isCompact ? 48.0 : 60.0;
-                  final sectionGap = isCompact ? 20.0 : 32.0;
-                  final timerRingSize = isCompact ? 132.0 : 160.0;
-                  final timeFontSize = isCompact ? 40.0 : 48.0;
+                  // More aggressive compact mode for smaller screens
+                  final isCompact = constraints.maxHeight < 750;
+                  final isVeryCompact = constraints.maxHeight < 650;
+                  final contentPadding = isVeryCompact ? 12.0 : (isCompact ? 16.0 : 24.0);
+                  final avatarSize = isVeryCompact ? 72.0 : (isCompact ? 96.0 : 120.0);
+                  final innerAvatarSize = isVeryCompact ? 48.0 : (isCompact ? 64.0 : 80.0);
+                  final messageFontSize = isVeryCompact ? 14.0 : (isCompact ? 16.0 : 18.0);
+                  final messageHeight = isVeryCompact ? 36.0 : (isCompact ? 48.0 : 60.0);
+                  final sectionGap = isVeryCompact ? 12.0 : (isCompact ? 16.0 : 32.0);
+                  final timerRingSize = isVeryCompact ? 100.0 : (isCompact ? 132.0 : 160.0);
+                  final timeFontSize = isVeryCompact ? 32.0 : (isCompact ? 40.0 : 48.0);
 
                   return Padding(
                     padding: EdgeInsets.all(contentPadding),
-                    child: SingleChildScrollView(
-                      physics: const ClampingScrollPhysics(),
-                      child: Column(
-                        children: [
-                          // Header with controls (animated visibility)
-                          AnimatedOpacity(
-                            opacity: _showControls ? 1.0 : 0.0,
-                            duration: const Duration(milliseconds: 200),
-                            child: _buildHeader(context),
-                          ),
+                    child: Column(
+                      children: [
+                        // Header with controls (animated visibility)
+                        AnimatedOpacity(
+                          opacity: _showControls ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: _buildHeader(context),
+                        ),
 
-                          SizedBox(height: isCompact ? 12 : 24),
+                        SizedBox(height: isVeryCompact ? 8 : (isCompact ? 12 : 24)),
 
-                          // Avatar with pulse - always visible
-                          _buildAvatar(
+                        // Avatar with pulse - always visible
+                        _buildAvatar(
+                          context,
+                          outerSize: avatarSize,
+                          innerSize: innerAvatarSize,
+                        ),
+
+                        SizedBox(height: isVeryCompact ? 8 : 16),
+
+                        // Encouragement message - always visible
+                        _buildEncouragementMessage(
+                          context,
+                          fontSize: messageFontSize,
+                          height: messageHeight,
+                        ),
+
+                        SizedBox(height: sectionGap),
+
+                        // Current step (if active) - always visible
+                        Flexible(
+                          child: _buildCurrentStep(
                             context,
-                            outerSize: avatarSize,
-                            innerSize: innerAvatarSize,
+                            padding: EdgeInsets.all(isVeryCompact ? 12 : (isCompact ? 16 : 20)),
+                            bodyFontSize: isVeryCompact ? 13 : (isCompact ? 14 : 16),
                           ),
+                        ),
 
-                          const SizedBox(height: 16),
+                        SizedBox(height: sectionGap),
 
-                          // Encouragement message - always visible
-                          _buildEncouragementMessage(
+                        // Timer - animated visibility
+                        AnimatedOpacity(
+                          opacity: _showControls ? 1.0 : 0.3,
+                          duration: const Duration(milliseconds: 200),
+                          child: _buildTimer(
                             context,
-                            fontSize: messageFontSize,
-                            height: messageHeight,
+                            ringSize: timerRingSize,
+                            timeFontSize: timeFontSize,
+                            compact: isCompact || isVeryCompact,
                           ),
+                        ),
 
-                          SizedBox(height: sectionGap),
+                        SizedBox(height: isVeryCompact ? 8 : (isCompact ? 16 : 24)),
 
-                          // Current step (if active) - always visible
-                          _buildCurrentStep(
-                            context,
-                            padding: EdgeInsets.all(isCompact ? 16 : 20),
-                            bodyFontSize: isCompact ? 14 : 16,
-                          ),
-
-                          SizedBox(height: sectionGap),
-
-                          // Timer - animated visibility
-                          AnimatedOpacity(
-                            opacity: _showControls ? 1.0 : 0.3,
-                            duration: const Duration(milliseconds: 200),
-                            child: _buildTimer(
+                        // Audio controls - animated visibility
+                        AnimatedOpacity(
+                          opacity: _showControls ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: IgnorePointer(
+                            ignoring: !_showControls,
+                            child: _buildAudioControls(
                               context,
-                              ringSize: timerRingSize,
-                              timeFontSize: timeFontSize,
-                              compact: isCompact,
+                              compact: isCompact || isVeryCompact,
                             ),
                           ),
+                        ),
 
-                          SizedBox(height: isCompact ? 16 : 24),
-
-                          // Audio controls - animated visibility
-                          AnimatedOpacity(
-                            opacity: _showControls ? 1.0 : 0.0,
-                            duration: const Duration(milliseconds: 200),
-                            child: IgnorePointer(
-                              ignoring: !_showControls,
-                              child: _buildAudioControls(
-                                context,
-                                compact: isCompact,
-                              ),
-                            ),
-                          ),
-
-                          SizedBox(height: isCompact ? 8 : 16),
-                        ],
-                      ),
+                        SizedBox(height: isVeryCompact ? 4 : (isCompact ? 8 : 16)),
+                      ],
                     ),
                   );
                 },
