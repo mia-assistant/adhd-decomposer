@@ -235,6 +235,8 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
         child: Scaffold(
         backgroundColor: backgroundColor,
         body: SafeArea(
+          // Reduce SafeArea bottom padding since we handle it ourselves
+          bottom: false,
           child: Stack(
             children: [
               // Floating particles background
@@ -246,7 +248,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                   // Compact mode thresholds - be aggressive to avoid overflow
                   final isCompact = constraints.maxHeight < 850;
                   final isVeryCompact = constraints.maxHeight < 700;
-                  final contentPadding = isVeryCompact ? 12.0 : (isCompact ? 16.0 : 24.0);
+                  final contentPadding = isVeryCompact ? 8.0 : (isCompact ? 12.0 : 24.0);
                   final avatarSize = isVeryCompact ? 64.0 : (isCompact ? 80.0 : 120.0);
                   final innerAvatarSize = isVeryCompact ? 40.0 : (isCompact ? 52.0 : 80.0);
                   final messageFontSize = isVeryCompact ? 14.0 : (isCompact ? 15.0 : 18.0);
@@ -315,7 +317,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                           ),
                         ),
 
-                        SizedBox(height: isVeryCompact ? 8 : (isCompact ? 16 : 24)),
+                        SizedBox(height: isVeryCompact ? 4 : (isCompact ? 8 : 24)),
 
                         // Audio controls - animated visibility
                         AnimatedOpacity(
@@ -330,7 +332,8 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                           ),
                         ),
 
-                        SizedBox(height: isVeryCompact ? 4 : (isCompact ? 8 : 16)),
+                        // Bottom padding to account for SafeArea bottom: false
+                        SizedBox(height: isVeryCompact ? 8 : (isCompact ? 16 : 24)),
                       ],
                     ),
                   );
@@ -340,22 +343,23 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
               // Break prompt overlay
               if (_showBreakPrompt) _buildBreakPrompt(context),
               
-              // Swipe hint at bottom
-              if (_showControls)
-                Positioned(
-                  bottom: 8,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: Text(
-                      'Swipe down to exit',
-                      style: TextStyle(
-                        color: Colors.white.withOpacity(0.3),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ),
+              // Swipe hint at bottom - hidden in compact mode to save space
+              // if (_showControls)
+              //   Positioned(
+              //     bottom: 8,
+              //     left: 0,
+              //     right: 0,
+              //     child: Center(
+              //       child: Text(
+              //         'Swipe down to exit',
+              //         style: TextStyle(
+              //           color: Colors.white.withOpacity(0.3),
+              //           fontSize: 12,
+              //         ),
+              //       ),
+              //     ),
+              //   ),
+              // ),
             ],
           ),
         ),
