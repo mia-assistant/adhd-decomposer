@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:device_calendar/device_calendar.dart';
@@ -8,6 +9,7 @@ import '../../data/services/calendar_service.dart';
 import 'paywall_screen.dart';
 import 'feedback_screen.dart';
 import 'coach_selector_screen.dart';
+import 'debug_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -171,6 +173,21 @@ class SettingsScreen extends StatelessWidget {
                 title: const Text('Made for ADHD minds'),
                 subtitle: const Text('One tiny step at a time'),
               ),
+              
+              // Debug tools — only in debug builds
+              if (kDebugMode) ...[
+                const Divider(height: 32),
+                _buildSectionHeader(context, 'Developer'),
+                ListTile(
+                  leading: Icon(Icons.bug_report, color: Colors.red.shade700),
+                  title: const Text('Debug Tools'),
+                  subtitle: const Text('Force onboarding, toggle premium, etc.'),
+                  trailing: const Icon(Icons.chevron_right),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const DebugScreen()),
+                  ),
+                ),
+              ],
             ],
           );
         },

@@ -24,9 +24,24 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Semantics(
-          header: true,
-          child: const Text(AppStrings.appName),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.asset(
+                'assets/icons/app_icon_1024.png',
+                width: 32,
+                height: 32,
+                fit: BoxFit.cover,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Semantics(
+              header: true,
+              child: const Text(AppStrings.appName),
+            ),
+          ],
         ),
         actions: [
           // Level badge - tappable to go to profile
