@@ -266,7 +266,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                           child: _buildHeader(context),
                         ),
 
-                        SizedBox(height: isVeryCompact ? 8 : (isCompact ? 12 : 24)),
+                        SizedBox(height: isVeryCompact ? 4 : (isCompact ? 8 : 24)),
 
                         // Avatar with pulse - always visible
                         _buildAvatar(
@@ -275,7 +275,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                           innerSize: innerAvatarSize,
                         ),
 
-                        SizedBox(height: isVeryCompact ? 8 : 16),
+                        SizedBox(height: isVeryCompact ? 4 : (isCompact ? 8 : 16)),
 
                         // Encouragement message - always visible
                         _buildEncouragementMessage(
@@ -284,24 +284,24 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                           height: messageHeight,
                         ),
 
-                        SizedBox(height: sectionGap),
+                        SizedBox(height: isVeryCompact ? 8 : sectionGap),
 
                         // Current step (if active) - constrained height
                         ConstrainedBox(
                           constraints: BoxConstraints(
-                            maxHeight: isVeryCompact ? 60 : (isCompact ? 80 : 100),
+                            maxHeight: isVeryCompact ? 56 : (isCompact ? 72 : 100),
                           ),
                           child: _buildCurrentStep(
                             context,
                             padding: EdgeInsets.symmetric(
-                              horizontal: isVeryCompact ? 12 : (isCompact ? 16 : 20),
-                              vertical: isVeryCompact ? 8 : (isCompact ? 12 : 16),
+                              horizontal: isVeryCompact ? 10 : (isCompact ? 14 : 20),
+                              vertical: isVeryCompact ? 6 : (isCompact ? 10 : 16),
                             ),
-                            bodyFontSize: isVeryCompact ? 13 : (isCompact ? 14 : 16),
+                            bodyFontSize: isVeryCompact ? 12 : (isCompact ? 13 : 16),
                           ),
                         ),
 
-                        SizedBox(height: sectionGap),
+                        SizedBox(height: isVeryCompact ? 8 : sectionGap),
 
                         // Timer - animated visibility
                         AnimatedOpacity(
