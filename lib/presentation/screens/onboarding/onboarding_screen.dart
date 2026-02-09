@@ -4,8 +4,8 @@ import '../../../data/services/settings_service.dart';
 import 'welcome_page.dart';
 import 'challenge_page.dart';
 import 'demo_page.dart';
-import 'name_page.dart';
-import 'widget_page.dart';
+import 'coach_picker_page.dart';
+import 'features_preview_page.dart';
 import '../paywall_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -20,10 +20,9 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final int _totalPages = 6; // Welcome, Challenge, Demo, Widget, Name, Paywall
+  final int _totalPages = 6; // Welcome, Challenge, Demo, Coach, Features, Paywall
   
   String? _selectedChallenge;
-  String? _userName;
   
   late final SettingsService _settings;
   
@@ -59,14 +58,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _nextPage();
   }
   
-  void _onNameSubmitted(String? name) {
-    setState(() => _userName = name);
-    if (name != null && name.isNotEmpty) {
-      _settings.userName = name;
-    }
-    _nextPage();
-  }
-  
   void _completeOnboarding() {
     _settings.onboardingComplete = true;
     widget.onComplete();
@@ -91,7 +82,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         borderRadius: BorderRadius.circular(2),
                         color: index <= _currentPage
                             ? Theme.of(context).colorScheme.primary
-                            : Theme.of(context).colorScheme.primary.withOpacity(0.2),
+                            : Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
                       ),
                     ),
                   ).animate(target: index <= _currentPage ? 1 : 0)
@@ -114,8 +105,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onChallengeSelected: _onChallengeSelected,
                   ),
                   DemoPage(onNext: _nextPage),
-                  WidgetPage(onNext: _nextPage),
-                  NamePage(onSubmit: _onNameSubmitted),
+                  CoachPickerPage(onNext: _nextPage),
+                  FeaturesPreviewPage(onNext: _nextPage),
                   PaywallScreen(
                     showSkip: true,
                     onSkip: _completeOnboarding,

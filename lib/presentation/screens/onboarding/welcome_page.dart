@@ -21,8 +21,8 @@ class WelcomePage extends StatelessWidget {
             borderRadius: BorderRadius.circular(32),
             child: Image.asset(
               'assets/icons/app_icon_1024.png',
-              width: 140,
-              height: 140,
+              width: 120,
+              height: 120,
               fit: BoxFit.cover,
             ),
           )
@@ -30,12 +30,14 @@ class WelcomePage extends StatelessWidget {
               .scale(duration: 600.ms, curve: Curves.elasticOut)
               .fadeIn(),
           
-          const SizedBox(height: 48),
+          const SizedBox(height: 40),
           
+          // The hook - the struggle
           Text(
-            'Tiny Steps',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
+            'You know what\nneeds to be done.',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.bold,
+              height: 1.2,
             ),
             textAlign: TextAlign.center,
           )
@@ -43,40 +45,48 @@ class WelcomePage extends StatelessWidget {
               .fadeIn(delay: 200.ms)
               .slideY(begin: 0.3, end: 0),
           
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           
           Text(
-            'Big tasks feel overwhelming?\nLet\'s break them into tiny,\nmanageable steps.',
-            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-              color: Theme.of(context).textTheme.bodyMedium?.color,
-              height: 1.5,
+            'You just can\'t start.',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.w400,
+              color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+              height: 1.2,
             ),
             textAlign: TextAlign.center,
           )
               .animate()
-              .fadeIn(delay: 400.ms)
+              .fadeIn(delay: 500.ms)
               .slideY(begin: 0.3, end: 0),
           
           const Spacer(),
           
-          // Feature highlights - centered
-          _FeatureRow(
-            icon: Icons.psychology_outlined,
-            text: 'AI breaks down your tasks',
-          ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2, end: 0),
-          
-          const SizedBox(height: 12),
-          
-          _FeatureRow(
-            icon: Icons.timer_outlined,
-            text: 'Each step takes minutes, not hours',
-          ).animate().fadeIn(delay: 700.ms).slideY(begin: 0.2, end: 0),
-          
-          const SizedBox(height: 12),
-          
-          _FeatureRow(
-            icon: Icons.celebration_outlined,
-            text: 'Celebrate every tiny win',
+          // The solution - concise
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                Text(
+                  'Other apps give you a plan.',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'We help you DO it.',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ).animate().fadeIn(delay: 800.ms).slideY(begin: 0.2, end: 0),
           
           const Spacer(),
@@ -88,7 +98,7 @@ class WelcomePage extends StatelessWidget {
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
               ),
-              child: const Text('Get Started'),
+              child: const Text('Show me how'),
             ),
           )
               .animate()
@@ -98,33 +108,6 @@ class WelcomePage extends StatelessWidget {
           const SizedBox(height: 32),
         ],
       ),
-    );
-  }
-}
-
-class _FeatureRow extends StatelessWidget {
-  final IconData icon;
-  final String text;
-  
-  const _FeatureRow({required this.icon, required this.text});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          size: 24,
-          color: Theme.of(context).colorScheme.primary,
-        ),
-        const SizedBox(width: 12),
-        Text(
-          text,
-          style: Theme.of(context).textTheme.bodyMedium,
-        ),
-      ],
     );
   }
 }
