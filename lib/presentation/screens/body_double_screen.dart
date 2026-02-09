@@ -259,8 +259,10 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
 
                   return Padding(
                     padding: EdgeInsets.all(contentPadding),
-                    child: Column(
-                      children: [
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      child: Column(
+                        children: [
                         // Header with controls (animated visibility)
                         AnimatedOpacity(
                           opacity: _showControls ? 1.0 : 0.0,
@@ -335,6 +337,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                         // Bottom padding to account for SafeArea bottom: false
                         SizedBox(height: isVeryCompact ? 8 : (isCompact ? 16 : 24)),
                       ],
+                      ),
                     ),
                   );
                 },
