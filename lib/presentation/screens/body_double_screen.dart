@@ -243,17 +243,17 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
               // Main content - always visible
               LayoutBuilder(
                 builder: (context, constraints) {
-                  // More aggressive compact mode for smaller screens
-                  final isCompact = constraints.maxHeight < 750;
-                  final isVeryCompact = constraints.maxHeight < 650;
+                  // Compact mode thresholds - be aggressive to avoid overflow
+                  final isCompact = constraints.maxHeight < 850;
+                  final isVeryCompact = constraints.maxHeight < 700;
                   final contentPadding = isVeryCompact ? 12.0 : (isCompact ? 16.0 : 24.0);
-                  final avatarSize = isVeryCompact ? 72.0 : (isCompact ? 96.0 : 120.0);
-                  final innerAvatarSize = isVeryCompact ? 48.0 : (isCompact ? 64.0 : 80.0);
-                  final messageFontSize = isVeryCompact ? 14.0 : (isCompact ? 16.0 : 18.0);
-                  final messageHeight = isVeryCompact ? 36.0 : (isCompact ? 48.0 : 60.0);
-                  final sectionGap = isVeryCompact ? 12.0 : (isCompact ? 16.0 : 32.0);
-                  final timerRingSize = isVeryCompact ? 100.0 : (isCompact ? 132.0 : 160.0);
-                  final timeFontSize = isVeryCompact ? 32.0 : (isCompact ? 40.0 : 48.0);
+                  final avatarSize = isVeryCompact ? 64.0 : (isCompact ? 80.0 : 120.0);
+                  final innerAvatarSize = isVeryCompact ? 40.0 : (isCompact ? 52.0 : 80.0);
+                  final messageFontSize = isVeryCompact ? 14.0 : (isCompact ? 15.0 : 18.0);
+                  final messageHeight = isVeryCompact ? 32.0 : (isCompact ? 40.0 : 60.0);
+                  final sectionGap = isVeryCompact ? 8.0 : (isCompact ? 12.0 : 32.0);
+                  final timerRingSize = isVeryCompact ? 90.0 : (isCompact ? 110.0 : 160.0);
+                  final timeFontSize = isVeryCompact ? 28.0 : (isCompact ? 36.0 : 48.0);
 
                   return Padding(
                     padding: EdgeInsets.all(contentPadding),
@@ -266,7 +266,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                           child: _buildHeader(context),
                         ),
 
-                        SizedBox(height: isVeryCompact ? 4 : (isCompact ? 8 : 24)),
+                        SizedBox(height: isVeryCompact ? 2 : (isCompact ? 6 : 24)),
 
                         // Avatar with pulse - always visible
                         _buildAvatar(
@@ -275,7 +275,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                           innerSize: innerAvatarSize,
                         ),
 
-                        SizedBox(height: isVeryCompact ? 4 : (isCompact ? 8 : 16)),
+                        SizedBox(height: isVeryCompact ? 2 : (isCompact ? 6 : 16)),
 
                         // Encouragement message - always visible
                         _buildEncouragementMessage(
@@ -284,24 +284,24 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                           height: messageHeight,
                         ),
 
-                        SizedBox(height: isVeryCompact ? 8 : sectionGap),
+                        SizedBox(height: sectionGap),
 
                         // Current step (if active) - constrained height
                         ConstrainedBox(
                           constraints: BoxConstraints(
-                            maxHeight: isVeryCompact ? 56 : (isCompact ? 72 : 100),
+                            maxHeight: isVeryCompact ? 50 : (isCompact ? 64 : 100),
                           ),
                           child: _buildCurrentStep(
                             context,
                             padding: EdgeInsets.symmetric(
-                              horizontal: isVeryCompact ? 10 : (isCompact ? 14 : 20),
-                              vertical: isVeryCompact ? 6 : (isCompact ? 10 : 16),
+                              horizontal: isVeryCompact ? 10 : (isCompact ? 12 : 20),
+                              vertical: isVeryCompact ? 6 : (isCompact ? 8 : 16),
                             ),
                             bodyFontSize: isVeryCompact ? 12 : (isCompact ? 13 : 16),
                           ),
                         ),
 
-                        SizedBox(height: isVeryCompact ? 8 : sectionGap),
+                        SizedBox(height: sectionGap),
 
                         // Timer - animated visibility
                         AnimatedOpacity(
