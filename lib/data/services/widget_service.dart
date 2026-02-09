@@ -7,7 +7,7 @@ import '../models/task.dart';
 
 /// Service for managing home screen widgets
 class WidgetService {
-  static const String _appGroupId = 'group.com.miadevelops.adhd_decomposer';
+  static const String _appGroupId = 'group.com.manuelpa.tinysteps';
   static const String _androidWidgetName = 'CurrentTaskWidget';
   static const String _quickAddWidgetName = 'QuickAddWidget';
   static const _pinChannel = MethodChannel('com.manuelpa.tinysteps/widget_pin');

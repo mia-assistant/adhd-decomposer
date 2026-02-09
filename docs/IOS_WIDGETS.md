@@ -29,7 +29,7 @@ Both the main app and widget need to share data via App Groups:
 
 1. In Xcode, select the Runner target → Signing & Capabilities
 2. Add "App Groups" capability
-3. Create group: `group.com.miadevelops.adhd_decomposer`
+3. Create group: `group.com.manuelpa.tinysteps`
 4. Repeat for the TinyStepsWidget target
 
 ### 3. Create Widget Views
@@ -77,7 +77,7 @@ struct CurrentTaskProvider: TimelineProvider {
     }
     
     private func readWidgetData() -> CurrentTaskEntry {
-        let userDefaults = UserDefaults(suiteName: "group.com.miadevelops.adhd_decomposer")
+        let userDefaults = UserDefaults(suiteName: "group.com.manuelpa.tinysteps")
         
         return CurrentTaskEntry(
             date: Date(),

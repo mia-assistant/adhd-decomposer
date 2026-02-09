@@ -22,11 +22,11 @@ The iOS widget code is ready in `ios/TinyStepsWidget/`. You need to add it to th
 4. **Add App Group:**
    - Select Runner target → Signing & Capabilities
    - Click "+ Capability" → "App Groups"
-   - Add group: `group.com.miadevelops.adhd_decomposer`
+   - Add group: `group.com.manuelpa.tinysteps`
    - Do the same for TinyStepsWidget target
 
 5. **Update Bundle Identifier:**
-   - Widget bundle ID should be: `com.miadevelops.adhd_decomposer.TinyStepsWidget`
+   - Widget bundle ID should be: `com.manuelpa.tinysteps.TinyStepsWidget`
 
 6. **Set Deployment Target:**
    - Widget minimum iOS version: 14.0 (for WidgetKit)

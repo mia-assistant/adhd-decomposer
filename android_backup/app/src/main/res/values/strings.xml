@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Tiny Steps</string>
-    <string name="current_task_widget_description">Shows your current task and step progress</string>
-    <string name="quick_add_widget_description">Quickly break down a new task</string>
-</resources>

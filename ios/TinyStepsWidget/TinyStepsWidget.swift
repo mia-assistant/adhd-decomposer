@@ -73,7 +73,7 @@ struct Provider: TimelineProvider {
     }
     
     private func getEntry() -> TaskEntry {
-        let userDefaults = UserDefaults(suiteName: "group.com.miadevelops.adhd_decomposer")
+        let userDefaults = UserDefaults(suiteName: "group.com.manuelpa.tinysteps")
         
         let taskName = userDefaults?.string(forKey: "task_name") ?? "No active task"
         let currentStep = userDefaults?.string(forKey: "current_step") ?? "Tap to start a task"
