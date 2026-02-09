@@ -83,6 +83,9 @@ class TaskProvider extends ChangeNotifier {
   CoachType get selectedCoachType => _settings?.selectedCoachType ?? CoachType.default_;
   Coach get selectedCoach => _settings?.selectedCoach ?? Coaches.default_;
   
+  // User personalization
+  String? get userName => _settings?.userName;
+  
   // Notification settings getters for UI
   bool get notificationsEnabled => _notifications?.notificationsEnabled ?? false;
   int get reminderHour => _notifications?.reminderHour ?? 9;
@@ -132,6 +135,11 @@ class TaskProvider extends ChangeNotifier {
   
   void setSelectedCoach(CoachType coachType) {
     _settings?.selectedCoachType = coachType;
+    notifyListeners();
+  }
+  
+  void setUserName(String? name) {
+    _settings?.userName = name;
     notifyListeners();
   }
   

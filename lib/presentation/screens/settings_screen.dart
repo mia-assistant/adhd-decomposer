@@ -105,7 +105,8 @@ class SettingsScreen extends StatelessWidget {
               _buildCalendarSettings(context),
               
               const Divider(height: 32),
-              _buildSectionHeader(context, 'AI Coach'),
+              _buildSectionHeader(context, 'Personalization'),
+              _buildNameTile(context, provider),
               _buildCoachSelectorTile(context, provider),
               
               const Divider(height: 32),
@@ -785,6 +786,56 @@ class SettingsScreen extends StatelessWidget {
             ),
           );
         },
+      ),
+    );
+  }
+  
+  Widget _buildNameTile(BuildContext context, TaskProvider provider) {
+    final name = provider.userName;
+    
+    return ListTile(
+      leading: const Icon(Icons.person_outline),
+      title: const Text('Your Name'),
+      subtitle: Text(name?.isNotEmpty == true ? name! : 'Not set'),
+      trailing: const Icon(Icons.edit_outlined),
+      onTap: () => _showNameDialog(context, provider),
+    );
+  }
+  
+  void _showNameDialog(BuildContext context, TaskProvider provider) {
+    final controller = TextEditingController(text: provider.userName ?? '');
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('What should we call you?'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(
+            hintText: 'Your name (optional)',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (value) {
+            provider.setUserName(value.trim().isEmpty ? null : value.trim());
+            Navigator.of(context).pop();
+          },
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              final value = controller.text.trim();
+              provider.setUserName(value.isEmpty ? null : value);
+              Navigator.of(context).pop();
+            },
+            child: const Text('Save'),
+          ),
+        ],
       ),
     );
   }
