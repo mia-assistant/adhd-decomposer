@@ -56,7 +56,7 @@ class SoundService {
 
   /// Play a gentle nudge sound for time blindness alerts
   Future<void> playTimeWarning() async {
-    if (!_settings.soundEnabled) return;
+    if (!_soundEnabled) return;
     try {
       // Use step_complete as a gentle nudge (softer than timer_end)
       await _player.play(AssetSource('sounds/step_complete.mp3'));

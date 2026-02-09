@@ -76,3 +76,23 @@ flutter:
     - assets/images/
     - assets/audio/ambient/
     - assets/icons/
+dev_dependencies:
+  flutter_native_splash: ^2.4.7
+
+flutter_native_splash:
+  # Light mode
+  color: "#FAFAFA"
+  image: assets/icons/app_icon_1024.png
+  
+  # Dark mode
+  color_dark: "#121212"
+  image_dark: assets/icons/app_icon_1024.png
+  
+  # Android 12+ splash screen
+  android_12:
+    color: "#FAFAFA"
+    image: assets/icons/app_icon_512.png
+    icon_background_color: "#FAFAFA"
+    color_dark: "#121212"
+    image_dark: assets/icons/app_icon_512.png
+    icon_background_color_dark: "#121212"

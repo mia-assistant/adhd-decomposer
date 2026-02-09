@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:home_widget/home_widget.dart';
 import '../models/task.dart';
 
@@ -7,6 +10,7 @@ class WidgetService {
   static const String _appGroupId = 'group.com.miadevelops.adhd_decomposer';
   static const String _androidWidgetName = 'CurrentTaskWidget';
   static const String _quickAddWidgetName = 'QuickAddWidget';
+  static const _pinChannel = MethodChannel('com.manuelpa.tinysteps/widget_pin');
   
   /// Initialize the widget service
   static Future<void> initialize() async {
@@ -14,6 +18,34 @@ class WidgetService {
       await HomeWidget.setAppGroupId(_appGroupId);
     } catch (e) {
       debugPrint('WidgetService: Error initializing - $e');
+    }
+  }
+  
+  /// Check if the device supports programmatic widget pinning (Android 8.0+)
+  static Future<bool> isWidgetPinSupported() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      final result = await _pinChannel.invokeMethod<bool>('isWidgetPinSupported');
+      return result ?? false;
+    } catch (e) {
+      debugPrint('WidgetService: Error checking pin support - $e');
+      return false;
+    }
+  }
+  
+  /// Request the system to pin the widget to the home screen (Android 8.0+).
+  /// Returns true if the request was sent (user still needs to confirm).
+  static Future<bool> requestPinWidget({String widgetClass = 'CurrentTaskWidget'}) async {
+    if (!Platform.isAndroid) return false;
+    try {
+      final result = await _pinChannel.invokeMethod<bool>(
+        'requestPinWidget',
+        {'widgetClass': widgetClass},
+      );
+      return result ?? false;
+    } catch (e) {
+      debugPrint('WidgetService: Error requesting pin widget - $e');
+      return false;
     }
   }
   

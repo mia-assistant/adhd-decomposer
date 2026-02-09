@@ -1,11 +1,42 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import '../../../data/services/widget_service.dart';
 
-class WidgetPage extends StatelessWidget {
+class WidgetPage extends StatefulWidget {
   final VoidCallback onNext;
   
   const WidgetPage({super.key, required this.onNext});
+
+  @override
+  State<WidgetPage> createState() => _WidgetPageState();
+}
+
+class _WidgetPageState extends State<WidgetPage> {
+  bool _canPinWidget = false;
+  bool _pinRequested = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPinSupport();
+  }
+
+  Future<void> _checkPinSupport() async {
+    if (Platform.isAndroid) {
+      final supported = await WidgetService.isWidgetPinSupported();
+      if (mounted) {
+        setState(() => _canPinWidget = supported);
+      }
+    }
+  }
+
+  Future<void> _requestPin() async {
+    final success = await WidgetService.requestPinWidget();
+    if (mounted && success) {
+      setState(() => _pinRequested = true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -106,14 +137,39 @@ class WidgetPage extends StatelessWidget {
           
           const SizedBox(height: 32),
           
-          // Instructions
+          // Android: show "Add Widget" button when pin is supported
+          if (_canPinWidget) ...[
+            FilledButton.icon(
+              onPressed: _pinRequested ? null : _requestPin,
+              icon: Icon(_pinRequested ? Icons.check_rounded : Icons.add_to_home_screen),
+              label: Text(_pinRequested ? 'Widget added!' : 'Add Widget to Home Screen'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ).animate().fadeIn(delay: 500.ms).slideY(begin: 0.2, end: 0),
+            const SizedBox(height: 24),
+            // Subtle manual instructions as fallback
+            Text(
+              'Or add it manually:',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.5),
+              ),
+              textAlign: TextAlign.center,
+            ).animate().fadeIn(delay: 600.ms),
+            const SizedBox(height: 12),
+          ],
+          
+          // Manual instructions (always shown on iOS, shown as secondary on Android)
           _buildInstructionStep(
             context,
-            icon: Platform.isIOS ? Icons.touch_app : Icons.touch_app,
+            icon: Icons.touch_app,
             text: Platform.isIOS 
                 ? 'Long-press your home screen'
                 : 'Long-press your home screen',
-            delay: 500,
+            delay: _canPinWidget ? 650 : 500,
           ),
           const SizedBox(height: 12),
           _buildInstructionStep(
@@ -122,14 +178,14 @@ class WidgetPage extends StatelessWidget {
             text: Platform.isIOS 
                 ? 'Tap the + button'
                 : 'Tap "Widgets"',
-            delay: 600,
+            delay: _canPinWidget ? 700 : 600,
           ),
           const SizedBox(height: 12),
           _buildInstructionStep(
             context,
             icon: Icons.search,
             text: 'Search for "Tiny Steps"',
-            delay: 700,
+            delay: _canPinWidget ? 750 : 700,
           ),
           
           const Spacer(),
@@ -138,14 +194,14 @@ class WidgetPage extends StatelessWidget {
           Row(
             children: [
               TextButton(
-                onPressed: onNext,
+                onPressed: widget.onNext,
                 child: const Text('Skip for now'),
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: FilledButton(
-                  onPressed: onNext,
-                  child: const Text('Got it!'),
+                  onPressed: widget.onNext,
+                  child: Text(_pinRequested ? 'Continue' : 'Got it!'),
                 ),
               ),
             ],

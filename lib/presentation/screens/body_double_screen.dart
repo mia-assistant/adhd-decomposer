@@ -349,6 +349,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
             ],
           ),
         ),
+        ),
       ),
     );
   }
