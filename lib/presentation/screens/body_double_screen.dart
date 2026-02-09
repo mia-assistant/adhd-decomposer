@@ -255,73 +255,76 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
 
                   return Padding(
                     padding: EdgeInsets.all(contentPadding),
-                    child: Column(
-                      children: [
-                        // Header with controls (animated visibility)
-                        AnimatedOpacity(
-                          opacity: _showControls ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 200),
-                          child: _buildHeader(context),
-                        ),
-
-                        SizedBox(height: isCompact ? 12 : 24),
-
-                        // Avatar with pulse - always visible
-                        _buildAvatar(
-                          context,
-                          outerSize: avatarSize,
-                          innerSize: innerAvatarSize,
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // Encouragement message - always visible
-                        _buildEncouragementMessage(
-                          context,
-                          fontSize: messageFontSize,
-                          height: messageHeight,
-                        ),
-
-                        SizedBox(height: sectionGap),
-
-                        // Current step (if active) - always visible
-                        _buildCurrentStep(
-                          context,
-                          padding: EdgeInsets.all(isCompact ? 16 : 20),
-                          bodyFontSize: isCompact ? 14 : 16,
-                        ),
-
-                        SizedBox(height: sectionGap),
-
-                        // Timer - animated visibility
-                        AnimatedOpacity(
-                          opacity: _showControls ? 1.0 : 0.3,
-                          duration: const Duration(milliseconds: 200),
-                          child: _buildTimer(
-                            context,
-                            ringSize: timerRingSize,
-                            timeFontSize: timeFontSize,
-                            compact: isCompact,
+                    child: SingleChildScrollView(
+                      physics: const ClampingScrollPhysics(),
+                      child: Column(
+                        children: [
+                          // Header with controls (animated visibility)
+                          AnimatedOpacity(
+                            opacity: _showControls ? 1.0 : 0.0,
+                            duration: const Duration(milliseconds: 200),
+                            child: _buildHeader(context),
                           ),
-                        ),
 
-                        SizedBox(height: isCompact ? 16 : 24),
+                          SizedBox(height: isCompact ? 12 : 24),
 
-                        // Audio controls - animated visibility
-                        AnimatedOpacity(
-                          opacity: _showControls ? 1.0 : 0.0,
-                          duration: const Duration(milliseconds: 200),
-                          child: IgnorePointer(
-                            ignoring: !_showControls,
-                            child: _buildAudioControls(
+                          // Avatar with pulse - always visible
+                          _buildAvatar(
+                            context,
+                            outerSize: avatarSize,
+                            innerSize: innerAvatarSize,
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Encouragement message - always visible
+                          _buildEncouragementMessage(
+                            context,
+                            fontSize: messageFontSize,
+                            height: messageHeight,
+                          ),
+
+                          SizedBox(height: sectionGap),
+
+                          // Current step (if active) - always visible
+                          _buildCurrentStep(
+                            context,
+                            padding: EdgeInsets.all(isCompact ? 16 : 20),
+                            bodyFontSize: isCompact ? 14 : 16,
+                          ),
+
+                          SizedBox(height: sectionGap),
+
+                          // Timer - animated visibility
+                          AnimatedOpacity(
+                            opacity: _showControls ? 1.0 : 0.3,
+                            duration: const Duration(milliseconds: 200),
+                            child: _buildTimer(
                               context,
+                              ringSize: timerRingSize,
+                              timeFontSize: timeFontSize,
                               compact: isCompact,
                             ),
                           ),
-                        ),
 
-                        SizedBox(height: isCompact ? 8 : 16),
-                      ],
+                          SizedBox(height: isCompact ? 16 : 24),
+
+                          // Audio controls - animated visibility
+                          AnimatedOpacity(
+                            opacity: _showControls ? 1.0 : 0.0,
+                            duration: const Duration(milliseconds: 200),
+                            child: IgnorePointer(
+                              ignoring: !_showControls,
+                              child: _buildAudioControls(
+                                context,
+                                compact: isCompact,
+                              ),
+                            ),
+                          ),
+
+                          SizedBox(height: isCompact ? 8 : 16),
+                        ],
+                      ),
                     ),
                   );
                 },
