@@ -57,11 +57,13 @@ class PurchaseService extends ChangeNotifier {
   static const String productIdLifetime = 'tiny_steps_premium_lifetime';
   
   bool _isInitialized = false;
+  bool _isConfigured = false;
   bool _isPremium = false;
   CustomerInfo? _customerInfo;
   List<Package> _availablePackages = [];
   
   bool get isInitialized => _isInitialized;
+  bool get isConfigured => _isConfigured;
   bool get isPremium => _isPremium;
   CustomerInfo? get customerInfo => _customerInfo;
   List<Package> get availablePackages => _availablePackages;
@@ -82,7 +84,8 @@ class PurchaseService extends ChangeNotifier {
       
       // Skip initialization if using placeholder key (for development)
       if (apiKey.startsWith('YOUR_')) {
-        debugPrint('PurchaseService: Using placeholder API key, skipping initialization');
+        debugPrint('PurchaseService: Using placeholder API key, skipping SDK configuration');
+        _isConfigured = false;
         _isInitialized = true;
         return;
       }
@@ -97,6 +100,8 @@ class PurchaseService extends ChangeNotifier {
       
       // Listen for customer info updates
       Purchases.addCustomerInfoUpdateListener(_onCustomerInfoUpdated);
+      
+      _isConfigured = true;
       
       // Get initial customer info
       await checkPremiumStatus();
@@ -130,6 +135,10 @@ class PurchaseService extends ChangeNotifier {
   
   /// Check current premium status from RevenueCat
   Future<void> checkPremiumStatus() async {
+    if (!_isConfigured) {
+      debugPrint('PurchaseService: SDK not configured, skipping premium check');
+      return;
+    }
     try {
       _customerInfo = await Purchases.getCustomerInfo();
       _updatePremiumStatus(_customerInfo!);
@@ -140,6 +149,10 @@ class PurchaseService extends ChangeNotifier {
   
   /// Get available subscription packages from RevenueCat
   Future<List<Package>> getOfferings() async {
+    if (!_isConfigured) {
+      debugPrint('PurchaseService: SDK not configured, no offerings available');
+      return [];
+    }
     try {
       final offerings = await Purchases.getOfferings();
       
@@ -165,6 +178,12 @@ class PurchaseService extends ChangeNotifier {
   
   /// Purchase a subscription package
   Future<bool> purchasePackage(Package package) async {
+    if (!_isConfigured) {
+      throw PurchaseException(
+        PurchaseErrorType.unknown,
+        'Purchases not configured',
+      );
+    }
     try {
       final result = await Purchases.purchasePackage(package);
       _customerInfo = result;
@@ -184,6 +203,12 @@ class PurchaseService extends ChangeNotifier {
   
   /// Restore previous purchases
   Future<bool> restorePurchases() async {
+    if (!_isConfigured) {
+      throw PurchaseException(
+        PurchaseErrorType.unknown,
+        'Purchases not configured',
+      );
+    }
     try {
       final result = await Purchases.restorePurchases();
       _customerInfo = result;
@@ -320,6 +345,7 @@ class PurchaseService extends ChangeNotifier {
   
   /// Set user ID for attribution (optional)
   Future<void> setUserId(String userId) async {
+    if (!_isConfigured) return;
     try {
       await Purchases.logIn(userId);
     } catch (e) {
@@ -329,7 +355,9 @@ class PurchaseService extends ChangeNotifier {
   
   @override
   void dispose() {
-    Purchases.removeCustomerInfoUpdateListener(_onCustomerInfoUpdated);
+    if (_isConfigured) {
+      Purchases.removeCustomerInfoUpdateListener(_onCustomerInfoUpdated);
+    }
     super.dispose();
   }
 }

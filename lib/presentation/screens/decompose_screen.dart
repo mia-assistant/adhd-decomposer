@@ -60,8 +60,7 @@ class _DecomposeScreenState extends State<DecomposeScreen> {
   /// Check if animations should be reduced
   bool _shouldReduceAnimations(BuildContext context) {
     final provider = context.read<TaskProvider>();
-    final mediaQuery = MediaQuery.of(context);
-    return provider.reduceAnimations || mediaQuery.disableAnimations;
+    return provider.reduceAnimations;
   }
 
   @override

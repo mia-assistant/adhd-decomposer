@@ -47,7 +47,7 @@ class AIService {
     // Try backend first
     try {
       final result = await _backend.decomposeTask(taskDescription, style: style);
-      if (result != null && result['task'] != null) {
+      if (result != null && result['success'] == true && result['task'] != null) {
         return _parseBackendResponse(result);
       }
     } on RateLimitException {
@@ -98,18 +98,31 @@ class AIService {
   
   /// Parse response from our backend API
   Task _parseBackendResponse(Map<String, dynamic> result) {
-    final taskData = result['task'];
-    final steps = (taskData['steps'] as List).map((s) => TaskStep(
-      id: _uuid.v4(),
-      action: s['action'] as String,
-      estimatedMinutes: s['estimatedMinutes'] as int? ?? 5,
-    )).toList();
+    final taskData = result['task'] as Map<String, dynamic>;
+    final rawSteps = taskData['steps'] as List;
     
-    final totalMinutes = steps.fold<int>(0, (sum, s) => sum + s.estimatedMinutes);
+    final steps = rawSteps.map((s) {
+      if (s is Map<String, dynamic>) {
+        return TaskStep(
+          id: _uuid.v4(),
+          action: (s['action'] as String?) ?? '',
+          estimatedMinutes: (s['estimatedMinutes'] as int?) ?? 5,
+        );
+      }
+      // Fallback for plain string steps
+      return TaskStep(
+        id: _uuid.v4(),
+        action: s.toString(),
+        estimatedMinutes: 5,
+      );
+    }).toList();
+    
+    final totalMinutes = (taskData['totalEstimatedMinutes'] as int?) ??
+        steps.fold<int>(0, (sum, s) => sum + s.estimatedMinutes);
     
     return Task(
       id: _uuid.v4(),
-      title: taskData['title'] as String,
+      title: (taskData['title'] as String?) ?? 'Task',
       steps: steps,
       totalEstimatedMinutes: totalMinutes,
       createdAt: DateTime.now(),

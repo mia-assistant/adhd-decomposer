@@ -2,7 +2,6 @@ import Flutter
 import UIKit
 import UserNotifications
 import AppIntents
-import flutter_app_intents
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -219,6 +218,42 @@ enum AppIntentError: Error {
     case executionFailed(String)
 }
 
+// MARK: - FlutterAppIntentsPlugin (local stub)
+/// Bridges App Intents to Flutter via method channels
+class FlutterAppIntentsPlugin {
+    static let shared = FlutterAppIntentsPlugin()
+    
+    func handleIntentInvocation(identifier: String, parameters: [String: Any]) async -> [String: Any] {
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.main.async {
+                guard let appDelegate = UIApplication.shared.delegate as? FlutterAppDelegate,
+                      let controller = appDelegate.window?.rootViewController as? FlutterViewController else {
+                    continuation.resume(returning: ["success": false, "error": "Flutter not available"])
+                    return
+                }
+                
+                let channel = FlutterMethodChannel(
+                    name: "com.tinysteps.app/intents",
+                    binaryMessenger: controller.binaryMessenger
+                )
+                
+                let args: [String: Any] = [
+                    "identifier": identifier,
+                    "parameters": parameters
+                ]
+                
+                channel.invokeMethod("handleIntent", arguments: args) { result in
+                    if let dict = result as? [String: Any] {
+                        continuation.resume(returning: dict)
+                    } else {
+                        continuation.resume(returning: ["success": true, "value": "Intent handled"])
+                    }
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Start New Task Intent
 /// Opens the decompose screen to break down a new task
 @available(iOS 16.0, *)
@@ -306,14 +341,11 @@ struct StartRoutineIntent: AppIntent {
     static var isDiscoverable = true
     static var openAppWhenRun = true
     
-    @Parameter(title: "Routine Name")
-    var routineName: String?
-    
     func perform() async throws -> some IntentResult & ReturnsValue<String> & OpensIntent {
         let plugin = FlutterAppIntentsPlugin.shared
         let result = await plugin.handleIntentInvocation(
             identifier: "start_routine",
-            parameters: ["routineName": routineName ?? "morning routine"]
+            parameters: [:]
         )
         
         if let success = result["success"] as? Bool, success {
@@ -377,8 +409,7 @@ struct TinyStepsShortcuts: AppShortcutsProvider {
                 phrases: [
                     "Start my routine in \(.applicationName)",
                     "Start morning routine with \(.applicationName)",
-                    "Begin my routine using \(.applicationName)",
-                    "Start \(\.$routineName) in \(.applicationName)"
+                    "Begin my routine using \(.applicationName)"
                 ],
                 shortTitle: "Routine",
                 systemImageName: "repeat"

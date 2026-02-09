@@ -53,6 +53,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
   // UI state - controls visibility
   bool _showControls = true;
   Timer? _hideControlsTimer;
+  double _verticalDragDistance = 0.0;
   
   static const List<String> _encouragements = [
     "You're doing great. Keep going.",
@@ -188,6 +189,16 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
     _startHideControlsTimer();
   }
 
+  void _exitScreen() {
+    _timer?.cancel();
+    _messageTimer?.cancel();
+    _hideControlsTimer?.cancel();
+    _ambientAudio.stop();
+    if (mounted) {
+      Navigator.of(context).pop();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -199,14 +210,29 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
         : const Color(0xFF2d2d44);
     
     return GestureDetector(
+      behavior: HitTestBehavior.translucent,
       onTap: _onTapAnywhere,
-      onVerticalDragEnd: (details) {
-        // Swipe down to exit
-        if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
-          Navigator.of(context).pop();
+      onVerticalDragStart: (_) {
+        _verticalDragDistance = 0.0;
+      },
+      onVerticalDragUpdate: (details) {
+        if (details.delta.dy > 0) {
+          _verticalDragDistance += details.delta.dy;
         }
       },
-      child: Scaffold(
+      onVerticalDragEnd: (details) {
+        final isFastSwipe = (details.primaryVelocity ?? 0) > 300;
+        final isLongDrag = _verticalDragDistance > 80;
+        if (isFastSwipe || isLongDrag) {
+          _exitScreen();
+        }
+      },
+      child: WillPopScope(
+        onWillPop: () async {
+          await _ambientAudio.stop();
+          return true;
+        },
+        child: Scaffold(
         backgroundColor: backgroundColor,
         body: SafeArea(
           child: Stack(
@@ -215,56 +241,90 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
               _buildParticles(context),
               
               // Main content - always visible
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    // Header with controls (animated visibility)
-                    AnimatedOpacity(
-                      opacity: _showControls ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: _buildHeader(context),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final isCompact = constraints.maxHeight < 700;
+                  final contentPadding = isCompact ? 16.0 : 24.0;
+                  final avatarSize = isCompact ? 96.0 : 120.0;
+                  final innerAvatarSize = isCompact ? 64.0 : 80.0;
+                  final messageFontSize = isCompact ? 16.0 : 18.0;
+                  final messageHeight = isCompact ? 48.0 : 60.0;
+                  final sectionGap = isCompact ? 20.0 : 32.0;
+                  final timerRingSize = isCompact ? 132.0 : 160.0;
+                  final timeFontSize = isCompact ? 40.0 : 48.0;
+
+                  return Padding(
+                    padding: EdgeInsets.all(contentPadding),
+                    child: Column(
+                      children: [
+                        // Header with controls (animated visibility)
+                        AnimatedOpacity(
+                          opacity: _showControls ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: _buildHeader(context),
+                        ),
+
+                        SizedBox(height: isCompact ? 12 : 24),
+
+                        // Avatar with pulse - always visible
+                        _buildAvatar(
+                          context,
+                          outerSize: avatarSize,
+                          innerSize: innerAvatarSize,
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Encouragement message - always visible
+                        _buildEncouragementMessage(
+                          context,
+                          fontSize: messageFontSize,
+                          height: messageHeight,
+                        ),
+
+                        SizedBox(height: sectionGap),
+
+                        // Current step (if active) - always visible
+                        _buildCurrentStep(
+                          context,
+                          padding: EdgeInsets.all(isCompact ? 16 : 20),
+                          bodyFontSize: isCompact ? 14 : 16,
+                        ),
+
+                        SizedBox(height: sectionGap),
+
+                        // Timer - animated visibility
+                        AnimatedOpacity(
+                          opacity: _showControls ? 1.0 : 0.3,
+                          duration: const Duration(milliseconds: 200),
+                          child: _buildTimer(
+                            context,
+                            ringSize: timerRingSize,
+                            timeFontSize: timeFontSize,
+                            compact: isCompact,
+                          ),
+                        ),
+
+                        SizedBox(height: isCompact ? 16 : 24),
+
+                        // Audio controls - animated visibility
+                        AnimatedOpacity(
+                          opacity: _showControls ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 200),
+                          child: IgnorePointer(
+                            ignoring: !_showControls,
+                            child: _buildAudioControls(
+                              context,
+                              compact: isCompact,
+                            ),
+                          ),
+                        ),
+
+                        SizedBox(height: isCompact ? 8 : 16),
+                      ],
                     ),
-                    
-                    const Spacer(),
-                    
-                    // Avatar with pulse - always visible
-                    _buildAvatar(context),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Encouragement message - always visible
-                    _buildEncouragementMessage(context),
-                    
-                    const SizedBox(height: 32),
-                    
-                    // Current step (if active) - always visible
-                    _buildCurrentStep(context),
-                    
-                    const Spacer(),
-                    
-                    // Timer - animated visibility
-                    AnimatedOpacity(
-                      opacity: _showControls ? 1.0 : 0.3,
-                      duration: const Duration(milliseconds: 200),
-                      child: _buildTimer(context),
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Audio controls - animated visibility
-                    AnimatedOpacity(
-                      opacity: _showControls ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: IgnorePointer(
-                        ignoring: !_showControls,
-                        child: _buildAudioControls(context),
-                      ),
-                    ),
-                    
-                    const SizedBox(height: 16),
-                  ],
-                ),
+                  );
+                },
               ),
               
               // Break prompt overlay
@@ -307,7 +367,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
           button: true,
           child: IconButton(
             icon: const Icon(Icons.close, color: Colors.white70),
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: _exitScreen,
             tooltip: 'Exit focus mode',
           ),
         ),
@@ -367,7 +427,11 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
     );
   }
 
-  Widget _buildAvatar(BuildContext context) {
+  Widget _buildAvatar(
+    BuildContext context, {
+    double outerSize = 120,
+    double innerSize = 80,
+  }) {
     const baseColor = Color(0xFF6366f1);
     
     return AnimatedBuilder(
@@ -379,8 +443,8 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
         return Semantics(
           label: 'Digital companion presence indicator',
           child: Container(
-            width: 120 * scale,
-            height: 120 * scale,
+            width: outerSize * scale,
+            height: outerSize * scale,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: baseColor.withOpacity(0.15),
@@ -394,8 +458,8 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
             ),
             child: Center(
               child: Container(
-                width: 80,
-                height: 80,
+                width: innerSize,
+                height: innerSize,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
@@ -418,14 +482,18 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
     );
   }
 
-  Widget _buildEncouragementMessage(BuildContext context) {
+  Widget _buildEncouragementMessage(
+    BuildContext context, {
+    double fontSize = 18,
+    double height = 60,
+  }) {
     final provider = context.read<TaskProvider>();
     final reduceAnimations = provider.reduceAnimations;
     
     final message = Text(
       _encouragements[_currentMessageIndex],
       style: TextStyle(
-        fontSize: 18,
+        fontSize: fontSize,
         fontWeight: FontWeight.w400,
         color: Colors.white.withOpacity(0.8),
         height: 1.4,
@@ -440,7 +508,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
         duration: Duration(milliseconds: reduceAnimations ? 0 : 500),
         child: SizedBox(
           key: ValueKey(_currentMessageIndex),
-          height: 60,
+          height: height,
           child: Center(
             child: reduceAnimations 
                 ? message 
@@ -451,7 +519,11 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
     );
   }
 
-  Widget _buildCurrentStep(BuildContext context) {
+  Widget _buildCurrentStep(
+    BuildContext context, {
+    EdgeInsets padding = const EdgeInsets.all(20),
+    double bodyFontSize = 16,
+  }) {
     return Consumer<TaskProvider>(
       builder: (context, provider, _) {
         final task = provider.activeTask;
@@ -464,7 +536,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
         return Semantics(
           label: 'Current step: ${step.action}',
           child: Container(
-            padding: const EdgeInsets.all(20),
+            padding: padding,
             decoration: BoxDecoration(
               color: Colors.white.withOpacity(0.1),
               borderRadius: BorderRadius.circular(16),
@@ -488,7 +560,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                   step.action,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.9),
-                    fontSize: 16,
+                    fontSize: bodyFontSize,
                     height: 1.3,
                   ),
                   textAlign: TextAlign.center,
@@ -503,7 +575,12 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
     );
   }
 
-  Widget _buildTimer(BuildContext context) {
+  Widget _buildTimer(
+    BuildContext context, {
+    double ringSize = 160,
+    double timeFontSize = 48,
+    bool compact = false,
+  }) {
     final minutes = _secondsRemaining ~/ 60;
     final seconds = _secondsRemaining % 60;
     final timeString = '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
@@ -539,7 +616,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
               ),
             ),
           ),
-          const SizedBox(height: 16),
+          SizedBox(height: compact ? 12 : 16),
           
           // Timer display with progress ring
           Stack(
@@ -547,11 +624,11 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
             children: [
               // Progress ring
               SizedBox(
-                width: 160,
-                height: 160,
+                width: ringSize,
+                height: ringSize,
                 child: CircularProgressIndicator(
                   value: progress,
-                  strokeWidth: 4,
+                  strokeWidth: compact ? 3 : 4,
                   backgroundColor: Colors.white.withOpacity(0.1),
                   valueColor: AlwaysStoppedAnimation<Color>(
                     isBreak ? Colors.green.shade400 : const Color(0xFF6366f1),
@@ -562,7 +639,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
               Text(
                 timeString,
                 style: TextStyle(
-                  fontSize: 48,
+                  fontSize: timeFontSize,
                   fontWeight: FontWeight.w200,
                   letterSpacing: 4,
                   color: Colors.white.withOpacity(0.9),
@@ -570,7 +647,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          SizedBox(height: compact ? 12 : 20),
           
           // Timer controls (only show when controls visible)
           if (_showControls)
@@ -594,8 +671,8 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                   label: _timerRunning ? 'Pause timer' : 'Start timer',
                   button: true,
                   child: SizedBox(
-                    width: 64,
-                    height: 64,
+                    width: compact ? 56 : 64,
+                    height: compact ? 56 : 64,
                     child: ElevatedButton(
                       onPressed: _toggleTimer,
                       style: ElevatedButton.styleFrom(
@@ -606,7 +683,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                       ),
                       child: Icon(
                         _timerRunning ? Icons.pause : Icons.play_arrow,
-                        size: 32,
+                        size: compact ? 28 : 32,
                       ),
                     ),
                   ),
@@ -630,11 +707,14 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
     );
   }
 
-  Widget _buildAudioControls(BuildContext context) {
+  Widget _buildAudioControls(
+    BuildContext context, {
+    bool compact = false,
+  }) {
     final currentSound = _ambientAudio.currentSound;
     
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(compact ? 12 : 16),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
@@ -656,7 +736,10 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
                       margin: const EdgeInsets.symmetric(horizontal: 4),
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: compact ? 6 : 8,
+                        vertical: compact ? 6 : 8,
+                      ),
                       decoration: BoxDecoration(
                         color: isSelected 
                             ? const Color(0xFF6366f1).withOpacity(0.3)
@@ -671,16 +754,16 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                         children: [
                           Icon(
                             _getSoundIcon(sound),
-                            size: 24,
+                            size: compact ? 20 : 24,
                             color: isSelected 
                                 ? const Color(0xFF818cf8)
                                 : Colors.white.withOpacity(0.4),
                           ),
-                          const SizedBox(height: 4),
+                          SizedBox(height: compact ? 2 : 4),
                           Text(
                             AmbientAudioService.getLabel(sound),
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: compact ? 9 : 10,
                               color: isSelected 
                                   ? const Color(0xFF818cf8)
                                   : Colors.white.withOpacity(0.4),
@@ -821,7 +904,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                       child: OutlinedButton(
                         onPressed: () {
                           setState(() => _showBreakPrompt = false);
-                          Navigator.of(context).pop();
+                          _exitScreen();
                         },
                         style: OutlinedButton.styleFrom(
                           foregroundColor: Colors.white70,
@@ -877,6 +960,10 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
         return Icons.water_drop;
       case AmbientSound.whiteNoise:
         return Icons.waves;
+      case AmbientSound.nature:
+        return Icons.park;
+      case AmbientSound.fireplace:
+        return Icons.local_fire_department;
     }
   }
 

@@ -1,4 +1,4 @@
-import { Env, DecomposeRequest, DecomposeResponse } from './types';
+import { Env, DecomposeRequest, DecomposeResponse, StepDetail } from './types';
 
 const CACHE_PREFIX = 'decompose:';
 
@@ -41,6 +41,16 @@ export async function cacheResponse(
 }
 
 // System prompts for different styles
+const JSON_FORMAT = `
+Respond with JSON only:
+{
+  "title": "<short descriptive title for the task>",
+  "steps": [
+    { "action": "<clear action description>", "estimatedMinutes": <minutes for this step> }
+  ],
+  "encouragement": "<brief motivating message>"
+}`;
+
 const STYLE_PROMPTS = {
   standard: `You are an ADHD task coach. Break down the given task into small, actionable steps.
 
@@ -51,13 +61,8 @@ Rules:
 - Add brief context/location when helpful
 - 5-8 steps is ideal
 - End with a small reward or acknowledgment step
-
-Respond with JSON only:
-{
-  "steps": ["step 1", "step 2", ...],
-  "estimatedMinutes": <total minutes>,
-  "encouragement": "<brief motivating message>"
-}`,
+- Each step must include a realistic time estimate in minutes
+${JSON_FORMAT}`,
 
   quick: `You are an ADHD task coach. Break down the given task into exactly 5 quick steps.
 
@@ -66,13 +71,8 @@ Rules:
 - Each step ultra-concise (under 10 words)
 - Action verbs only
 - No fluff, just essentials
-
-Respond with JSON only:
-{
-  "steps": ["step 1", "step 2", "step 3", "step 4", "step 5"],
-  "estimatedMinutes": <total minutes>,
-  "encouragement": "<5 word max encouragement>"
-}`,
+- Each step must include a realistic time estimate in minutes
+${JSON_FORMAT}`,
 
   gentle: `You are a supportive ADHD coach. Break down the given task with extra care and gentleness.
 
@@ -83,13 +83,8 @@ Rules:
 - Acknowledge difficulty without judgment
 - Include self-compassion reminders
 - 6-10 steps is fine
-
-Respond with JSON only:
-{
-  "steps": ["step 1", "step 2", ...],
-  "estimatedMinutes": <total minutes>,
-  "encouragement": "<warm, gentle encouragement>"
-}`,
+- Each step must include a realistic time estimate in minutes
+${JSON_FORMAT}`,
 };
 
 // Context additions
@@ -135,7 +130,7 @@ export async function decomposeTask(
         'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `Break down this task: ${request.task}` },
@@ -168,11 +163,25 @@ export async function decomposeTask(
     }
 
     const parsed = JSON.parse(content);
+
+    // Normalize steps: support both string[] (legacy) and {action, estimatedMinutes}[] formats
+    const steps: StepDetail[] = (parsed.steps || []).map((s: string | { action: string; estimatedMinutes?: number }) => {
+      if (typeof s === 'string') {
+        return { action: s, estimatedMinutes: 5 };
+      }
+      return { action: s.action, estimatedMinutes: s.estimatedMinutes ?? 5 };
+    });
+
+    const totalEstimatedMinutes = steps.reduce((sum: number, s: StepDetail) => sum + s.estimatedMinutes, 0);
+
     return {
       success: true,
-      steps: parsed.steps,
-      estimatedMinutes: parsed.estimatedMinutes,
-      encouragement: parsed.encouragement,
+      task: {
+        title: parsed.title || request.task,
+        steps,
+        totalEstimatedMinutes,
+        encouragement: parsed.encouragement || 'You\'ve got this!',
+      },
       cached: false,
     };
   } catch (error) {
@@ -218,7 +227,7 @@ export async function getSubSteps(
         'Authorization': `Bearer ${env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        model: 'gpt-5-mini',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: SUBSTEPS_PROMPT },
           { role: 'user', content: userMessage },

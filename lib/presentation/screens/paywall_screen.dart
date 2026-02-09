@@ -168,14 +168,14 @@ class _PaywallScreenState extends State<PaywallScreen> {
     
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: features.asMap().entries.map((entry) {
         final index = entry.key;
         final feature = entry.value;
         return Padding(
           padding: const EdgeInsets.only(bottom: 12),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
               Container(
@@ -240,7 +240,8 @@ class _PaywallScreenState extends State<PaywallScreen> {
     return Column(
       children: [
         // Monthly & Yearly row
-        Row(
+        IntrinsicHeight(
+          child: Row(
           children: [
             Expanded(
               child: _CompactPricingCard(
@@ -263,6 +264,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
               ),
             ),
           ],
+        ),
         ).animate().fadeIn(delay: 300.ms),
         
         const SizedBox(height: 8),
@@ -482,9 +484,7 @@ class _CompactPricingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: isSelected
-          ? Theme.of(context).colorScheme.primaryContainer
-          : Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
@@ -498,7 +498,7 @@ class _CompactPricingCard extends StatelessWidget {
               color: isSelected
                   ? Theme.of(context).colorScheme.primary
                   : Theme.of(context).colorScheme.outline.withOpacity(0.3),
-              width: 2,
+              width: isSelected ? 2.5 : 1.5,
             ),
           ),
           child: Column(

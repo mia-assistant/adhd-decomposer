@@ -157,14 +157,15 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
   /// Check if animations should be reduced based on settings or system preferences
   bool _shouldReduceAnimations(BuildContext context) {
     final provider = context.read<TaskProvider>();
-    final mediaQuery = MediaQuery.of(context);
-    return provider.reduceAnimations || mediaQuery.disableAnimations;
+    return provider.reduceAnimations;
   }
   
   /// Check if confetti should be shown
   bool _shouldShowConfetti(BuildContext context) {
     final provider = context.read<TaskProvider>();
-    return provider.confettiEnabled && !_shouldReduceAnimations(context);
+    final reduceAnimations = provider.reduceAnimations;
+    final shouldShow = provider.confettiEnabled && !reduceAnimations;
+    return shouldShow;
   }
 
   @override

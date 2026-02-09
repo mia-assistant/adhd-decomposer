@@ -25,11 +25,19 @@ export interface DecomposeRequest {
   };
 }
 
+export interface StepDetail {
+  action: string;
+  estimatedMinutes: number;
+}
+
 export interface DecomposeResponse {
   success: boolean;
-  steps?: string[];
-  estimatedMinutes?: number;
-  encouragement?: string;
+  task?: {
+    title: string;
+    steps: StepDetail[];
+    totalEstimatedMinutes: number;
+    encouragement: string;
+  };
   cached?: boolean;
   error?: string;
 }
