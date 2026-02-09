@@ -185,7 +185,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                   color: Theme.of(context).colorScheme.primaryContainer,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(feature.icon, size: 20, color: Theme.of(context).colorScheme.primary),
+                child: Icon(feature.icon, size: 20, color: Theme.of(context).colorScheme.onPrimaryContainer),
               ),
               const SizedBox(width: 12),
               Text(feature.text, style: Theme.of(context).textTheme.bodyLarge),
