@@ -104,24 +104,23 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
               return _buildExecutionScreen(context, provider, task);
             },
           ),
-          // Confetti overlay - only show if enabled and animations not reduced
-          if (_shouldShowConfetti(context))
-            Align(
-              alignment: Alignment.topCenter,
-              child: ConfettiWidget(
-                confettiController: _confettiController,
-                blastDirectionality: BlastDirectionality.explosive,
-                shouldLoop: false,
-                colors: const [
-                  Color(0xFF4ECDC4),
-                  Color(0xFFFF6B6B),
-                  Color(0xFFFFBE76),
-                  Color(0xFF7BC47F),
-                  Color(0xFF9B59B6),
-                ],
-                numberOfParticles: 30,
-              ),
+          // Confetti overlay - always in tree, controller decides when to play
+          Align(
+            alignment: Alignment.topCenter,
+            child: ConfettiWidget(
+              confettiController: _confettiController,
+              blastDirectionality: BlastDirectionality.explosive,
+              shouldLoop: false,
+              colors: const [
+                Color(0xFF4ECDC4),
+                Color(0xFFFF6B6B),
+                Color(0xFFFFBE76),
+                Color(0xFF7BC47F),
+                Color(0xFF9B59B6),
+              ],
+              numberOfParticles: 30,
             ),
+          ),
           // Celebration overlay
           if (_showCelebration)
             _buildCelebrationOverlay(context),
