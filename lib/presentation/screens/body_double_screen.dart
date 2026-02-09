@@ -286,11 +286,17 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
 
                         SizedBox(height: sectionGap),
 
-                        // Current step (if active) - always visible
-                        Flexible(
+                        // Current step (if active) - constrained height
+                        ConstrainedBox(
+                          constraints: BoxConstraints(
+                            maxHeight: isVeryCompact ? 60 : (isCompact ? 80 : 100),
+                          ),
                           child: _buildCurrentStep(
                             context,
-                            padding: EdgeInsets.all(isVeryCompact ? 12 : (isCompact ? 16 : 20)),
+                            padding: EdgeInsets.symmetric(
+                              horizontal: isVeryCompact ? 12 : (isCompact ? 16 : 20),
+                              vertical: isVeryCompact ? 8 : (isCompact ? 12 : 16),
+                            ),
                             bodyFontSize: isVeryCompact ? 13 : (isCompact ? 14 : 16),
                           ),
                         ),
@@ -550,6 +556,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
               ),
             ),
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   'CURRENT FOCUS',
@@ -561,16 +568,18 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                   ),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  step.action,
-                  style: TextStyle(
-                    color: Colors.white.withOpacity(0.9),
-                    fontSize: bodyFontSize,
-                    height: 1.3,
+                Flexible(
+                  child: Text(
+                    step.action,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: bodyFontSize,
+                      height: 1.3,
+                    ),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  textAlign: TextAlign.center,
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
