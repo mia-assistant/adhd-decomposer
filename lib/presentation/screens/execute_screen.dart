@@ -51,7 +51,10 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
   Timer? _stepTimer;
   int _stepSecondsElapsed = 0;
   bool _hasShown5MinWarning = false;
+  bool _hasShownEstimateWarning = false;
+  bool _hasShownDoubleWarning = false;
   String? _timeBlindnessAlert;
+  bool _isAlertSticky = false;
   
   final _random = Random();
 
@@ -82,7 +85,10 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
     _stepTimer?.cancel();
     _stepSecondsElapsed = 0;
     _hasShown5MinWarning = false;
+    _hasShownEstimateWarning = false;
+    _hasShownDoubleWarning = false;
     _timeBlindnessAlert = null;
+    _isAlertSticky = false;
     
     _stepTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
@@ -106,22 +112,24 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
     // Alert 1: Timer has 5 minutes left (only if timer is running)
     if (_timerRunning && _secondsRemaining == 300 && !_hasShown5MinWarning) {
       _hasShown5MinWarning = true;
-      _showTimeAlert('5 minutes left');
+      _showTimeAlert('5 minutes left', sticky: false);
     }
     
     // Alert 2: You've been on this step longer than estimated
-    if (_stepSecondsElapsed == estimatedSeconds && estimatedSeconds > 0) {
-      _showTimeAlert('${step.estimatedMinutes} min on this step — no rush, just a heads up');
+    if (_stepSecondsElapsed == estimatedSeconds && estimatedSeconds > 0 && !_hasShownEstimateWarning) {
+      _hasShownEstimateWarning = true;
+      _showTimeAlert('${step.estimatedMinutes} min on this step — no rush, just a heads up', sticky: false);
     }
     
-    // Alert 3: Double the estimated time (gentle check-in)
-    if (_stepSecondsElapsed == estimatedSeconds * 2 && estimatedSeconds > 0) {
-      _showTimeAlert('${elapsedMinutes} min now — stuck? Tap "I\'m stuck" for smaller steps');
+    // Alert 3: Double the estimated time (gentle check-in) - STICKY
+    if (_stepSecondsElapsed == estimatedSeconds * 2 && estimatedSeconds > 0 && !_hasShownDoubleWarning) {
+      _hasShownDoubleWarning = true;
+      _showTimeAlert('${elapsedMinutes} min now — stuck? Tap "I\'m stuck" for smaller steps', sticky: true);
     }
   }
   
   /// Show a time blindness alert banner
-  void _showTimeAlert(String message) {
+  void _showTimeAlert(String message, {bool sticky = false}) {
     if (!mounted) return;
     
     final provider = context.read<TaskProvider>();
@@ -133,25 +141,29 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
     
     // Haptic feedback
     if (provider.hapticEnabled) {
-      HapticFeedback.lightImpact();
+      HapticFeedback.mediumImpact();
     }
     
     // Show alert banner
     setState(() {
       _timeBlindnessAlert = message;
+      _isAlertSticky = sticky;
     });
     
     // Announce for screen readers
     SemanticsService.announce(message, TextDirection.ltr);
     
-    // Auto-dismiss after 5 seconds
-    Future.delayed(const Duration(seconds: 5), () {
-      if (mounted && _timeBlindnessAlert == message) {
-        setState(() {
-          _timeBlindnessAlert = null;
-        });
-      }
-    });
+    // Auto-dismiss after 5 seconds (only for non-sticky alerts)
+    if (!sticky) {
+      Future.delayed(const Duration(seconds: 5), () {
+        if (mounted && _timeBlindnessAlert == message) {
+          setState(() {
+            _timeBlindnessAlert = null;
+            _isAlertSticky = false;
+          });
+        }
+      });
+    }
   }
   
   /// Check if animations should be reduced based on settings or system preferences
@@ -252,7 +264,10 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => setState(() => _timeBlindnessAlert = null),
+                  onTap: () => setState(() {
+                    _timeBlindnessAlert = null;
+                    _isAlertSticky = false;
+                  }),
                   child: Icon(
                     Icons.close,
                     color: Theme.of(context).colorScheme.onSecondaryContainer,
