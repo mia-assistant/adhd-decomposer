@@ -47,12 +47,21 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
   String? _celebrationMessage;
   bool _hasTriggeredCompletion = false;
   
+  // Time blindness tracking
+  Timer? _stepTimer;
+  int _stepSecondsElapsed = 0;
+  bool _hasShown5MinWarning = false;
+  String? _timeBlindnessAlert;
+  
   final _random = Random();
 
   @override
   void initState() {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(seconds: 2));
+    
+    // Start tracking time on this step
+    _startStepTimer();
     
     // Donate intent when user continues a task
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -64,7 +73,85 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
   void dispose() {
     _confettiController.dispose();
     _timer?.cancel();
+    _stepTimer?.cancel();
     super.dispose();
+  }
+  
+  /// Start tracking elapsed time on current step (for time blindness alerts)
+  void _startStepTimer() {
+    _stepTimer?.cancel();
+    _stepSecondsElapsed = 0;
+    _hasShown5MinWarning = false;
+    _timeBlindnessAlert = null;
+    
+    _stepTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (mounted) {
+        setState(() {
+          _stepSecondsElapsed++;
+        });
+        _checkTimeBlindnessAlerts();
+      }
+    });
+  }
+  
+  /// Check and trigger time blindness alerts
+  void _checkTimeBlindnessAlerts() {
+    final provider = context.read<TaskProvider>();
+    final step = provider.activeTask?.currentStep;
+    if (step == null) return;
+    
+    final estimatedSeconds = step.estimatedMinutes * 60;
+    final elapsedMinutes = _stepSecondsElapsed ~/ 60;
+    
+    // Alert 1: Timer has 5 minutes left (only if timer is running)
+    if (_timerRunning && _secondsRemaining == 300 && !_hasShown5MinWarning) {
+      _hasShown5MinWarning = true;
+      _showTimeAlert('5 minutes left');
+    }
+    
+    // Alert 2: You've been on this step longer than estimated
+    if (_stepSecondsElapsed == estimatedSeconds && estimatedSeconds > 0) {
+      _showTimeAlert('${step.estimatedMinutes} min on this step — no rush, just a heads up');
+    }
+    
+    // Alert 3: Double the estimated time (gentle check-in)
+    if (_stepSecondsElapsed == estimatedSeconds * 2 && estimatedSeconds > 0) {
+      _showTimeAlert('${elapsedMinutes} min now — stuck? Tap "I\'m stuck" for smaller steps');
+    }
+  }
+  
+  /// Show a time blindness alert banner
+  void _showTimeAlert(String message) {
+    if (!mounted) return;
+    
+    final provider = context.read<TaskProvider>();
+    
+    // Play gentle sound
+    if (provider.soundEnabled) {
+      _soundService.playTimeWarning();
+    }
+    
+    // Haptic feedback
+    if (provider.hapticEnabled) {
+      HapticFeedback.lightImpact();
+    }
+    
+    // Show alert banner
+    setState(() {
+      _timeBlindnessAlert = message;
+    });
+    
+    // Announce for screen readers
+    SemanticsService.announce(message, TextDirection.ltr);
+    
+    // Auto-dismiss after 5 seconds
+    Future.delayed(const Duration(seconds: 5), () {
+      if (mounted && _timeBlindnessAlert == message) {
+        setState(() {
+          _timeBlindnessAlert = null;
+        });
+      }
+    });
   }
   
   /// Check if animations should be reduced based on settings or system preferences
@@ -124,7 +211,57 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
           // Celebration overlay
           if (_showCelebration)
             _buildCelebrationOverlay(context),
+          // Time blindness alert banner
+          if (_timeBlindnessAlert != null)
+            _buildTimeBlindnessAlert(context),
         ],
+      ),
+    );
+  }
+  
+  Widget _buildTimeBlindnessAlert(BuildContext context) {
+    return Positioned(
+      top: MediaQuery.of(context).padding.top + 8,
+      left: 16,
+      right: 16,
+      child: Material(
+        elevation: 4,
+        borderRadius: BorderRadius.circular(12),
+        color: Theme.of(context).colorScheme.secondaryContainer,
+        child: Semantics(
+          liveRegion: true,
+          label: 'Time alert: $_timeBlindnessAlert',
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.timer_outlined,
+                  color: Theme.of(context).colorScheme.onSecondaryContainer,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _timeBlindnessAlert!,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSecondaryContainer,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => setState(() => _timeBlindnessAlert = null),
+                  child: Icon(
+                    Icons.close,
+                    color: Theme.of(context).colorScheme.onSecondaryContainer,
+                    size: 18,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -518,6 +655,7 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
       _secondsRemaining = 0;
       _timerRunning = false;
       _selectedMinutes = null;
+      _startStepTimer(); // Reset step timer for next step
     } else {
       setState(() {
         _showCelebration = true;
@@ -534,6 +672,7 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
           _secondsRemaining = 0;
           _timerRunning = false;
           _selectedMinutes = null;
+          _startStepTimer(); // Reset step timer for next step
         }
       });
     }
@@ -554,6 +693,7 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
       _timerRunning = false;
       _selectedMinutes = null;
     });
+    _startStepTimer(); // Reset step timer for next step
   }
 
   Widget _buildCelebrationOverlay(BuildContext context) {

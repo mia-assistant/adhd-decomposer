@@ -5,6 +5,7 @@ import 'welcome_page.dart';
 import 'challenge_page.dart';
 import 'demo_page.dart';
 import 'name_page.dart';
+import 'widget_page.dart';
 import '../paywall_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class OnboardingScreen extends StatefulWidget {
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
-  final int _totalPages = 5; // Welcome, Challenge, Demo, Name, Paywall
+  final int _totalPages = 6; // Welcome, Challenge, Demo, Widget, Name, Paywall
   
   String? _selectedChallenge;
   String? _userName;
@@ -113,6 +114,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     onChallengeSelected: _onChallengeSelected,
                   ),
                   DemoPage(onNext: _nextPage),
+                  WidgetPage(onNext: _nextPage),
                   NamePage(onSubmit: _onNameSubmitted),
                   PaywallScreen(
                     showSkip: true,
