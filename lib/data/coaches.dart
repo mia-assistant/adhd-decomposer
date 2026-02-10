@@ -204,6 +204,17 @@ Include realistic time estimates and clear action steps.
   /// Get all coaches as a list
   static List<Coach> get all => [default_, zen, cheerleader, drill, friend];
   
+  /// Free coaches available to all users (Guide + Zen)
+  static List<Coach> get freeCoaches => [default_, zen];
+  
+  /// Premium coaches (Hype, Drill, Friend)
+  static List<Coach> get premiumCoaches => [cheerleader, drill, friend];
+  
+  /// Check if a coach type is free
+  static bool isFreeCoch(CoachType type) {
+    return type == CoachType.default_ || type == CoachType.zen;
+  }
+  
   /// Get coach by type
   static Coach getByType(CoachType type) {
     switch (type) {

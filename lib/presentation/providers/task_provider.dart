@@ -343,17 +343,16 @@ class TaskProvider extends ChangeNotifier {
     }
   }
   
-  /// Check if user can break down current step for free
+  /// Check if user can break down current step (has remaining free uses or is premium)
   bool get canBreakDownForFree {
-    if (_activeTask == null) return false;
-    return isPremium || _activeTask!.canBreakDownForFree;
+    if (isPremium || hasCustomApiKey) return true;
+    return !(_settings?.hasReachedFreeLimit ?? true);
   }
   
-  /// Remaining free breakdowns for current task
+  /// Remaining free breakdowns (global lifetime limit)
   int get remainingFreeBreakdowns {
-    if (_activeTask == null) return 0;
-    if (isPremium) return 999; // Unlimited for premium
-    return _activeTask!.remainingFreeBreakdowns;
+    if (isPremium || hasCustomApiKey) return 999; // Unlimited
+    return _settings?.remainingFreeDecompositions ?? 0;
   }
   
   /// Break down the current step into smaller sub-steps using AI
@@ -363,8 +362,8 @@ class TaskProvider extends ChangeNotifier {
       throw Exception('No active step to break down');
     }
     
-    // Check if user can break down (premium or has free uses left)
-    if (!isPremium && !_activeTask!.canBreakDownForFree) {
+    // Check if user can break down (premium, custom API key, or has free uses left)
+    if (!isPremium && !hasCustomApiKey && (_settings?.hasReachedFreeLimit ?? true)) {
       return false; // Signal that user hit the limit
     }
     
@@ -387,9 +386,9 @@ class TaskProvider extends ChangeNotifier {
       throw Exception('Could not break down this step further');
     }
     
-    // Increment usage counter (only for free users)
-    if (!isPremium) {
-      _activeTask!.subStepBreakdownsUsed++;
+    // Increment global usage counter (counts against lifetime limit)
+    if (!isPremium && !hasCustomApiKey) {
+      _settings?.incrementDecompositionCount();
     }
     
     // Store substeps inside the current step (not replacing in main list)

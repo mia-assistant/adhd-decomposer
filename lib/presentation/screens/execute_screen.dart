@@ -21,6 +21,7 @@ import '../../data/services/siri_service.dart';
 import '../widgets/time_slot_picker.dart';
 import 'body_double_screen.dart';
 import 'routines_screen.dart';
+import 'paywall_screen.dart';
 
 /// Minimum touch target size for accessibility (48x48dp per WCAG guidelines)
 const double kMinTouchTarget = 48.0;
@@ -1659,7 +1660,7 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
       builder: (ctx) => AlertDialog(
         title: const Text('Need more breakdowns?'),
         content: const Text(
-          'You\'ve used your 2 free step breakdowns for this task. '
+          'You\'ve used your 5 free breakdowns. '
           'Upgrade to Pro for unlimited breakdowns and help whenever you\'re stuck!',
         ),
         actions: [
@@ -1670,7 +1671,9 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
           ElevatedButton(
             onPressed: () {
               Navigator.pop(ctx);
-              Navigator.pushNamed(context, '/paywall');
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const PaywallScreen()),
+              );
             },
             child: const Text('See Pro'),
           ),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/task_provider.dart';
 import '../../core/constants/strings.dart';
+import '../../data/services/purchase_service.dart';
+import 'paywall_screen.dart';
 
 class CoachSelectorScreen extends StatelessWidget {
   const CoachSelectorScreen({super.key});
@@ -12,8 +14,10 @@ class CoachSelectorScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text(AppStrings.meetYourCoaches),
       ),
-      body: Consumer<TaskProvider>(
-        builder: (context, provider, _) {
+      body: Consumer2<TaskProvider, PurchaseService>(
+        builder: (context, provider, purchases, _) {
+          final isPremium = purchases.isPremium;
+          
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -48,28 +52,40 @@ class CoachSelectorScreen extends StatelessWidget {
               const SizedBox(height: 24),
               
               // Coach cards
-              ...Coaches.all.map((coach) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _CoachCard(
-                  coach: coach,
-                  isSelected: provider.selectedCoachType == coach.type,
-                  onSelect: () {
-                    provider.setSelectedCoach(coach.type);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Row(
-                          children: [
-                            Icon(coach.icon, size: 20, color: Colors.white),
-                            const SizedBox(width: 8),
-                            Expanded(child: Text('${coach.name} is now your coach!')),
-                          ],
+              ...Coaches.all.map((coach) {
+                final isFree = Coaches.isFreeCoch(coach.type);
+                final isLocked = !isPremium && !isFree;
+                
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _CoachCard(
+                    coach: coach,
+                    isSelected: provider.selectedCoachType == coach.type,
+                    isLocked: isLocked,
+                    onSelect: () {
+                      if (isLocked) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const PaywallScreen()),
+                        );
+                        return;
+                      }
+                      provider.setSelectedCoach(coach.type);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Row(
+                            children: [
+                              Icon(coach.icon, size: 20, color: Colors.white),
+                              const SizedBox(width: 8),
+                              Expanded(child: Text('${coach.name} is now your coach!')),
+                            ],
+                          ),
+                          behavior: SnackBarBehavior.floating,
                         ),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                ),
-              )),
+                      );
+                    },
+                  ),
+                );
+              }),
               
               const SizedBox(height: 16),
             ],
@@ -83,12 +99,14 @@ class CoachSelectorScreen extends StatelessWidget {
 class _CoachCard extends StatelessWidget {
   final Coach coach;
   final bool isSelected;
+  final bool isLocked;
   final VoidCallback onSelect;
   
   const _CoachCard({
     required this.coach,
     required this.isSelected,
     required this.onSelect,
+    this.isLocked = false,
   });
 
   @override
@@ -107,19 +125,21 @@ class _CoachCard extends StatelessWidget {
       child: InkWell(
         onTap: onSelect,
         borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header row
-              Row(
-                children: [
-                  // Icon
-                  Container(
-                    width: 56,
-                    height: 56,
-                    decoration: BoxDecoration(
+        child: Opacity(
+          opacity: isLocked ? 0.7 : 1.0,
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header row
+                Row(
+                  children: [
+                    // Icon
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
                       color: Theme.of(context).colorScheme.primaryContainer,
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -148,7 +168,33 @@ class _CoachCard extends StatelessWidget {
                                 ),
                               ),
                             ),
-                            if (isSelected)
+                            if (isLocked)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(context).colorScheme.tertiary,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      Icons.workspace_premium,
+                                      size: 14,
+                                      color: Theme.of(context).colorScheme.onTertiary,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'PRO',
+                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                        color: Theme.of(context).colorScheme.onTertiary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            else if (isSelected)
                               Icon(
                                 Icons.check_circle,
                                 color: Theme.of(context).colorScheme.primary,
@@ -210,6 +256,7 @@ class _CoachCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

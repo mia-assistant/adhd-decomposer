@@ -1051,7 +1051,7 @@ class SettingsScreen extends StatelessWidget {
     } else {
       final remaining = provider.remainingFreeDecompositions;
       statusText = remaining > 0 
-          ? 'Free ($remaining breakdowns left today)'
+          ? 'Free ($remaining breakdowns remaining)'
           : 'Free (limit reached)';
       statusIcon = Icons.person_outline;
       statusColor = Theme.of(context).colorScheme.primary;

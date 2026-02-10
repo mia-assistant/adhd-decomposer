@@ -47,7 +47,7 @@ class SettingsService {
   static const String keyDefaultCalendarId = 'defaultCalendarId';
   static const String keyDefaultReminderMinutes = 'defaultReminderMinutes';
   
-  static const int freeDecompositionLimit = 3;
+  static const int freeDecompositionLimit = 5;
   static const int tasksBeforeFirstAsk = 5;
   static const int tasksBetweenAsks = 5;
   static const int maxAskCount = 3;

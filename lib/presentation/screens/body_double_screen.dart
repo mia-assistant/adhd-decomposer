@@ -7,6 +7,8 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/task_provider.dart';
 import '../../data/services/ambient_audio_service.dart';
 import '../../data/services/sound_service.dart';
+import '../../data/services/purchase_service.dart';
+import 'paywall_screen.dart';
 
 /// Body Double Mode - Digital presence for focus and accountability
 /// 
@@ -733,6 +735,7 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
     bool compact = false,
   }) {
     final currentSound = _ambientAudio.currentSound;
+    final isPremium = context.watch<PurchaseService>().isPremium;
     
     return Container(
       padding: EdgeInsets.all(compact ? 12 : 16),
@@ -747,9 +750,10 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: AmbientSound.values.map((sound) {
               final isSelected = currentSound == sound;
+              final isLocked = sound.isPremium && !isPremium;
               return Expanded(
                 child: Semantics(
-                  label: '${AmbientAudioService.getLabel(sound)} sound${isSelected ? ', selected' : ''}',
+                  label: '${AmbientAudioService.getLabel(sound)} sound${isSelected ? ', selected' : ''}${isLocked ? ', requires Pro' : ''}',
                   button: true,
                   selected: isSelected,
                   child: GestureDetector(
@@ -773,12 +777,29 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
-                            _getSoundIcon(sound),
-                            size: compact ? 20 : 24,
-                            color: isSelected 
-                                ? const Color(0xFF818cf8)
-                                : Colors.white.withOpacity(0.4),
+                          Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Icon(
+                                _getSoundIcon(sound),
+                                size: compact ? 20 : 24,
+                                color: isSelected 
+                                    ? const Color(0xFF818cf8)
+                                    : isLocked
+                                        ? Colors.white.withOpacity(0.2)
+                                        : Colors.white.withOpacity(0.4),
+                              ),
+                              if (isLocked)
+                                Positioned(
+                                  right: -4,
+                                  top: -4,
+                                  child: Icon(
+                                    Icons.lock,
+                                    size: 10,
+                                    color: Colors.amber.withOpacity(0.8),
+                                  ),
+                                ),
+                            ],
                           ),
                           SizedBox(height: compact ? 2 : 4),
                           Text(
@@ -787,7 +808,9 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
                               fontSize: compact ? 9 : 10,
                               color: isSelected 
                                   ? const Color(0xFF818cf8)
-                                  : Colors.white.withOpacity(0.4),
+                                  : isLocked
+                                      ? Colors.white.withOpacity(0.2)
+                                      : Colors.white.withOpacity(0.4),
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1049,6 +1072,15 @@ class _BodyDoubleScreenState extends State<BodyDoubleScreen>
   }
 
   void _selectSound(AmbientSound sound) {
+    // Check if premium sound and user isn't premium
+    final purchases = context.read<PurchaseService>();
+    if (sound.isPremium && !purchases.isPremium) {
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const PaywallScreen()),
+      );
+      return;
+    }
+    
     setState(() {});
     _ambientAudio.play(sound);
   }

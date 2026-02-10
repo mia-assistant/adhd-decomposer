@@ -155,11 +155,9 @@ class _PaywallScreenState extends State<PaywallScreen> {
   
   Widget _buildFeatures(BuildContext context) {
     final features = [
-      (icon: Icons.all_inclusive, text: 'Unlimited task breakdowns'),
-      (icon: Icons.psychology, text: 'All AI coaching styles'),
-      (icon: Icons.palette, text: 'Premium themes & sounds'),
-      (icon: Icons.people, text: 'Body doubling mode'),
-      (icon: Icons.emoji_events, text: 'Full gamification system'),
+      (icon: Icons.all_inclusive, text: 'Unlimited task & step breakdowns'),
+      (icon: Icons.psychology, text: 'All 5 AI coaching styles'),
+      (icon: Icons.music_note, text: 'All ambient sounds'),
     ];
     
     return Column(

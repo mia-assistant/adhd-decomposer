@@ -11,6 +11,33 @@ enum AmbientSound {
   fireplace,
 }
 
+/// Helper extension for free/premium sound categorization
+extension AmbientSoundExtension on AmbientSound {
+  /// Café is the free sound, others require Pro
+  bool get isFree => this == AmbientSound.none || this == AmbientSound.cafe;
+  
+  /// All sounds except none and cafe are premium
+  bool get isPremium => !isFree && this != AmbientSound.none;
+  
+  /// Display name for UI
+  String get displayName {
+    switch (this) {
+      case AmbientSound.none:
+        return 'None';
+      case AmbientSound.cafe:
+        return 'Café';
+      case AmbientSound.rain:
+        return 'Rain';
+      case AmbientSound.whiteNoise:
+        return 'White Noise';
+      case AmbientSound.nature:
+        return 'Nature';
+      case AmbientSound.fireplace:
+        return 'Fireplace';
+    }
+  }
+}
+
 /// Service for playing ambient background sounds during focus sessions.
 /// 
 /// Supports looping playback of cafe, rain, and white noise sounds
