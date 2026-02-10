@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../../data/models/task.dart';
 import '../../data/task_templates.dart';
 import '../providers/task_provider.dart';
-import 'execute_screen.dart';
+import 'task_summary_screen.dart';
 
 class TemplatesScreen extends StatefulWidget {
   const TemplatesScreen({super.key});
@@ -175,9 +175,9 @@ class _TemplatesScreenState extends State<TemplatesScreen> {
     // Record template usage for stats/achievements
     provider.recordTemplateUsed(template.id);
 
-    // Navigate to execute screen
+    // Navigate to summary screen
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const ExecuteScreen()),
+      MaterialPageRoute(builder: (_) => const TaskSummaryScreen()),
     );
   }
 }

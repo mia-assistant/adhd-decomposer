@@ -5,7 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../providers/task_provider.dart';
 import '../../core/constants/strings.dart';
 import '../../data/services/siri_service.dart';
-import 'execute_screen.dart';
+import 'task_summary_screen.dart';
 import 'paywall_screen.dart';
 
 /// Minimum touch target size for accessibility (48x48dp per WCAG guidelines)
@@ -327,7 +327,7 @@ class _DecomposeScreenState extends State<DecomposeScreen> {
     if (task != null && mounted) {
       provider.setActiveTask(task);
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const ExecuteScreen()),
+        MaterialPageRoute(builder: (_) => const TaskSummaryScreen()),
       );
     } else if (provider.error != null && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
