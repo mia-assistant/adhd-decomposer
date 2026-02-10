@@ -17,13 +17,8 @@ class CoachPickerPage extends StatefulWidget {
 class _CoachPickerPageState extends State<CoachPickerPage> {
   CoachType? _selectedCoach;
   
-  final List<Coach> _coaches = [
-    Coaches.default_,
-    Coaches.zen,
-    Coaches.cheerleader,
-    Coaches.drill,
-    Coaches.friend,
-  ];
+  // Only show free coaches in onboarding
+  final List<Coach> _coaches = Coaches.freeCoaches;
 
   void _selectCoach(Coach coach) {
     setState(() => _selectedCoach = coach.type);
@@ -85,6 +80,35 @@ class _CoachPickerPageState extends State<CoachPickerPage> {
               },
             ),
           ),
+          
+          // Hint about more coaches
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.workspace_premium,
+                  size: 20,
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    '3 more coaching styles available with Pro',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).textTheme.bodySmall?.color?.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ).animate().fadeIn(delay: 500.ms),
+          
+          const SizedBox(height: 16),
         ],
       ),
     );
