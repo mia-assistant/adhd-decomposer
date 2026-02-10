@@ -102,9 +102,10 @@ class SettingsScreen extends StatelessWidget {
               _buildSectionHeader(context, 'Appearance'),
               _buildThemeSelector(context),
               
-              const Divider(height: 32),
-              _buildSectionHeader(context, 'Calendar'),
-              _buildCalendarSettings(context),
+              // Calendar integration hidden for v1 - see GitHub issue #5
+              // const Divider(height: 32),
+              // _buildSectionHeader(context, 'Calendar'),
+              // _buildCalendarSettings(context),
               
               const Divider(height: 32),
               _buildSectionHeader(context, 'Personalization'),

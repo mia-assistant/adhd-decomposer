@@ -973,25 +973,7 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
                     ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                // Calendar button
-                Expanded(
-                  child: Semantics(
-                    label: 'Schedule this task again',
-                    button: true,
-                    child: SizedBox(
-                      height: kMinTouchTarget,
-                      child: OutlinedButton.icon(
-                        onPressed: () => _showTimeSlotPicker(context, task),
-                        icon: const Icon(Icons.calendar_today),
-                        label: const Text('Schedule'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                // Calendar scheduling hidden for v1 - see GitHub issue #5
               ],
             ),
             const SizedBox(height: 12),
