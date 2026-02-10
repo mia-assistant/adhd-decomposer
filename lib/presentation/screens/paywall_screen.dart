@@ -61,7 +61,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                     Align(
                       alignment: Alignment.topRight,
                       child: TextButton(
-                        onPressed: _isLoading ? null : widget.onSkip,
+                        onPressed: _isLoading ? null : (widget.onSkip ?? () => Navigator.of(context).pop()),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           minimumSize: Size.zero,
