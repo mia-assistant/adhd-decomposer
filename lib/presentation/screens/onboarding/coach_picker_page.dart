@@ -18,6 +18,7 @@ class _CoachPickerPageState extends State<CoachPickerPage> {
   CoachType? _selectedCoach;
   
   final List<Coach> _coaches = [
+    Coaches.default_,
     Coaches.zen,
     Coaches.cheerleader,
     Coaches.drill,
