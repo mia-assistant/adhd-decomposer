@@ -197,10 +197,11 @@ class SettingsScreen extends StatelessWidget {
   
   Widget _buildUpgradeBanner(BuildContext context, TaskProvider provider) {
     final remaining = provider.remainingFreeDecompositions;
+    final colorScheme = Theme.of(context).colorScheme;
     
     return Card(
       margin: const EdgeInsets.all(16),
-      color: Theme.of(context).colorScheme.primaryContainer,
+      color: colorScheme.primaryContainer,
       child: InkWell(
         onTap: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => const PaywallScreen()),
@@ -213,12 +214,12 @@ class SettingsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: colorScheme.primary,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
                   Icons.workspace_premium,
-                  color: Theme.of(context).colorScheme.onPrimary,
+                  color: colorScheme.onPrimary,
                 ),
               ),
               const SizedBox(width: 16),
@@ -230,18 +231,21 @@ class SettingsScreen extends StatelessWidget {
                       'Upgrade to Pro',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
+                        color: colorScheme.onPrimaryContainer,
                       ),
                     ),
                     Text(
                       remaining == -1 
                           ? 'Unlimited breakdowns with your API key'
                           : '$remaining free breakdowns remaining',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onPrimaryContainer.withValues(alpha: 0.8),
+                      ),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right),
+              Icon(Icons.chevron_right, color: colorScheme.onPrimaryContainer),
             ],
           ),
         ),
