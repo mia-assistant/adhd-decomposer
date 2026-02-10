@@ -43,8 +43,20 @@ class Task {
 
   void completeCurrentStep() {
     if (currentStepIndex < steps.length) {
-      steps[currentStepIndex].isCompleted = true;
-      steps[currentStepIndex].completedAt = DateTime.now();
+      final step = steps[currentStepIndex];
+      
+      // If step has substeps, complete the current substep first
+      if (step.hasSubSteps && step.currentSubStep != null) {
+        final allSubStepsDone = step.completeCurrentSubStep();
+        if (!allSubStepsDone) {
+          // More substeps to go, don't advance main step
+          return;
+        }
+      }
+      
+      // All substeps done (or no substeps), complete the main step
+      step.isCompleted = true;
+      step.completedAt = DateTime.now();
       currentStepIndex++;
       
       if (currentStepIndex >= steps.length) {
@@ -95,6 +107,7 @@ class TaskStep {
   bool isSkipped;
   DateTime? completedAt;
   List<TaskStep>? subSteps;
+  int currentSubStepIndex;
 
   TaskStep({
     required this.id,
@@ -104,7 +117,36 @@ class TaskStep {
     this.isSkipped = false,
     this.completedAt,
     this.subSteps,
+    this.currentSubStepIndex = 0,
   });
+  
+  /// Whether this step has been broken down into substeps
+  bool get hasSubSteps => subSteps != null && subSteps!.isNotEmpty;
+  
+  /// Get current substep being worked on (if any)
+  TaskStep? get currentSubStep {
+    if (!hasSubSteps || currentSubStepIndex >= subSteps!.length) return null;
+    return subSteps![currentSubStepIndex];
+  }
+  
+  /// Number of completed substeps
+  int get completedSubStepsCount => 
+      subSteps?.where((s) => s.isCompleted).length ?? 0;
+  
+  /// Progress through substeps (0.0 to 1.0)
+  double get subStepProgress => 
+      hasSubSteps ? completedSubStepsCount / subSteps!.length : 0;
+  
+  /// Move to next substep, returns true if all substeps complete
+  bool completeCurrentSubStep() {
+    if (!hasSubSteps) return true;
+    
+    subSteps![currentSubStepIndex].isCompleted = true;
+    subSteps![currentSubStepIndex].completedAt = DateTime.now();
+    currentSubStepIndex++;
+    
+    return currentSubStepIndex >= subSteps!.length;
+  }
 
   Map<String, dynamic> toJson() => {
     'id': id,
@@ -114,6 +156,7 @@ class TaskStep {
     'isSkipped': isSkipped,
     'completedAt': completedAt?.toIso8601String(),
     'subSteps': subSteps?.map((s) => s.toJson()).toList(),
+    'currentSubStepIndex': currentSubStepIndex,
   };
 
   factory TaskStep.fromJson(Map<String, dynamic> json) => TaskStep(
@@ -126,5 +169,6 @@ class TaskStep {
     subSteps: json['subSteps'] != null 
       ? (json['subSteps'] as List).map((s) => TaskStep.fromJson(s as Map<String, dynamic>)).toList()
       : null,
+    currentSubStepIndex: json['currentSubStepIndex'] ?? 0,
   );
 }

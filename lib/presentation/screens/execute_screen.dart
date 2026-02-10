@@ -419,30 +419,79 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
       ),
       child: Column(
         children: [
-          Text(
-            step.action,
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-              height: 1.3, // Improved line spacing for dyslexia
+          // If step has substeps, show substep UI
+          if (step.hasSubSteps) ...[
+            // Parent step (smaller, context)
+            Text(
+              step.action,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.left, // Left-align for readability
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                Icons.timer_outlined,
-                size: 20,
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-                semanticLabel: 'Estimated time',
-              ),
-              const SizedBox(width: 8),
+            const SizedBox(height: 8),
+            // Substep progress indicator
+            _buildSubStepProgress(context, step),
+            const SizedBox(height: 16),
+            // Current substep (big)
+            if (step.currentSubStep != null)
               Text(
-                '~${step.estimatedMinutes} min',
-                style: Theme.of(context).textTheme.bodyMedium,
+                step.currentSubStep!.action,
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  height: 1.3,
+                ),
+                textAlign: TextAlign.left,
+              )
+            else
+              Text(
+                'All substeps done!',
+                style: Theme.of(context).textTheme.displaySmall,
+                textAlign: TextAlign.center,
               ),
-            ],
-          ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.timer_outlined,
+                  size: 20,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  semanticLabel: 'Estimated time',
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '~${step.currentSubStep?.estimatedMinutes ?? step.estimatedMinutes} min',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ] else ...[
+            // Normal step (no substeps)
+            Text(
+              step.action,
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                height: 1.3, // Improved line spacing for dyslexia
+              ),
+              textAlign: TextAlign.left, // Left-align for readability
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.timer_outlined,
+                  size: 20,
+                  color: Theme.of(context).textTheme.bodyMedium?.color,
+                  semanticLabel: 'Estimated time',
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '~${step.estimatedMinutes} min',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -456,6 +505,40 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
       .animate()
       .fadeIn(duration: const Duration(milliseconds: 300))
       .slideY(begin: 0.1, end: 0, duration: const Duration(milliseconds: 300));
+  }
+  
+  Widget _buildSubStepProgress(BuildContext context, TaskStep step) {
+    final total = step.subSteps!.length;
+    final current = step.currentSubStepIndex + 1;
+    
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        for (int i = 0; i < total; i++) ...[
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: i < step.currentSubStepIndex
+                  ? Theme.of(context).colorScheme.primary
+                  : i == step.currentSubStepIndex
+                      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.5)
+                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.2),
+            ),
+          ),
+          if (i < total - 1) const SizedBox(width: 6),
+        ],
+        const SizedBox(width: 12),
+        Text(
+          'Substep $current of $total',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
   }
   
   Widget _buildActionButtons(BuildContext context, TaskProvider provider) {
@@ -508,8 +591,13 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
                 child: SizedBox(
                   height: kMinTouchTarget,
                   child: OutlinedButton(
-                    onPressed: () => _showStuckDialog(context, provider.activeTask!.currentStep!),
-                    child: const Text(AppStrings.imStuck),
+                    // Disable if step already has substeps
+                    onPressed: provider.activeTask!.currentStep!.hasSubSteps 
+                        ? null 
+                        : () => _showStuckDialog(context, provider.activeTask!.currentStep!),
+                    child: Text(provider.activeTask!.currentStep!.hasSubSteps 
+                        ? 'Already broken down' 
+                        : AppStrings.imStuck),
                   ),
                 ),
               ),

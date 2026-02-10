@@ -369,7 +369,11 @@ class TaskProvider extends ChangeNotifier {
     }
     
     final currentStep = _activeTask!.currentStep!;
-    final currentIndex = _activeTask!.currentStepIndex;
+    
+    // Don't allow breaking down if already has substeps
+    if (currentStep.hasSubSteps) {
+      throw Exception('This step is already broken down');
+    }
     
     // Get sub-steps from AI (pass task title as context)
     final apiKey = _settings?.openAIApiKey;
@@ -388,9 +392,9 @@ class TaskProvider extends ChangeNotifier {
       _activeTask!.subStepBreakdownsUsed++;
     }
     
-    // Remove the current step and insert the sub-steps in its place
-    _activeTask!.steps.removeAt(currentIndex);
-    _activeTask!.steps.insertAll(currentIndex, subSteps);
+    // Store substeps inside the current step (not replacing in main list)
+    currentStep.subSteps = subSteps;
+    currentStep.currentSubStepIndex = 0;
     
     // Save and notify
     await _saveTasks();
