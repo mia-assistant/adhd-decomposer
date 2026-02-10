@@ -160,13 +160,7 @@ class SettingsScreen extends StatelessWidget {
                 leading: const Icon(Icons.privacy_tip_outlined),
                 title: const Text('Privacy Policy'),
                 trailing: const Icon(Icons.open_in_new, size: 18),
-                onTap: () => _openUrl('https://mia-assistant.github.io/adhd-decomposer/privacy-policy'),
-              ),
-              ListTile(
-                leading: const Icon(Icons.description_outlined),
-                title: const Text('Terms of Service'),
-                trailing: const Icon(Icons.open_in_new, size: 18),
-                onTap: () => _openUrl('https://mia-assistant.github.io/adhd-decomposer/terms-of-service'),
+                onTap: () => _openUrl('https://www.freeprivacypolicy.com/live/bece15e9-ea42-4925-a22b-9d0bae1bbfe3'),
               ),
               ListTile(
                 leading: const Icon(Icons.favorite_outline),

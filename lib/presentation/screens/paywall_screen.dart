@@ -343,7 +343,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget _buildFooter(BuildContext context, PurchaseService purchaseService) {
     return Column(
       children: [
-        // Restore + terms row
+        // Restore + privacy row
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -358,23 +358,13 @@ class _PaywallScreenState extends State<PaywallScreen> {
             ),
             Text(' • ', style: Theme.of(context).textTheme.bodySmall),
             TextButton(
-              onPressed: () => _openUrl('https://mia-assistant.github.io/adhd-decomposer/privacy-policy'),
+              onPressed: () => _openUrl('https://www.freeprivacypolicy.com/live/bece15e9-ea42-4925-a22b-9d0bae1bbfe3'),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 8),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: Text('Privacy', style: Theme.of(context).textTheme.bodySmall),
-            ),
-            Text(' • ', style: Theme.of(context).textTheme.bodySmall),
-            TextButton(
-              onPressed: () => _openUrl('https://mia-assistant.github.io/adhd-decomposer/terms-of-service'),
-              style: TextButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text('Terms', style: Theme.of(context).textTheme.bodySmall),
             ),
           ],
         ),
