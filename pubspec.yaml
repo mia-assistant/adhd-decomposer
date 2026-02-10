@@ -1,7 +1,7 @@
 name: adhd_decomposer
 description: "ADHD-friendly task decomposition app"
 publish_to: 'none'
-version: 1.0.0+4
+version: 1.0.0+5
 
 environment:
   sdk: ^3.5.0
@@ -99,17 +99,17 @@ flutter_launcher_icons:
 flutter_native_splash:
   # Light mode
   color: "#FAFAFA"
-  image: assets/icons/app_icon_1024.png
+  image: assets/icons/app_icon_1024_rounded.png
   
   # Dark mode
   color_dark: "#121212"
-  image_dark: assets/icons/app_icon_1024.png
+  image_dark: assets/icons/app_icon_1024_rounded.png
   
   # Android 12+ splash screen
   android_12:
     color: "#FAFAFA"
-    image: assets/icons/app_icon_512.png
+    image: assets/icons/app_icon_512_rounded.png
     icon_background_color: "#FAFAFA"
     color_dark: "#121212"
-    image_dark: assets/icons/app_icon_512.png
+    image_dark: assets/icons/app_icon_512_rounded.png
     icon_background_color_dark: "#121212"

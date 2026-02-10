@@ -1,86 +1,86 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-	<key>CADisableMinimumFrameDurationOnPhone</key>
-	<true/>
-	<key>CFBundleDevelopmentRegion</key>
-	<string>$(DEVELOPMENT_LANGUAGE)</string>
-	<key>CFBundleDisplayName</key>
-	<string>Tiny Steps</string>
-	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
-	<key>CFBundleIdentifier</key>
-	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>CFBundleInfoDictionaryVersion</key>
-	<string>6.0</string>
-	<key>CFBundleName</key>
-	<string>Tiny Steps</string>
-	<key>CFBundlePackageType</key>
-	<string>APPL</string>
-	<key>CFBundleShortVersionString</key>
-	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleSignature</key>
-	<string>????</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleURLName</key>
-			<string>com.tinysteps.app</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>tinysteps</string>
-			</array>
-		</dict>
-	</array>
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>NSAppTransportSecurity</key>
 	<dict>
-		<key>NSAllowsArbitraryLoads</key>
+		<key>CADisableMinimumFrameDurationOnPhone</key>
+		<true/>
+		<key>CFBundleDevelopmentRegion</key>
+		<string>$(DEVELOPMENT_LANGUAGE)</string>
+		<key>CFBundleDisplayName</key>
+		<string>Tiny Steps</string>
+		<key>CFBundleExecutable</key>
+		<string>$(EXECUTABLE_NAME)</string>
+		<key>CFBundleIdentifier</key>
+		<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+		<key>CFBundleInfoDictionaryVersion</key>
+		<string>6.0</string>
+		<key>CFBundleName</key>
+		<string>Tiny Steps</string>
+		<key>CFBundlePackageType</key>
+		<string>APPL</string>
+		<key>CFBundleShortVersionString</key>
+		<string>$(FLUTTER_BUILD_NAME)</string>
+		<key>CFBundleSignature</key>
+		<string>????</string>
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLName</key>
+				<string>com.tinysteps.app</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>tinysteps</string>
+				</array>
+			</dict>
+		</array>
+		<key>CFBundleVersion</key>
+		<string>$(FLUTTER_BUILD_NUMBER)</string>
+		<key>LSRequiresIPhoneOS</key>
+		<true/>
+		<key>NSAppTransportSecurity</key>
+		<dict>
+			<key>NSAllowsArbitraryLoads</key>
+			<false/>
+		</dict>
+		<key>NSCalendarsFullAccessUsageDescription</key>
+		<string>Tiny Steps needs full calendar access to add your task deadlines and reminders to your calendar, helping you stay organized.</string>
+		<key>NSCalendarsUsageDescription</key>
+		<string>Tiny Steps needs calendar access to add your task deadlines and reminders to your calendar, helping you stay organized.</string>
+		<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
+		<string>Tiny Steps needs calendar write access to add your task deadlines to your calendar.</string>
+		<key>NSSiriUsageDescription</key>
+		<string>Tiny Steps uses Siri to let you start tasks, continue your work, and check your progress using voice commands.</string>
+		<key>NSUserActivityTypes</key>
+		<array>
+			<string>StartNewTaskIntent</string>
+			<string>ContinueTaskIntent</string>
+			<string>ShowProgressIntent</string>
+			<string>StartRoutineIntent</string>
+		</array>
+		<key>UIApplicationSupportsIndirectInputEvents</key>
+		<true/>
+		<key>UIBackgroundModes</key>
+		<array>
+			<string>fetch</string>
+			<string>remote-notification</string>
+		</array>
+		<key>UIFileSharingEnabled</key>
 		<false/>
+		<key>UILaunchStoryboardName</key>
+		<string>LaunchScreen</string>
+		<key>UIMainStoryboardFile</key>
+		<string>Main</string>
+		<key>UIStatusBarHidden</key>
+		<false/>
+		<key>UISupportedInterfaceOrientations</key>
+		<array>
+			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
+		</array>
+		<key>com.apple.developer.associated-domains</key>
+		<array>
+			<string>applinks:tinysteps.app</string>
+		</array>
 	</dict>
-	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>Tiny Steps needs full calendar access to add your task deadlines and reminders to your calendar, helping you stay organized.</string>
-	<key>NSCalendarsUsageDescription</key>
-	<string>Tiny Steps needs calendar access to add your task deadlines and reminders to your calendar, helping you stay organized.</string>
-	<key>NSCalendarsWriteOnlyAccessUsageDescription</key>
-	<string>Tiny Steps needs calendar write access to add your task deadlines to your calendar.</string>
-	<key>NSSiriUsageDescription</key>
-	<string>Tiny Steps uses Siri to let you start tasks, continue your work, and check your progress using voice commands.</string>
-	<key>NSUserActivityTypes</key>
-	<array>
-		<string>StartNewTaskIntent</string>
-		<string>ContinueTaskIntent</string>
-		<string>ShowProgressIntent</string>
-		<string>StartRoutineIntent</string>
-	</array>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>fetch</string>
-		<string>remote-notification</string>
-	</array>
-	<key>UIFileSharingEnabled</key>
-	<false/>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
-	<key>UIMainStoryboardFile</key>
-	<string>Main</string>
-	<key>UIStatusBarHidden</key>
-	<false/>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>com.apple.developer.associated-domains</key>
-	<array>
-		<string>applinks:tinysteps.app</string>
-	</array>
-</dict>
 </plist>
