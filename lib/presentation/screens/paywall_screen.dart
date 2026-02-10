@@ -301,22 +301,43 @@ class _PaywallScreenState extends State<PaywallScreen> {
       if (price == null) {
         buttonText = 'Loading prices...';
       } else {
-        buttonText = _selectedOption == PricingOption.lifetime
-            ? 'Get Lifetime Access — $price'
-            : 'Continue — $price';
+        buttonText = switch (_selectedOption) {
+          PricingOption.monthly => 'Subscribe Monthly — $price',
+          PricingOption.yearly => 'Subscribe Yearly — $price',
+          PricingOption.lifetime => 'Get Lifetime Access — $price',
+        };
       }
     }
     
-    return SizedBox(
-      width: double.infinity,
-      child: FilledButton(
-        onPressed: _isLoading || _isLoadingPackages ? null : () => _purchase(purchaseService),
-        style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
-        child: _isLoading
-            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-            : Text(buttonText),
-      ),
-    ).animate().fadeIn(delay: 400.ms);
+    // Billing info text
+    final billingInfo = switch (_selectedOption) {
+      PricingOption.monthly => 'Billed monthly. Cancel anytime.',
+      PricingOption.yearly => 'Billed yearly. Cancel anytime.',
+      PricingOption.lifetime => 'One-time purchase. Yours forever.',
+    };
+    
+    return Column(
+      children: [
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            onPressed: _isLoading || _isLoadingPackages ? null : () => _purchase(purchaseService),
+            style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+            child: _isLoading
+                ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                : Text(buttonText),
+          ),
+        ).animate().fadeIn(delay: 400.ms),
+        const SizedBox(height: 8),
+        Text(
+          billingInfo,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
   }
   
   Widget _buildFooter(BuildContext context, PurchaseService purchaseService) {
