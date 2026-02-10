@@ -352,6 +352,20 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
                     ),
                   ),
                 ),
+                // View full plan button
+                Semantics(
+                  label: 'View full task plan',
+                  button: true,
+                  child: SizedBox(
+                    width: kMinTouchTarget,
+                    height: kMinTouchTarget,
+                    child: IconButton(
+                      icon: const Icon(Icons.list_alt),
+                      onPressed: () => _showTaskPlan(context, task),
+                      tooltip: 'View Plan',
+                    ),
+                  ),
+                ),
               ],
             ),
             
@@ -1323,6 +1337,259 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
             const SizedBox(height: 16),
           ],
         ),
+      ),
+    );
+  }
+  
+  void _showTaskPlan(BuildContext context, Task task) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.7,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollController) => Column(
+          children: [
+            // Handle
+            Container(
+              margin: const EdgeInsets.only(top: 12, bottom: 8),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            // Title
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      task.title,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(),
+            // Steps list
+            Expanded(
+              child: ListView.builder(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                itemCount: task.steps.length,
+                itemBuilder: (_, index) {
+                  final step = task.steps[index];
+                  final isCurrent = index == task.currentStepIndex;
+                  final isCompleted = step.isCompleted;
+                  final isSkipped = step.isSkipped;
+                  
+                  return _buildPlanStepTile(
+                    context, 
+                    step, 
+                    index, 
+                    isCurrent: isCurrent,
+                    isCompleted: isCompleted,
+                    isSkipped: isSkipped,
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildPlanStepTile(
+    BuildContext context, 
+    TaskStep step, 
+    int index, {
+    required bool isCurrent,
+    required bool isCompleted,
+    required bool isSkipped,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: isCurrent 
+            ? colorScheme.primaryContainer 
+            : colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: isCurrent 
+            ? Border.all(color: colorScheme.primary, width: 2)
+            : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Main step
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Status icon
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    color: isCompleted 
+                        ? colorScheme.primary
+                        : isSkipped
+                            ? colorScheme.outline
+                            : isCurrent
+                                ? colorScheme.primary.withValues(alpha: 0.2)
+                                : colorScheme.surface,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: isCompleted
+                        ? Icon(Icons.check, size: 16, color: colorScheme.onPrimary)
+                        : isSkipped
+                            ? Icon(Icons.skip_next, size: 16, color: colorScheme.onInverseSurface)
+                            : Text(
+                                '${index + 1}',
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: isCurrent 
+                                      ? colorScheme.primary 
+                                      : colorScheme.onSurface,
+                                ),
+                              ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // Step content
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        step.action,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          fontWeight: isCurrent ? FontWeight.w600 : FontWeight.normal,
+                          color: isSkipped 
+                              ? colorScheme.onSurface.withValues(alpha: 0.5)
+                              : isCurrent
+                                  ? colorScheme.onPrimaryContainer
+                                  : null,
+                          decoration: isSkipped ? TextDecoration.lineThrough : null,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        '~${step.estimatedMinutes} min',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: isCurrent 
+                              ? colorScheme.onPrimaryContainer.withValues(alpha: 0.7)
+                              : colorScheme.onSurface.withValues(alpha: 0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (isCurrent)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      'NOW',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onPrimary,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          // Substeps (if any)
+          if (step.hasSubSteps) ...[
+            Padding(
+              padding: const EdgeInsets.only(left: 52, right: 12, bottom: 12),
+              child: Column(
+                children: step.subSteps!.asMap().entries.map((entry) {
+                  final subIndex = entry.key;
+                  final subStep = entry.value;
+                  final isCurrentSub = isCurrent && subIndex == step.currentSubStepIndex;
+                  final isSubCompleted = subStep.isCompleted;
+                  
+                  return Container(
+                    margin: const EdgeInsets.only(top: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isCurrentSub
+                          ? colorScheme.primary.withValues(alpha: 0.15)
+                          : colorScheme.surface.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(8),
+                      border: isCurrentSub 
+                          ? Border.all(color: colorScheme.primary.withValues(alpha: 0.5))
+                          : null,
+                    ),
+                    child: Row(
+                      children: [
+                        // Substep indicator
+                        Container(
+                          width: 20,
+                          height: 20,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isSubCompleted
+                                ? colorScheme.primary
+                                : colorScheme.outline.withValues(alpha: 0.3),
+                          ),
+                          child: Center(
+                            child: isSubCompleted
+                                ? Icon(Icons.check, size: 12, color: colorScheme.onPrimary)
+                                : Text(
+                                    '${subIndex + 1}',
+                                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            subStep.action,
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: isCurrentSub ? FontWeight.w500 : FontWeight.normal,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '~${subStep.estimatedMinutes}m',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }
