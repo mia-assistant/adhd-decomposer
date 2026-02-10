@@ -865,9 +865,10 @@ class SettingsScreen extends StatelessWidget {
     final coach = provider.selectedCoach;
     
     return ListTile(
-      leading: Text(
-        coach.avatar,
-        style: const TextStyle(fontSize: 24),
+      leading: Icon(
+        coach.icon,
+        size: 24,
+        color: Theme.of(context).colorScheme.primary,
       ),
       title: const Text('Your Coach'),
       subtitle: Text('${coach.name} - ${coach.tagline}'),

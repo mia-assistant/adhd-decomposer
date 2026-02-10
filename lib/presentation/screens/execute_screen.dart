@@ -311,12 +311,13 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
                     ),
                   ),
                 ),
-                // Coach avatar
+                // Coach icon
                 Semantics(
                   label: '${coach.name} coaching you',
-                  child: Text(
-                    coach.avatar,
-                    style: const TextStyle(fontSize: 24),
+                  child: Icon(
+                    coach.icon,
+                    size: 24,
+                    color: Theme.of(context).colorScheme.primary,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -783,12 +784,13 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Coach avatar and celebration
+            // Coach icon and celebration
             Semantics(
               label: '${coach.name} celebrating with you',
-              child: Text(
-                coach.avatar,
-                style: const TextStyle(fontSize: 64),
+              child: Icon(
+                coach.icon,
+                size: 64,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(height: 24),
@@ -1155,11 +1157,11 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Coach avatar
-            Text(
-              coach.avatar,
-              style: const TextStyle(fontSize: 48),
-              textAlign: TextAlign.center,
+            // Coach icon
+            Icon(
+              coach.icon,
+              size: 48,
+              color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 12),
             Semantics(
@@ -1337,10 +1339,10 @@ class _ExecuteScreenState extends State<ExecuteScreen> with SingleTickerProvider
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              coach.avatar,
-              style: const TextStyle(fontSize: 32),
-              textAlign: TextAlign.center,
+            Icon(
+              coach.icon,
+              size: 32,
+              color: Theme.of(context).colorScheme.primary,
             ),
             const SizedBox(height: 12),
             Semantics(

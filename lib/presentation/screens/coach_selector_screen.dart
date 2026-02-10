@@ -59,7 +59,7 @@ class CoachSelectorScreen extends StatelessWidget {
                       SnackBar(
                         content: Row(
                           children: [
-                            Text(coach.avatar, style: const TextStyle(fontSize: 20)),
+                            Icon(coach.icon, size: 20, color: Colors.white),
                             const SizedBox(width: 8),
                             Expanded(child: Text('${coach.name} is now your coach!')),
                           ],
@@ -115,7 +115,7 @@ class _CoachCard extends StatelessWidget {
               // Header row
               Row(
                 children: [
-                  // Avatar
+                  // Icon
                   Container(
                     width: 56,
                     height: 56,
@@ -124,9 +124,10 @@ class _CoachCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Center(
-                      child: Text(
-                        coach.avatar,
-                        style: const TextStyle(fontSize: 32),
+                      child: Icon(
+                        coach.icon,
+                        size: 32,
+                        color: Theme.of(context).colorScheme.onPrimaryContainer,
                       ),
                     ),
                   ),

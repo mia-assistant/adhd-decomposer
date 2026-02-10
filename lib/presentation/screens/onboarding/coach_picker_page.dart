@@ -126,7 +126,7 @@ class _CoachCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // Coach avatar
+              // Coach icon
               Container(
                 width: 56,
                 height: 56,
@@ -137,9 +137,12 @@ class _CoachCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Center(
-                  child: Text(
-                    coach.avatar,
-                    style: const TextStyle(fontSize: 28),
+                  child: Icon(
+                    coach.icon,
+                    size: 28,
+                    color: isSelected
+                        ? Theme.of(context).colorScheme.primary
+                        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                 ),
               ),

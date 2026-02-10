@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'models/coach.dart';
 
 /// All available AI coaches for the app
@@ -7,6 +8,7 @@ class Coaches {
     type: CoachType.zen,
     name: 'Zen Master',
     avatar: '🧘',
+    icon: Icons.self_improvement,
     tagline: 'Breathe. Focus. One step.',
     completionMessages: [
       'Well done. Peace follows action.',
@@ -45,6 +47,7 @@ Add gentle transition moments between steps.
     type: CoachType.cheerleader,
     name: 'Hype Coach',
     avatar: '🎉',
+    icon: Icons.celebration,
     tagline: 'LET\'S GO! You\'ve got this!',
     completionMessages: [
       'YESSS! You did THAT! 🔥',
@@ -84,6 +87,7 @@ Make the user feel like a champion.
     type: CoachType.drill,
     name: 'Drill Sergeant',
     avatar: '🎖️',
+    icon: Icons.military_tech,
     tagline: 'Step 1. Do it. Next.',
     completionMessages: [
       'Done. Next step.',
@@ -123,6 +127,7 @@ Focus: What needs to happen? When? Move on.
     type: CoachType.friend,
     name: 'Best Friend',
     avatar: '💜',
+    icon: Icons.favorite,
     tagline: 'Hey, you\'re doing amazing!',
     completionMessages: [
       'Hey, you did it! So proud of you! 💜',
@@ -162,6 +167,7 @@ Be understanding of ADHD struggles without being patronizing.
     type: CoachType.default_,
     name: 'Guide',
     avatar: '✨',
+    icon: Icons.auto_awesome,
     tagline: 'Break it down. Get it done.',
     completionMessages: [
       'Nice work!',

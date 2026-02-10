@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 /// AI Coach personality types for different moods/preferences
 enum CoachType {
   zen,        // Calm, mindful
@@ -11,7 +13,8 @@ enum CoachType {
 class Coach {
   final CoachType type;
   final String name;
-  final String avatar;  // Emoji
+  final String avatar;  // Emoji (legacy, for text display)
+  final IconData icon;  // Material icon for consistent cross-platform display
   final String tagline;
   final List<String> completionMessages;
   final List<String> stuckMessages;
@@ -22,6 +25,7 @@ class Coach {
     required this.type,
     required this.name,
     required this.avatar,
+    required this.icon,
     required this.tagline,
     required this.completionMessages,
     required this.stuckMessages,

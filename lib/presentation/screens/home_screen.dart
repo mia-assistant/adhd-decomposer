@@ -813,7 +813,7 @@ class _CoachGreetingCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Coach avatar
+                // Coach icon
                 Container(
                   width: 48,
                   height: 48,
@@ -822,9 +822,10 @@ class _CoachGreetingCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Center(
-                    child: Text(
-                      coach.avatar,
-                      style: const TextStyle(fontSize: 24),
+                    child: Icon(
+                      coach.icon,
+                      size: 24,
+                      color: Theme.of(context).colorScheme.onPrimaryContainer,
                     ),
                   ),
                 ),
