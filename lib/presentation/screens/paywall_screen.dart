@@ -28,10 +28,6 @@ class _PaywallScreenState extends State<PaywallScreen> {
   bool _isLoadingPackages = true;
   String? _errorMessage;
   
-  static const double fallbackMonthlyPrice = 4.99;
-  static const double fallbackYearlyPrice = 29.99;
-  static const double fallbackLifetimePrice = 49.99;
-  
   @override
   void initState() {
     super.initState();
@@ -225,17 +221,17 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget _buildPricingCards(BuildContext context, PurchaseService purchaseService) {
     final monthlyPrice = purchaseService.monthlyPackage != null
         ? purchaseService.getFormattedPrice(purchaseService.monthlyPackage!)
-        : '\$${fallbackMonthlyPrice.toStringAsFixed(2)}';
+        : '—';
     
     final yearlyPrice = purchaseService.yearlyPackage != null
         ? purchaseService.getFormattedPrice(purchaseService.yearlyPackage!)
-        : '\$${fallbackYearlyPrice.toStringAsFixed(2)}';
+        : '—';
     
     final lifetimePrice = purchaseService.lifetimePackage != null
         ? purchaseService.getFormattedPrice(purchaseService.lifetimePackage!)
-        : '\$${fallbackLifetimePrice.toStringAsFixed(2)}';
+        : '—';
     
-    final monthlyEquiv = purchaseService.getYearlyMonthlyEquivalent() ?? (fallbackYearlyPrice / 12);
+    final monthlyEquiv = purchaseService.getYearlyMonthlyEquivalent();
     
     return Column(
       children: [
@@ -258,7 +254,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 title: 'Yearly',
                 price: yearlyPrice,
                 period: '/yr',
-                subtitle: '\$${monthlyEquiv.toStringAsFixed(2)}/mo',
+                subtitle: monthlyEquiv != null ? '\$${monthlyEquiv.toStringAsFixed(2)}/mo' : null,
                 isSelected: _selectedOption == PricingOption.yearly,
                 onTap: () => setState(() => _selectedOption = PricingOption.yearly),
               ),
@@ -293,18 +289,22 @@ class _PaywallScreenState extends State<PaywallScreen> {
       final price = switch (_selectedOption) {
         PricingOption.monthly => purchaseService.monthlyPackage != null
             ? purchaseService.getFormattedPrice(purchaseService.monthlyPackage!)
-            : '\$${fallbackMonthlyPrice.toStringAsFixed(2)}',
+            : null,
         PricingOption.yearly => purchaseService.yearlyPackage != null
             ? purchaseService.getFormattedPrice(purchaseService.yearlyPackage!)
-            : '\$${fallbackYearlyPrice.toStringAsFixed(2)}',
+            : null,
         PricingOption.lifetime => purchaseService.lifetimePackage != null
             ? purchaseService.getFormattedPrice(purchaseService.lifetimePackage!)
-            : '\$${fallbackLifetimePrice.toStringAsFixed(2)}',
+            : null,
       };
       
-      buttonText = _selectedOption == PricingOption.lifetime
-          ? 'Get Lifetime Access — $price'
-          : 'Continue — $price';
+      if (price == null) {
+        buttonText = 'Loading prices...';
+      } else {
+        buttonText = _selectedOption == PricingOption.lifetime
+            ? 'Get Lifetime Access — $price'
+            : 'Continue — $price';
+      }
     }
     
     return SizedBox(
