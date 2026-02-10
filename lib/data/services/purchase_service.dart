@@ -46,14 +46,14 @@ class PurchaseException implements Exception {
 class PurchaseService extends ChangeNotifier {
   // RevenueCat API keys
   static const String _androidApiKey = 'goog_AlilYWerPjIQtwOfMamxRVObQmx';
-  static const String _iosApiKey = 'YOUR_REVENUECAT_IOS_API_KEY'; // TODO: Add iOS key when ready
+  static const String _iosApiKey = 'appl_VVZzBmKhtHZJuvUwfgXgNAIqsgE';
   
   // Entitlement ID configured in RevenueCat
   static const String _entitlementId = 'entl2de33d59e5';
   
   // Product identifiers (must match RevenueCat/Play Store)
-  static const String productIdMonthly = 'tinysteps-pro-monthly';
-  static const String productIdYearly = 'tinysteps-pro-yearly';
+  static const String productIdMonthly = 'tinysteps_pro_monthly';
+  static const String productIdYearly = 'tinysteps_pro_yearly';
   static const String productIdLifetime = 'tinysteps_pro_lifetime';
   
   bool _isInitialized = false;
