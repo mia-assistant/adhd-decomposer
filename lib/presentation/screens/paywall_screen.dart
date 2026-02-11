@@ -341,7 +341,7 @@ class _PaywallScreenState extends State<PaywallScreen> {
   Widget _buildFooter(BuildContext context, PurchaseService purchaseService) {
     return Column(
       children: [
-        // Restore + privacy row
+        // Restore + privacy + terms row
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -363,6 +363,16 @@ class _PaywallScreenState extends State<PaywallScreen> {
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: Text('Privacy', style: Theme.of(context).textTheme.bodySmall),
+            ),
+            Text(' • ', style: Theme.of(context).textTheme.bodySmall),
+            TextButton(
+              onPressed: () => _openUrl('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/'),
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              child: Text('Terms', style: Theme.of(context).textTheme.bodySmall),
             ),
           ],
         ),
