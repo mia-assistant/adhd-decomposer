@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tiny Steps — ADHD Task Helper</title>
+  <meta name="description" content="Break overwhelming tasks into tiny, doable steps. AI-powered task decomposition designed for ADHD brains.">
+  <meta name="theme-color" content="#6366f1">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="Tiny Steps — ADHD Task Helper">
+  <meta property="og:description" content="Break overwhelming tasks into tiny, doable steps. AI-powered task decomposition designed for ADHD brains.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="https://tinysteps.app/og-image.png">
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --bg: #0f0f1a;
+      --bg-card: #1a1a2e;
+      --text: #ffffff;
+      --text-muted: #a1a1aa;
+      --accent: #818cf8;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+    
+    /* Hero */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+    
+    .hero-icon {
+      width: 100px;
+      height: 100px;
+      border-radius: 22px;
+      margin-bottom: 24px;
+      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);
+    }
+    
+    .hero h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero .tagline {
+      font-size: 1.5rem;
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    
+    .store-badges {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 48px;
+    }
+    
+    .store-badges a img {
+      height: 50px;
+      transition: transform 0.2s;
+    }
+    
+    .store-badges a:hover img {
+      transform: scale(1.05);
+    }
+    
+    /* Features */
+    .features {
+      padding: 60px 0;
+    }
+    
+    .features h2 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 48px;
+      color: var(--accent);
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+    
+    .feature-card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 32px;
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .feature-card .icon {
+      font-size: 2.5rem;
+      margin-bottom: 16px;
+    }
+    
+    .feature-card h3 {
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+    }
+    
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    
+    /* How it works */
+    .how-it-works {
+      padding: 60px 0;
+      text-align: center;
+    }
+    
+    .how-it-works h2 {
+      font-size: 2rem;
+      margin-bottom: 48px;
+      color: var(--accent);
+    }
+    
+    .steps {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+    
+    .step {
+      max-width: 280px;
+    }
+    
+    .step-number {
+      width: 48px;
+      height: 48px;
+      background: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin: 0 auto 16px;
+    }
+    
+    .step h3 {
+      font-size: 1.1rem;
+      margin-bottom: 8px;
+    }
+    
+    .step p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    
+    /* CTA */
+    .cta {
+      padding: 80px 0;
+      text-align: center;
+    }
+    
+    .cta h2 {
+      font-size: 2rem;
+      margin-bottom: 16px;
+    }
+    
+    .cta p {
+      color: var(--text-muted);
+      margin-bottom: 32px;
+      font-size: 1.1rem;
+    }
+    
+    /* Footer */
+    footer {
+      padding: 40px 0;
+      text-align: center;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    footer .links {
+      display: flex;
+      gap: 24px;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    
+    footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+    }
+    
+    footer a:hover {
+      color: var(--accent);
+    }
+    
+    footer .copyright {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero {
+        padding: 60px 0 40px;
+      }
+      
+      .hero h1 {
+        font-size: 2rem;
+      }
+      
+      .hero .tagline {
+        font-size: 1.2rem;
+      }
+      
+      .features h2,
+      .how-it-works h2,
+      .cta h2 {
+        font-size: 1.5rem;
+      }
+      
+      .steps {
+        gap: 32px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <!-- Hero -->
+    <section class="hero">
+      <div class="container">
+        <img src="icon.png" alt="Tiny Steps App Icon" class="hero-icon">
+        <h1>Tiny Steps</h1>
+        <p class="tagline">Break overwhelming tasks into tiny, doable steps. Built for ADHD brains.</p>
+        
+        <div class="store-badges">
+          <a href="https://apps.apple.com/app/tiny-steps-adhd-task-helper/id6742128498" target="_blank" rel="noopener">
+            <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store">
+          </a>
+          <a href="#" target="_blank" rel="noopener" style="opacity: 0.5; pointer-events: none;">
+            <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" style="height: 73px; margin-top: -11px;">
+          </a>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Features -->
+    <section class="features">
+      <div class="container">
+        <h2>Why Tiny Steps?</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="icon">🧠</div>
+            <h3>AI-Powered Breakdown</h3>
+            <p>Tell us your task, we'll break it into small, concrete steps with realistic time estimates. No more staring at a mountain wondering where to start.</p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">⏱️</div>
+            <h3>Time Blindness Alerts</h3>
+            <p>Gentle nudges when you're spending too long on a step. Stay aware of time passing without the anxiety of watching a clock.</p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">🎯</div>
+            <h3>One Step at a Time</h3>
+            <p>Focus on just the current step. No overwhelming list of 47 things — just this one tiny thing you can do right now.</p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">👥</div>
+            <h3>Body Double Mode</h3>
+            <p>A calm digital presence with ambient sounds to keep you company while you work. Like having a focus buddy without the social pressure.</p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">🏆</div>
+            <h3>Celebrate Wins</h3>
+            <p>Every completed step gets recognized. Build streaks, earn achievements, and actually feel good about your progress.</p>
+          </div>
+          <div class="feature-card">
+            <div class="icon">🎨</div>
+            <h3>Choose Your Coach</h3>
+            <p>Pick a coaching style that matches your mood — calm and zen, high-energy hype, gentle guidance, or tough love.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- How it works -->
+    <section class="how-it-works">
+      <div class="container">
+        <h2>How It Works</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3>Enter Your Task</h3>
+            <p>"Clean my room" or "Do my taxes" — whatever feels impossible right now.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3>Get Tiny Steps</h3>
+            <p>AI breaks it down into small, specific actions with time estimates.</p>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3>Do One Thing</h3>
+            <p>Focus on just the current step. Tap done. Repeat. Feel the momentum build.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- CTA -->
+    <section class="cta">
+      <div class="container">
+        <h2>Ready to start small?</h2>
+        <p>Free to try. No account required.</p>
+        <div class="store-badges">
+          <a href="https://apps.apple.com/app/tiny-steps-adhd-task-helper/id6742128498" target="_blank" rel="noopener">
+            <img src="https://tools.applemediaservices.com/api/badges/download-on-the-app-store/black/en-us?size=250x83" alt="Download on the App Store">
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <footer>
+    <div class="container">
+      <div class="links">
+        <a href="https://www.freeprivacypolicy.com/live/bece15e9-ea42-4925-a22b-9d0bae1bbfe3" target="_blank">Privacy Policy</a>
+        <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank">Terms of Use</a>
+        <a href="mailto:support@tinysteps.app">Contact</a>
+      </div>
+      <p class="copyright">© 2026 Tiny Steps. Made with 💜 for ADHD brains.</p>
+    </div>
+  </footer>
+</body>
+</html>
