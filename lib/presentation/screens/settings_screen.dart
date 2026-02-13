@@ -164,6 +164,12 @@ class SettingsScreen extends StatelessWidget {
                 onTap: () => _openUrl('https://www.freeprivacypolicy.com/live/bece15e9-ea42-4925-a22b-9d0bae1bbfe3'),
               ),
               ListTile(
+                leading: const Icon(Icons.language),
+                title: const Text('Website'),
+                trailing: const Icon(Icons.open_in_new, size: 18),
+                onTap: () => _openUrl('https://tinysteps-6hy.pages.dev'),
+              ),
+              ListTile(
                 leading: const Icon(Icons.favorite_outline),
                 title: const Text('Made for ADHD minds'),
                 subtitle: const Text('One tiny step at a time'),

@@ -4,6 +4,8 @@ An ADHD-friendly task decomposition app that breaks overwhelming tasks into tiny
 
 **"Finally. A to-do list that gets ADHD."**
 
+🌐 [Website](https://tinysteps-6hy.pages.dev) • 📱 [App Store](https://apps.apple.com/us/app/tiny-steps-adhd-task-helper/id6758985538) • 🤖 Play Store (coming soon)
+
 ## Why Tiny Steps?
 
 For people with ADHD, starting tasks can feel impossible. "Clean the house" might as well be "climb Mount Everest." 
